@@ -354,9 +354,42 @@ function createTokenNode(item){
     fill.style.width = Math.max(6, score) + '%'; // ensure visible
     fill.title = `Score ${score}`;
 
-    // links
-    modal.querySelector('#m-pumpfun').href = addr ? `https://pump.fun/coin/${addr}` : '#';
-    modal.querySelector('#m-dex').href = addr ? `https://explorer.solana.com/address/${addr}` : '#';
+    // === LINKS (Pumpfun + Explorer + Fallback Solscan) ===
+if (addr) {
+  // Pump.fun link
+  modal.querySelector('#m-pumpfun').href = `https://pump.fun/coin/${addr}`;
+
+  // Explorer (primary) + Solscan (fallback)
+  const solanaExplorer = `https://explorer.solana.com/address/${encodeURIComponent(addr)}?cluster=mainnet`;
+  const solscanToken = `https://solscan.io/token/${encodeURIComponent(addr)}?cluster=mainnet`;
+
+  // Set primary link
+  const dexBtn = modal.querySelector('#m-dex');
+  dexBtn.href = solanaExplorer;
+  dexBtn.dataset.fallback = solscanToken;
+
+  // Optional secondary button (Solscan)
+  let solscanBtn = modal.querySelector('#m-solscan');
+  if (!solscanBtn) {
+    solscanBtn = document.createElement('a');
+    solscanBtn.id = 'm-solscan';
+    solscanBtn.className = 'btn small';
+    solscanBtn.target = '_blank';
+    solscanBtn.textContent = 'Open on Solscan';
+    dexBtn.parentElement.appendChild(solscanBtn);
+  }
+  solscanBtn.href = solscanToken;
+
+  // Handle click on explorer button: try explorer first, fallback Solscan after 1s
+  dexBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.open(solanaExplorer, '_blank');
+    setTimeout(() => window.open(solscanToken, '_blank'), 1000);
+  });
+} else {
+  modal.querySelector('#m-pumpfun').href = '#';
+  modal.querySelector('#m-dex').href = '#';
+}
 
     // open modal
     modal.classList.add('open');
