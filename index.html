@@ -1,3 +1,137 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PumpWolf Dashboard — Neon Cyber</title>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* --- Neon Cyber styling (simple & responsive) --- */
+    :root{
+      --bg:#030406;
+      --card:#071018;
+      --neon:#00f0ff;
+      --accent:#8a2be2;
+      --muted:#9bb;
+      --glass: rgba(255,255,255,0.02);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;font-family:Inter,ui-sans-serif,system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(circle at 10% 10%, #02030a 0%, var(--bg) 60%);
+      color:#dff; -webkit-font-smoothing:antialiased;
+    }
+    header{
+      padding:28px 20px; display:flex; align-items:center; gap:18px;
+      border-bottom:1px solid rgba(0,255,255,0.03);
+    }
+    header .logo{
+      width:64px; height:64px; border-radius:12px; box-shadow:0 0 24px rgba(0,240,255,0.08);
+      background: radial-gradient(circle at 30% 30%, #002, #012233);
+      display:flex; align-items:center; justify-content:center; font-weight:700;
+    }
+    header h1{margin:0;font-size:1.25rem;color:var(--neon); text-shadow:0 0 10px rgba(0,240,255,0.15)}
+    .layout{display:flex; gap:20px; padding:28px; align-items:flex-start}
+    .col-left{width:320px; min-width:260px}
+    .col-main{flex:1}
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.015));
+      border:1px solid rgba(0,240,255,0.06);
+      border-radius:12px; padding:16px; margin-bottom:16px;
+      box-shadow: 0 6px 30px rgba(0,0,0,0.6);
+    }
+
+    .muted{color:var(--muted); font-size:0.9rem}
+    .stat{display:flex; justify-content:space-between; gap:8px; align-items:center}
+    .stat b{color:var(--neon)}
+
+    /* token list */
+    .token-list{display:flex; flex-direction:column; gap:12px; max-height:65vh; overflow:auto; padding-right:6px}
+    .token {
+      display:flex; gap:12px; align-items:center;
+      border-radius:10px; padding:10px; background: linear-gradient(90deg, rgba(0,0,0,0.16), rgba(0,0,0,0.06));
+      border:1px solid rgba(0,240,255,0.03);
+    }
+    .token .meta{flex:1}
+    .token h3{margin:0;color:var(--neon);font-size:1rem}
+    .ticker{font-weight:700; color:#bff}
+    .tiny{font-size:0.85rem; color:var(--muted)}
+
+    .spark{width:140px; height:40px}
+
+    .filters{display:flex; gap:8px; margin-bottom:12px; align-items:center}
+    .btn {
+      background:linear-gradient(90deg,var(--neon),var(--accent));
+      border:none; color:#001; padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer;
+      box-shadow:0 6px 24px rgba(0,240,255,0.06);
+    }
+    .small { padding:6px 10px; font-size:0.9rem; }
+
+    footer{padding:14px 28px; color:var(--muted); font-size:0.9rem; text-align:center}
+    @media(max-width:900px){
+      .layout{flex-direction:column}
+      .col-left{width:100%}
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">PW</div>
+    <div>
+      <h1>PumpWolf Dashboard</h1>
+      <div class="muted">Live feed — only Level 2 &amp; Level 3 tokens</div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="col-left">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="muted">Connected API</div>
+            <div><b id="api-status" style="color:var(--neon)">Moralis: ready</b></div>
+          </div>
+          <div style="text-align:right">
+            <div class="muted">Last update</div>
+            <div id="last-update" class="small muted">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="muted">Filters</div>
+        <div style="height:8px"></div>
+        <div class="filters">
+          <button class="btn small" id="refreshBtn">Refresh</button>
+          <button class="btn small" id="pauseBtn">Pause</button>
+        </div>
+        <div style="height:10px"></div>
+        <div class="muted">Info</div>
+        <div class="tiny" style="margin-top:8px">Dashboard memfetch endpoint Pump.fun via Moralis. Tokens ditampilkan bila memenuhi filter Level 2 atau Level 3.</div>
+      </div>
+    </aside>
+
+    <main class="col-main">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+          <div><b style="color:var(--neon)">Live Tokens</b> <span class="muted"> — showing tokens that passed filters</span></div>
+          <div class="muted">Auto refresh: <span id="interval-label">60s</span></div>
+        </div>
+
+        <div id="tokenContainer" class="token-list">
+          <!-- token cards injected here -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer>© 2025 PumpWolf — The Cyber Pack • Dashboard demo</footer>
+
 <script>
 /* PumpWolf Dashboard — Moralis Pump.fun (solana-gateway) integration
    Paste this script into your index.html (replace existing script).
