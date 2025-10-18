@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PumpWolf - Cyber Dark</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #020202;
+      color: #0ff;
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      padding-top: 15vh;
+    }
+
+    h1 {
+      font-size: 3rem;
+      text-shadow: 0 0 20px #00f0ff;
+    }
+
+    p {
+      font-size: 1.2rem;
+      color: #aaa;
+      margin-bottom: 40px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 14px 28px;
+      background: linear-gradient(90deg, #00f0ff, #0044ff);
+      border: none;
+      border-radius: 30px;
+      color: white;
+      text-transform: uppercase;
+      font-weight: bold;
+      letter-spacing: 2px;
+      cursor: pointer;
+      box-shadow: 0 0 15px #00f0ff;
+      transition: 0.3s;
+    }
+
+    .button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px #00f0ff;
+    }
+
+    .socials {
+      margin-top: 40px;
+    }
+
+    .socials a {
+      margin: 0 15px;
+      color: #0ff;
+      text-decoration: none;
+      font-size: 1.2rem;
+      transition: 0.3s;
+    }
+
+    .socials a:hover {
+      color: #fff;
+      text-shadow: 0 0 15px #00f0ff;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .progress-bar {
+      width: 60%;
+      height: 20px;
+      margin: 40px auto;
+      background-color: rgba(0, 255, 255, 0.1);
+      border: 1px solid #00f0ff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 10px #00f0ff;
+    }
+
+    .progress {
+      height: 100%;
+      background: linear-gradient(90deg, #00f0ff, #0044ff);
+      width: 73%;
+      animation: pulse 2s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { opacity: 0.7; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <canvas></canvas>
+
+  <div class="container">
+    <h1>🐺 PumpWolf</h1>
+    <p>The Cyber Wolf Sniffing Early Gems</p>
+
+    <div class="progress-bar"><div class="progress"></div></div>
+
+    <a href="https://pump.fun" target="_blank" class="button">Buy on Pump.fun</a>
+
+    <div class="socials">
+      <a href="https://x.com/PumpWolfHQ" target="_blank">X (Twitter)</a>
+      <a href="https://t.me/PumpWolfHQ" target="_blank">Telegram</a>
+    </div>
+  </div>
+
+  <audio id="wolfAudio" src="https://cdn.pixabay.com/download/audio/2022/10/23/audio_d0f8d4b2f4.mp3?filename=cyber-wolf-howl-11465.mp3"></audio>
+
+  <script>
+    // === Cyber Glow Particle Effect ===
+    const canvas = document.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2;
+        this.speedX = (Math.random() - 0.5) * 0.6;
+        this.speedY = (Math.random() - 0.5) * 0.6;
+      }
+
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+      }
+
+      draw() {
+        ctx.fillStyle = 'rgba(0, 240, 255, 0.4)';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function initParticles() {
+      particles = [];
+      for (let i = 0; i < 100; i++) {
+        particles.push(new Particle());
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+
+    initParticles();
+    animateParticles();
+
+    // === Wolf Howl Sound ===
+    window.addEventListener('click', () => {
+      const audio = document.getElementById('wolfAudio');
+      audio.volume = 0.3;
+      audio.play();
+    });
+
+    // Auto-play softly after 2s if allowed
+    setTimeout(() => {
+      const audio = document.getElementById('wolfAudio');
+      audio.volume = 0.2;
+      audio.play().catch(() => {});
+    }, 2000);
+  </script>
+</body>
+</html>
