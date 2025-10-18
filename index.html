@@ -8,97 +8,98 @@
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-/* ===== Copy-to-Clipboard alert & modal button spacing ===== */
-#copyAlert {
-  animation: fadeInOut 2s ease;
-  text-align: right;
-  margin-top: 6px;
-  color: #00f0ff;
-}
-@keyframes fadeInOut {
-  0% { opacity: 0; transform: translateY(6px); }
-  20% { opacity: 1; transform: translateY(0); }
-  80% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-6px); }
-}
-
-/* ensure modal button group wraps nicely on mobile */
-.pw-modal .card .btn { margin-left: 6px; margin-right: 0; }
- 
   <style>
+    /* ===== Copy-to-Clipboard alert & modal button spacing ===== */
+    #copyAlert {
+      animation: fadeInOut 2s ease;
+      text-align: right;
+      margin-top: 6px;
+      color: #00f0ff;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(6px); }
+      20% { opacity: 1; transform: translateY(0); }
+      80% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-6px); }
+    }
+
+    /* ensure modal button group wraps nicely on mobile */
+    .pw-modal .card .btn { margin-left: 6px; margin-right: 0; }
+
     /* ========== PumpWolf UI Upgrades (append) ========== */
 
-/* token card tweaks */
-.token {
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  align-items:center;
-  padding:14px;
-  border-radius:10px;
-  background: linear-gradient(90deg, rgba(0,0,0,0.14), rgba(0,0,0,0.06));
-  border: 1px solid rgba(0,240,255,0.04);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-}
-.token:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 18px 50px rgba(0,240,255,0.06);
-}
+    /* token card tweaks */
+    .token {
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      padding:14px;
+      border-radius:10px;
+      background: linear-gradient(90deg, rgba(0,0,0,0.14), rgba(0,0,0,0.06));
+      border: 1px solid rgba(0,240,255,0.04);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .token:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 18px 50px rgba(0,240,255,0.06);
+    }
 
-/* meta left */
-.token .meta h3 { font-size:1.05rem; margin-bottom:6px; letter-spacing:0.6px;}
-.token .meta .tiny { color: #a7dfe8; opacity:0.95; }
+    /* meta left */
+    .token .meta h3 { font-size:1.05rem; margin-bottom:6px; letter-spacing:0.6px;}
+    .token .meta .tiny { color: #a7dfe8; opacity:0.95; }
 
-/* spark container */
-.spark { width:140px; height:40px; border-radius:6px; background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.04)); padding:4px; }
+    /* spark container */
+    .spark { width:140px; height:40px; border-radius:6px; background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.04)); padding:4px; }
 
-/* modal (detail view) */
-.pw-modal {
-  position: fixed;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  backdrop-filter: blur(6px) saturate(120%);
-}
-.pw-modal.open { display:flex; }
-.pw-modal .card {
-  width: min(720px, 92%);
-  max-height: 86vh;
-  overflow:auto;
-  padding: 22px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, rgba(2,6,10,0.92), rgba(6,8,16,0.98));
-  box-shadow: 0 30px 80px rgba(0,0,0,0.7);
-  border: 1px solid rgba(0,240,255,0.06);
-}
-.pw-modal .card .row { display:flex; gap:12px; align-items:center; margin-bottom:10px; }
-.pw-modal .card img.logoBig { width:72px; height:72px; border-radius:8px; box-shadow:0 0 26px rgba(0,240,255,0.08); }
-.pw-modal .metaBig h2 { margin:0; color:var(--neon); font-size:1.4rem; }
-.pw-modal .metaBig .sub { color:var(--muted); font-size:0.95rem; margin-top:4px; }
+    /* modal (detail view) */
+    .pw-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(6px) saturate(120%);
+    }
+    .pw-modal.open { display:flex; }
+    .pw-modal .card {
+      width: min(720px, 92%);
+      max-height: 86vh;
+      overflow:auto;
+      padding: 22px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(2,6,10,0.92), rgba(6,8,16,0.98));
+      box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+      border: 1px solid rgba(0,240,255,0.06);
+    }
+    .pw-modal .card .row { display:flex; gap:12px; align-items:center; margin-bottom:10px; }
+    .pw-modal .card img.logoBig { width:72px; height:72px; border-radius:8px; box-shadow:0 0 26px rgba(0,240,255,0.08); }
+    .pw-modal .metaBig h2 { margin:0; color:var(--neon); font-size:1.4rem; }
+    .pw-modal .metaBig .sub { color:var(--muted); font-size:0.95rem; margin-top:4px; }
 
-/* details grid */
-.detailsGrid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:16px; }
-.detailItem { background: rgba(255,255,255,0.01); padding:10px; border-radius:8px; border:1px solid rgba(0,240,255,0.03); }
-.detailItem b { color:var(--neon); }
+    /* details grid */
+    .detailsGrid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:16px; }
+    .detailItem { background: rgba(255,255,255,0.01); padding:10px; border-radius:8px; border:1px solid rgba(0,240,255,0.03); }
+    .detailItem b { color:var(--neon); }
 
-/* pump strength bar */
-.pumpStrength { height:10px; background:linear-gradient(90deg,#001, rgba(0,240,255,0.04)); border-radius:8px; overflow:hidden; margin-top:8px; }
-.pumpStrength .fill { height:100%; width:0%; background:linear-gradient(90deg,#00f0ff,#8a2be2); transition:width 0.6s ease; }
+    /* pump strength bar */
+    .pumpStrength { height:10px; background:linear-gradient(90deg,#001, rgba(0,240,255,0.04)); border-radius:8px; overflow:hidden; margin-top:8px; }
+    .pumpStrength .fill { height:100%; width:0%; background:linear-gradient(90deg,#00f0ff,#8a2be2); transition:width 0.6s ease; }
 
-/* close button */
-.pw-modal .closeBtn {
-  position:absolute;
-  right:18px; top:14px;
-  background:transparent; border:0; color:#9fe; font-size:1.3rem; cursor:pointer;
-}
+    /* close button */
+    .pw-modal .closeBtn {
+      position:absolute;
+      right:18px; top:14px;
+      background:transparent; border:0; color:#9fe; font-size:1.3rem; cursor:pointer;
+    }
 
-/* small screen tweaks */
-@media(max-width:520px){
-  .detailsGrid { grid-template-columns: 1fr; }
-  .pw-modal .card { padding:14px; }
-}
+    /* small screen tweaks */
+    @media(max-width:520px){
+      .detailsGrid { grid-template-columns: 1fr; }
+      .pw-modal .card { padding:14px; }
+    }
+
     /* --- Neon Cyber styling (simple & responsive) --- */
     :root{
       --bg:#030406;
@@ -509,3 +510,5 @@ if(pauseBtn) pauseBtn.addEventListener('click', () => {
 fetchAndRender();
 startPolling();
 </script>
+</body>
+</html>
