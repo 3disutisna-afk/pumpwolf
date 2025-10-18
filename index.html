@@ -9,6 +9,79 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
+    /* ========== PumpWolf UI Upgrades (append) ========== */
+
+/* token card tweaks */
+.token {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  padding:14px;
+  border-radius:10px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.14), rgba(0,0,0,0.06));
+  border: 1px solid rgba(0,240,255,0.04);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.token:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 50px rgba(0,240,255,0.06);
+}
+
+/* meta left */
+.token .meta h3 { font-size:1.05rem; margin-bottom:6px; letter-spacing:0.6px;}
+.token .meta .tiny { color: #a7dfe8; opacity:0.95; }
+
+/* spark container */
+.spark { width:140px; height:40px; border-radius:6px; background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.04)); padding:4px; }
+
+/* modal (detail view) */
+.pw-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(6px) saturate(120%);
+}
+.pw-modal.open { display:flex; }
+.pw-modal .card {
+  width: min(720px, 92%);
+  max-height: 86vh;
+  overflow:auto;
+  padding: 22px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(2,6,10,0.92), rgba(6,8,16,0.98));
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+  border: 1px solid rgba(0,240,255,0.06);
+}
+.pw-modal .card .row { display:flex; gap:12px; align-items:center; margin-bottom:10px; }
+.pw-modal .card img.logoBig { width:72px; height:72px; border-radius:8px; box-shadow:0 0 26px rgba(0,240,255,0.08); }
+.pw-modal .metaBig h2 { margin:0; color:var(--neon); font-size:1.4rem; }
+.pw-modal .metaBig .sub { color:var(--muted); font-size:0.95rem; margin-top:4px; }
+
+/* details grid */
+.detailsGrid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:16px; }
+.detailItem { background: rgba(255,255,255,0.01); padding:10px; border-radius:8px; border:1px solid rgba(0,240,255,0.03); }
+.detailItem b { color:var(--neon); }
+
+/* pump strength bar */
+.pumpStrength { height:10px; background:linear-gradient(90deg,#001, rgba(0,240,255,0.04)); border-radius:8px; overflow:hidden; margin-top:8px; }
+.pumpStrength .fill { height:100%; width:0%; background:linear-gradient(90deg,#00f0ff,#8a2be2); transition:width 0.6s ease; }
+
+/* close button */
+.pw-modal .closeBtn {
+  position:absolute;
+  right:18px; top:14px;
+  background:transparent; border:0; color:#9fe; font-size:1.3rem; cursor:pointer;
+}
+
+/* small screen tweaks */
+@media(max-width:520px){
+  .detailsGrid { grid-template-columns: 1fr; }
+  .pw-modal .card { padding:14px; }
+}
     /* --- Neon Cyber styling (simple & responsive) --- */
     :root{
       --bg:#030406;
@@ -132,28 +205,54 @@
 
   <footer>© 2025 PumpWolf — The Cyber Pack • Dashboard demo</footer>
 
-<script>
-/* PumpWolf Dashboard — Moralis Pump.fun (solana-gateway) integration
-   Paste this script into your index.html (replace existing script).
-   IMPORTANT: replace MORALIS_API_KEY with your real key.
-*/
-
-const MORALIS_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY"; // <-- ganti dengan key-mu
+ <script>
+/* PumpWolf Dashboard — UI upgrade: modal details + pump strength + real sparkline */
+const MORALIS_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY"; // <-- ganti key mu
 const ENDPOINT = "https://solana-gateway.moralis.io/token/mainnet/exchange/pumpfun/new?limit=100";
-const POLL_INTERVAL = 60 * 1000; // 60s
+const POLL_INTERVAL = 60 * 1000;
 
-// UI elements (harus ada di HTML)
 const tokenContainer = document.getElementById('tokenContainer');
 const apiStatusEl = document.getElementById('api-status');
 const lastUpdateEl = document.getElementById('last-update');
 
 let pollHandle = null;
 let paused = false;
+const MIN_LIQUIDITY = 5000; // proxy filter for Level2/3 (adjustable)
 
-function startPolling(){ stopPolling(); pollHandle = setInterval(fetchAndRender, POLL_INTERVAL); }
+// create modal element (append to body)
+const modal = document.createElement('div');
+modal.className = 'pw-modal';
+modal.innerHTML = `
+  <div class="card">
+    <button class="closeBtn" aria-label="Close">✕</button>
+    <div class="row">
+      <img class="logoBig" src="" alt="logo"/>
+      <div class="metaBig">
+        <h2 id="m-name">Name</h2>
+        <div class="sub" id="m-symbol">SYMBOL</div>
+      </div>
+    </div>
+    <canvas id="mChart" style="width:100%;height:140px"></canvas>
+    <div class="detailsGrid" id="m-details"></div>
+    <div style="margin-top:12px">
+      <div class="muted">Pump Strength</div>
+      <div class="pumpStrength"><div class="fill" id="m-strength"></div></div>
+    </div>
+    <div style="margin-top:14px; display:flex; gap:8px; justify-content:flex-end;">
+      <a id="m-pumpfun" class="btn small" target="_blank">Open on Pump.fun</a>
+      <a id="m-dex" class="btn small" target="_blank">Open on Explorer</a>
+    </div>
+  </div>
+`;
+document.body.appendChild(modal);
+const closeBtn = modal.querySelector('.closeBtn');
+closeBtn.onclick = () => modal.classList.remove('open');
+
+// start/stop poll helpers
+function startPolling(){ stopPolling(); pollHandle = setInterval(() => { if(!paused) fetchAndRender(); }, POLL_INTERVAL); }
 function stopPolling(){ if(pollHandle) clearInterval(pollHandle); pollHandle = null; }
 
-// small helper to create sparkline (Chart.js must be loaded)
+// sparkline with Chart.js
 function makeSparkline(data){
   const canvas = document.createElement('canvas');
   canvas.className = 'spark';
@@ -161,29 +260,39 @@ function makeSparkline(data){
   canvas.style.height = '40px';
   const ctx = canvas.getContext('2d');
   new Chart(ctx, {
-    type: 'line',
-    data: { labels: data.map((_,i)=>i), datasets: [{ data, borderColor: 'rgba(0,240,255,0.9)', borderWidth:1.4, pointRadius:0, fill:false }] },
-    options: { responsive:true, maintainAspectRatio:false, elements:{line:{tension:0.25}}, scales:{x:{display:false}, y:{display:false}}, plugins:{legend:{display:false}, tooltip:{enabled:false}} }
+    type:'line',
+    data: { labels: data.map((_,i)=>i), datasets:[{ data, borderColor:'rgba(0,240,255,0.92)', borderWidth:1.4, pointRadius:0, fill:false }]},
+    options:{ responsive:true, maintainAspectRatio:false, elements:{line:{tension:0.25}}, scales:{x:{display:false}, y:{display:false}}, plugins:{legend:{display:false}, tooltip:{enabled:false}} }
   });
   return canvas;
 }
 
-function formatNumber(n){
-  if(n===null||n===undefined) return '—';
-  if(typeof n === 'number') return n.toLocaleString();
-  if(!isNaN(Number(n))) return Number(n).toLocaleString();
-  return n;
+function formatNum(n){ if(n===null||n===undefined) return '—'; if(!isNaN(Number(n))) return Number(n).toLocaleString(); return n; }
+
+// pump strength scoring (simple heuristic)
+function calcPumpStrength(item){
+  // inputs: liquidity, priceUsd, fdv, createdAt, volume fallback
+  const liquidity = Number(item.liquidity || 0);
+  const fdv = Number(item.fullyDilutedValuation || item.fdv || 0);
+  const vol = Number(item.volume_24h || item.volume || 0);
+  const ageHours = item.createdAt ? ( (Date.now() - new Date(item.createdAt).getTime()) / (1000*60*60) ) : 1;
+  // scoring: liquidity positive, fdv negative (lower fdv better), volume positive, younger tokens more exciting
+  let score = 0;
+  score += Math.min(1, liquidity / 20000) * 40;    // liquidity up to 20k => 40 pts
+  score += Math.min(1, vol / 10000) * 25;          // volume up to 10k => 25 pts
+  score += Math.max(0, (1 - Math.min(1, fdv / 50000))) * 20; // lower fdv better => up to 20 pts
+  score += Math.max(0, (1 - Math.min(1, ageHours / 72))) * 15; // <72h gets up to 15 pts
+  return Math.round(Math.max(0, Math.min(100, score)));
 }
 
+// create token card node (with click => show modal)
 function createTokenNode(item){
-  // map Moralis fields to our display fields
-  const addr = item.tokenAddress || item.address || item.contract_address || '';
+  const addr = item.tokenAddress || item.address || '';
   const name = item.name || item.token_name || 'Unknown';
   const symbol = item.symbol || item.ticker || '—';
   const logo = item.logo || '';
-  const priceUsd = Number(item.priceUsd || item.price_usd || item.priceUsd) || Number(item.priceUsd || 0);
-  const liquidity = Number(item.liquidity || item.liquidity_usd || 0);
-  const vol = Number(item.volume_24h || item.volume || 0);
+  const priceUsd = Number(item.priceUsd || item.price_usd || item.priceUsd || 0);
+  const liquidity = Number(item.liquidity || 0);
   const holders = item.holders || item.holders_count || '—';
 
   const card = document.createElement('div');
@@ -193,25 +302,66 @@ function createTokenNode(item){
   meta.className = 'meta';
   const h = document.createElement('h3'); h.innerHTML = `<span class="ticker">${symbol}</span> — ${name}`;
   const p = document.createElement('div'); p.className = 'tiny';
-  p.innerHTML = `Price: <b style="color:var(--neon)">$${priceUsd ? priceUsd.toLocaleString() : '—'}</b> &nbsp; • &nbsp; Liquidity: <b>$${formatNumber(liquidity)}</b> &nbsp; • &nbsp; Holders: <b>${holders}</b>`;
+  p.innerHTML = `Price: <b style="color:var(--neon)">$${priceUsd ? priceUsd.toLocaleString() : '0'}</b> &nbsp; • &nbsp; Liquidity: <b>$${formatNum(liquidity)}</b> &nbsp; • &nbsp; Holders: <b>${holders}</b>`;
   meta.appendChild(h); meta.appendChild(p);
 
   const sparkWrap = document.createElement('div');
-  // create synthetic spark data around priceUsd if no history available
   let sparkData = Array.from({length:20}, (_,i) => (priceUsd || (Math.random()*0.00001)) * (1 + (Math.sin(i/3)*0.002 + (Math.random()-0.5)*0.01)));
-  try{
-    if(Array.isArray(item.price_history) && item.price_history.length) sparkData = item.price_history.map(x=>Number(x)).slice(-20);
-  }catch(e){}
-
+  if(Array.isArray(item.price_history) && item.price_history.length) {
+    try { sparkData = item.price_history.map(x => Number(x)).slice(-20); } catch(e) {}
+  }
   const spark = makeSparkline(sparkData);
   sparkWrap.appendChild(spark);
 
   card.appendChild(meta);
   card.appendChild(sparkWrap);
 
-  card.style.cursor = 'pointer';
+  // click handler => open modal with details
   card.addEventListener('click', () => {
-    if(addr) window.open(`https://pump.fun/coin/${addr}`, '_blank');
+    // fill modal fields
+    modal.querySelector('img.logoBig').src = logo || 'https://logo.moralis.io/solana-mainnet_' + addr + '_placeholder.png';
+    modal.querySelector('#m-name').textContent = name;
+    modal.querySelector('#m-symbol').textContent = symbol + ' • ' + addr.slice(0,6) + '...' ;
+
+    // chart in modal (reuse sparkData but larger)
+    const mctx = document.getElementById('mChart').getContext('2d');
+    if(window._mChart) { window._mChart.destroy(); window._mChart = null; }
+    window._mChart = new Chart(mctx, {
+      type: 'line',
+      data: { labels: sparkData.map((_,i)=>i), datasets:[ { data: sparkData, borderColor: 'rgba(0,240,255,0.95)', borderWidth:1.6, pointRadius:0, fill:true, backgroundColor:'rgba(0,240,255,0.04)' } ] },
+      options: { responsive:true, maintainAspectRatio:false, scales:{x:{display:false}, y:{display:false}}, plugins:{legend:{display:false}} }
+    });
+
+    // details
+    const details = document.getElementById('m-details');
+    details.innerHTML = '';
+    const detailsList = [
+      ['Price (USD)', `$${formatNum(priceUsd)}`],
+      ['Liquidity', `$${formatNum(liquidity)}`],
+      ['FDV', `$${formatNum(item.fullyDilutedValuation || item.fdv || '—')}`],
+      ['Volume 24h', `$${formatNum(item.volume_24h || item.volume || '—')}`],
+      ['Decimals', item.decimals || '—'],
+      ['Created', item.createdAt ? new Date(item.createdAt).toLocaleString() : '—']
+    ];
+    detailsList.forEach(([k,v])=>{
+      const d = document.createElement('div'); d.className='detailItem'; d.innerHTML = `<div class="muted">${k}</div><div><b>${v}</b></div>`;
+      details.appendChild(d);
+    });
+
+    // pump strength UI
+    const score = calcPumpStrength(item);
+    const fill = document.getElementById('m-strength');
+    fill.style.width = Math.max(6, score) + '%'; // ensure visible
+    fill.title = `Score ${score}`;
+
+    // links
+    modal.querySelector('#m-pumpfun').href = addr ? `https://pump.fun/coin/${addr}` : '#';
+    modal.querySelector('#m-dex').href = addr ? `https://explorer.solana.com/address/${addr}` : '#';
+
+    // open modal
+    modal.classList.add('open');
+    // scroll top of modal
+    modal.querySelector('.card').scrollTop = 0;
   });
 
   return card;
@@ -220,38 +370,26 @@ function createTokenNode(item){
 async function fetchAndRender(){
   apiStatusEl.textContent = 'Fetching...';
   try{
-    const res = await fetch(ENDPOINT, {
-      headers: { "X-API-Key": MORALIS_API_KEY, "accept": "application/json" }
-    });
+    const res = await fetch(ENDPOINT, { headers: { "X-API-Key": MORALIS_API_KEY, "accept": "application/json" }});
     const text = await res.text();
     if(!res.ok){
-      console.warn('Moralis error', res.status, text);
       apiStatusEl.textContent = `Moralis: error ${res.status}`;
-      tokenContainer.innerHTML = `<div class="muted">Moralis error ${res.status} — try again later.</div>`;
+      tokenContainer.innerHTML = `<div class="muted">Moralis returned ${res.status}. Try refresh.</div>`;
       lastUpdateEl.textContent = new Date().toLocaleTimeString();
       return;
     }
-
     const data = JSON.parse(text);
-    // response has { result: [ ... ] } per curl -> use data.result
-    let items = Array.isArray(data.result) ? data.result : (Array.isArray(data) ? data : (Array.isArray(data.tokens) ? data.tokens : []));
-    if(!items || items.length === 0){
-      tokenContainer.innerHTML = `<div class="muted">No tokens returned by Moralis right now.</div>`;
+    let items = Array.isArray(data.result) ? data.result : (Array.isArray(data) ? data : []);
+    if(items.length === 0){
+      tokenContainer.innerHTML = `<div class="muted">No tokens right now.</div>`;
       apiStatusEl.textContent = 'Moralis: OK (no tokens)';
       lastUpdateEl.textContent = new Date().toLocaleTimeString();
       return;
     }
 
-    // FILTER: using liquidity threshold as proxy for Level2/3.
-    // You can change MIN_LIQUIDITY to any number (e.g., 5000)
-    const MIN_LIQUIDITY = 5000;
-    const filtered = items.filter(it => {
-      const liquidity = Number(it.liquidity || 0);
-      return liquidity >= MIN_LIQUIDITY;
-    });
-
-    // Sort by liquidity desc
-    filtered.sort((a,b) => (Number(b.liquidity||0) - Number(a.liquidity||0)));
+    // filter by liquidity (proxy)
+    const filtered = items.filter(it => Number(it.liquidity || 0) >= MIN_LIQUIDITY);
+    filtered.sort((a,b) => Number(b.liquidity||0) - Number(a.liquidity||0));
 
     tokenContainer.innerHTML = '';
     if(filtered.length === 0){
@@ -262,16 +400,26 @@ async function fetchAndRender(){
 
     apiStatusEl.textContent = 'Moralis: OK';
     lastUpdateEl.textContent = new Date().toLocaleTimeString();
-
   }catch(err){
     console.error(err);
-    apiStatusEl.textContent = 'Moralis: error (network)';
+    apiStatusEl.textContent = 'Moralis: error';
     tokenContainer.innerHTML = `<div class="muted">Network error — check console.</div>`;
     lastUpdateEl.textContent = new Date().toLocaleTimeString();
   }
 }
 
-// initial run
+// attach refresh / pause handlers (if exist)
+const refreshBtn = document.getElementById('refreshBtn');
+if(refreshBtn) refreshBtn.addEventListener('click', fetchAndRender);
+const pauseBtn = document.getElementById('pauseBtn');
+if(pauseBtn) pauseBtn.addEventListener('click', () => {
+  paused = !paused;
+  pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+  if(!paused) startPolling(); else stopPolling();
+});
+
+// initial
 fetchAndRender();
 startPolling();
 </script>
+
