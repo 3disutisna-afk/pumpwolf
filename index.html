@@ -1,336 +1,143 @@
-<!doctype html>
-<html lang="id">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PumpWolf Dashboard — Neon Cyber</title>
-
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <style>
-    /* --- Neon Cyber styling (simple & responsive) --- */
-    :root{
-      --bg:#030406;
-      --card:#071018;
-      --neon:#00f0ff;
-      --accent:#8a2be2;
-      --muted:#9bb;
-      --glass: rgba(255,255,255,0.02);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;font-family:Inter,ui-sans-serif,system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background: radial-gradient(circle at 10% 10%, #02030a 0%, var(--bg) 60%);
-      color:#dff; -webkit-font-smoothing:antialiased;
-    }
-    header{
-      padding:28px 20px; display:flex; align-items:center; gap:18px;
-      border-bottom:1px solid rgba(0,255,255,0.03);
-    }
-    header .logo{
-      width:64px; height:64px; border-radius:12px; box-shadow:0 0 24px rgba(0,240,255,0.08);
-      background: radial-gradient(circle at 30% 30%, #002, #012233);
-      display:flex; align-items:center; justify-content:center; font-weight:700;
-    }
-    header h1{margin:0;font-size:1.25rem;color:var(--neon); text-shadow:0 0 10px rgba(0,240,255,0.15)}
-    .layout{display:flex; gap:20px; padding:28px; align-items:flex-start}
-    .col-left{width:320px; min-width:260px}
-    .col-main{flex:1}
-
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.015));
-      border:1px solid rgba(0,240,255,0.06);
-      border-radius:12px; padding:16px; margin-bottom:16px;
-      box-shadow: 0 6px 30px rgba(0,0,0,0.6);
-    }
-
-    .muted{color:var(--muted); font-size:0.9rem}
-    .stat{display:flex; justify-content:space-between; gap:8px; align-items:center}
-    .stat b{color:var(--neon)}
-
-    /* token list */
-    .token-list{display:flex; flex-direction:column; gap:12px; max-height:65vh; overflow:auto; padding-right:6px}
-    .token {
-      display:flex; gap:12px; align-items:center;
-      border-radius:10px; padding:10px; background: linear-gradient(90deg, rgba(0,0,0,0.16), rgba(0,0,0,0.06));
-      border:1px solid rgba(0,240,255,0.03);
-    }
-    .token .meta{flex:1}
-    .token h3{margin:0;color:var(--neon);font-size:1rem}
-    .ticker{font-weight:700; color:#bff}
-    .tiny{font-size:0.85rem; color:var(--muted)}
-
-    .spark{width:140px; height:40px}
-
-    .filters{display:flex; gap:8px; margin-bottom:12px; align-items:center}
-    .btn {
-      background:linear-gradient(90deg,var(--neon),var(--accent));
-      border:none; color:#001; padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer;
-      box-shadow:0 6px 24px rgba(0,240,255,0.06);
-    }
-    .small { padding:6px 10px; font-size:0.9rem; }
-
-    footer{padding:14px 28px; color:var(--muted); font-size:0.9rem; text-align:center}
-    @media(max-width:900px){
-      .layout{flex-direction:column}
-      .col-left{width:100%}
-    }
-  </style>
-</head>
-<body>
-
-  <header>
-    <div class="logo">PW</div>
-    <div>
-      <h1>PumpWolf Dashboard</h1>
-      <div class="muted">Live feed — only Level 2 &amp; Level 3 tokens</div>
-    </div>
-  </header>
-
-  <div class="layout">
-    <aside class="col-left">
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div class="muted">Connected API</div>
-            <div><b id="api-status" style="color:var(--neon)">Moralis: ready</b></div>
-          </div>
-          <div style="text-align:right">
-            <div class="muted">Last update</div>
-            <div id="last-update" class="small muted">—</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="muted">Filters</div>
-        <div style="height:8px"></div>
-        <div class="filters">
-          <button class="btn small" id="refreshBtn">Refresh</button>
-          <button class="btn small" id="pauseBtn">Pause</button>
-        </div>
-        <div style="height:10px"></div>
-        <div class="muted">Info</div>
-        <div class="tiny" style="margin-top:8px">Dashboard memfetch endpoint Pump.fun via Moralis. Tokens ditampilkan bila memenuhi filter Level 2 atau Level 3.</div>
-      </div>
-    </aside>
-
-    <main class="col-main">
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-          <div><b style="color:var(--neon)">Live Tokens</b> <span class="muted"> — showing tokens that passed filters</span></div>
-          <div class="muted">Auto refresh: <span id="interval-label">60s</span></div>
-        </div>
-
-        <div id="tokenContainer" class="token-list">
-          <!-- token cards injected here -->
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <footer>© 2025 PumpWolf — The Cyber Pack • Dashboard demo</footer>
-
 <script>
-/*
-  PumpWolf Dashboard Frontend
-  - Replace MORALIS_API_KEY with your real key before deploying.
-  - Endpoint example (Moralis Pumpfun feed): /exchange/pumpfun/new
-  - This frontend uses a robust, defensive parsing: adapt keys if Moralis response shape differs.
+/* PumpWolf Dashboard — Moralis Pump.fun (solana-gateway) integration
+   Paste this script into your index.html (replace existing script).
+   IMPORTANT: replace MORALIS_API_KEY with your real key.
 */
 
-const MORALIS_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY"; // <-- ganti dengan API key kamu (tes cepat)
+const MORALIS_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY"; // <-- ganti dengan key-mu
+const ENDPOINT = "https://solana-gateway.moralis.io/token/mainnet/exchange/pumpfun/new?limit=100";
 const POLL_INTERVAL = 60 * 1000; // 60s
+
+// UI elements (harus ada di HTML)
+const tokenContainer = document.getElementById('tokenContainer');
+const apiStatusEl = document.getElementById('api-status');
+const lastUpdateEl = document.getElementById('last-update');
+
 let pollHandle = null;
 let paused = false;
 
-// Basic helpers
-const $ = sel => document.querySelector(sel);
-const tokenContainer = document.getElementById('tokenContainer');
-const lastUpdateEl = document.getElementById('last-update');
-const apiStatusEl = document.getElementById('api-status');
-const intervalLabel = document.getElementById('interval-label');
-
-document.getElementById('refreshBtn').addEventListener('click', fetchAndRender);
-document.getElementById('pauseBtn').addEventListener('click', () => {
-  paused = !paused;
-  document.getElementById('pauseBtn').textContent = paused ? 'Resume' : 'Pause';
-  if (!paused) startPolling();
-  else stopPolling();
-});
-
-function startPolling(){
-  stopPolling();
-  pollHandle = setInterval(() => { if(!paused) fetchAndRender(); }, POLL_INTERVAL);
-}
+function startPolling(){ stopPolling(); pollHandle = setInterval(fetchAndRender, POLL_INTERVAL); }
 function stopPolling(){ if(pollHandle) clearInterval(pollHandle); pollHandle = null; }
 
-intervalLabel.textContent = (POLL_INTERVAL/1000) + 's';
-
-// Build a sparkline (tiny chart) using Chart.js for a token, returns canvas
+// small helper to create sparkline (Chart.js must be loaded)
 function makeSparkline(data){
   const canvas = document.createElement('canvas');
   canvas.className = 'spark';
+  canvas.style.width = '140px';
+  canvas.style.height = '40px';
   const ctx = canvas.getContext('2d');
   new Chart(ctx, {
     type: 'line',
-    data: {
-      labels: data.map((_,i)=>i),
-      datasets: [{
-        data: data,
-        borderColor: 'rgba(0,240,255,0.9)',
-        borderWidth: 1.6,
-        pointRadius: 0,
-        fill: false,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      elements:{line:{tension:0.35}},
-      scales:{
-        x:{display:false}, y:{display:false}
-      },
-      plugins:{legend:{display:false}, tooltip:{enabled:false}}
-    }
+    data: { labels: data.map((_,i)=>i), datasets: [{ data, borderColor: 'rgba(0,240,255,0.9)', borderWidth:1.4, pointRadius:0, fill:false }] },
+    options: { responsive:true, maintainAspectRatio:false, elements:{line:{tension:0.25}}, scales:{x:{display:false}, y:{display:false}}, plugins:{legend:{display:false}, tooltip:{enabled:false}} }
   });
   return canvas;
 }
 
-// Filter checker: decide token qualifies as Level 2 or 3
-function isLevel2or3(item){
-  // Moralis / Pumpfun response keys vary. Try multiple heuristics:
-  //  - item.level === 2 or 3
-  //  - item.priority === 'Level 2' or 'Level 3'
-  //  - item.alert_level numeric field
-  const lvl = item.level || item.lvl || item.alert_level || item.priority;
-  if(lvl === 2 || lvl === 3) return true;
-  if(typeof lvl === 'string' && (/level\s*2|level\s*3|lvl\s*2/i).test(lvl)) return true;
-
-  // fallback: check if item.tags includes 'Level 2' or 'VIP' etc
-  if(item.tags && Array.isArray(item.tags)){
-    return item.tags.some(t => /level\s*2|level\s*3|vip|priority/i.test(t));
-  }
-  return false;
-}
-
-// Defensive accessors for typical token properties
-function getProp(item, keys){
-  for(const k of keys) if(item[k] !== undefined) return item[k];
-  return null;
+function formatNumber(n){
+  if(n===null||n===undefined) return '—';
+  if(typeof n === 'number') return n.toLocaleString();
+  if(!isNaN(Number(n))) return Number(n).toLocaleString();
+  return n;
 }
 
 function createTokenNode(item){
-  // Gather fields safely:
-  const name = getProp(item, ['name','token_name','token','symbol_name']) || (item.token_name || 'Unknown');
-  const ticker = getProp(item, ['symbol','ticker','token_symbol']) || 'WOLF';
-  const price = getProp(item, ['price','current_price','token_price']) || 0;
-  const mc = getProp(item, ['market_cap','marketCap']) || null;
-  const vol = getProp(item, ['volume_24h','volume']) || null;
-  const holders = getProp(item, ['holders','holders_count']) || null;
+  // map Moralis fields to our display fields
+  const addr = item.tokenAddress || item.address || item.contract_address || '';
+  const name = item.name || item.token_name || 'Unknown';
+  const symbol = item.symbol || item.ticker || '—';
+  const logo = item.logo || '';
+  const priceUsd = Number(item.priceUsd || item.price_usd || item.priceUsd) || Number(item.priceUsd || 0);
+  const liquidity = Number(item.liquidity || item.liquidity_usd || 0);
+  const vol = Number(item.volume_24h || item.volume || 0);
+  const holders = item.holders || item.holders_count || '—';
 
   const card = document.createElement('div');
   card.className = 'token';
 
   const meta = document.createElement('div');
   meta.className = 'meta';
-  const h = document.createElement('h3'); h.innerHTML = `<span class="ticker">${ticker}</span> — ${name}`;
-  const p = document.createElement('div');
-  p.className = 'tiny';
-  p.innerHTML = `Price: <b style="color:var(--neon)">$${Number(price).toLocaleString()}</b> &nbsp; • &nbsp; Vol24h: <b>$${Number(vol||0).toLocaleString()}</b> &nbsp; • &nbsp; Holders: <b>${holders||'—'}</b>`;
+  const h = document.createElement('h3'); h.innerHTML = `<span class="ticker">${symbol}</span> — ${name}`;
+  const p = document.createElement('div'); p.className = 'tiny';
+  p.innerHTML = `Price: <b style="color:var(--neon)">$${priceUsd ? priceUsd.toLocaleString() : '—'}</b> &nbsp; • &nbsp; Liquidity: <b>$${formatNumber(liquidity)}</b> &nbsp; • &nbsp; Holders: <b>${holders}</b>`;
   meta.appendChild(h); meta.appendChild(p);
 
   const sparkWrap = document.createElement('div');
-  // create dummy spark data from item.history or fallback random
-  let sparkData = getProp(item, ['price_history','price_history_1h','history']) || null;
-  if(sparkData && Array.isArray(sparkData)) {
-    // convert to numeric
-    sparkData = sparkData.map(x => Number(x || 0)).slice(-20);
-  } else {
-    // synthetic: generate small variations around price
-    const base = Number(price) || Math.random()*0.00001;
-    sparkData = Array.from({length:20},(_,i)=> base * (1 + (Math.sin(i/3)*0.002 + (Math.random()-0.5)*0.01)));
-  }
+  // create synthetic spark data around priceUsd if no history available
+  let sparkData = Array.from({length:20}, (_,i) => (priceUsd || (Math.random()*0.00001)) * (1 + (Math.sin(i/3)*0.002 + (Math.random()-0.5)*0.01)));
+  try{
+    if(Array.isArray(item.price_history) && item.price_history.length) sparkData = item.price_history.map(x=>Number(x)).slice(-20);
+  }catch(e){}
+
   const spark = makeSparkline(sparkData);
   sparkWrap.appendChild(spark);
 
   card.appendChild(meta);
   card.appendChild(sparkWrap);
 
-  // clickable: open pump.fun page if token_address available
   card.style.cursor = 'pointer';
   card.addEventListener('click', () => {
-    const addr = getProp(item, ['address','contract_address','token_address']);
-    if(addr){
-      window.open(`https://pump.fun/coin/${addr}`, '_blank');
-    }
+    if(addr) window.open(`https://pump.fun/coin/${addr}`, '_blank');
   });
 
   return card;
 }
 
-// Main fetch + render
 async function fetchAndRender(){
   apiStatusEl.textContent = 'Fetching...';
   try{
-    // Example Moralis endpoint: https://deep-index.moralis.io/api/v2/ ... or Pumpfun feed
-    // Here we try the Pump.fun new endpoint (may differ per user account)
-    // Adjust endpoint if you have a specific one.
-    const endpoint = "https://deep-index.moralis.io/api/v2/exchange/pumpfun/new"; // best-effort
-    const res = await fetch(endpoint, {
-      headers: {
-        "X-API-Key": MORALIS_API_KEY,
-        "Accept": "application/json"
-      }
+    const res = await fetch(ENDPOINT, {
+      headers: { "X-API-Key": MORALIS_API_KEY, "accept": "application/json" }
     });
+    const text = await res.text();
     if(!res.ok){
-      console.error("Moralis fetch failed", res.status, await res.text());
+      console.warn('Moralis error', res.status, text);
       apiStatusEl.textContent = `Moralis: error ${res.status}`;
+      tokenContainer.innerHTML = `<div class="muted">Moralis error ${res.status} — try again later.</div>`;
+      lastUpdateEl.textContent = new Date().toLocaleTimeString();
       return;
     }
-    const data = await res.json();
+
+    const data = JSON.parse(text);
+    // response has { result: [ ... ] } per curl -> use data.result
+    let items = Array.isArray(data.result) ? data.result : (Array.isArray(data) ? data : (Array.isArray(data.tokens) ? data.tokens : []));
+    if(!items || items.length === 0){
+      tokenContainer.innerHTML = `<div class="muted">No tokens returned by Moralis right now.</div>`;
+      apiStatusEl.textContent = 'Moralis: OK (no tokens)';
+      lastUpdateEl.textContent = new Date().toLocaleTimeString();
+      return;
+    }
+
+    // FILTER: using liquidity threshold as proxy for Level2/3.
+    // You can change MIN_LIQUIDITY to any number (e.g., 5000)
+    const MIN_LIQUIDITY = 5000;
+    const filtered = items.filter(it => {
+      const liquidity = Number(it.liquidity || 0);
+      return liquidity >= MIN_LIQUIDITY;
+    });
+
+    // Sort by liquidity desc
+    filtered.sort((a,b) => (Number(b.liquidity||0) - Number(a.liquidity||0)));
+
+    tokenContainer.innerHTML = '';
+    if(filtered.length === 0){
+      tokenContainer.innerHTML = `<div class="muted">No tokens passed liquidity filter (>= ${MIN_LIQUIDITY}).</div>`;
+    } else {
+      filtered.forEach(it => tokenContainer.appendChild(createTokenNode(it)));
+    }
+
     apiStatusEl.textContent = 'Moralis: OK';
     lastUpdateEl.textContent = new Date().toLocaleTimeString();
 
-    // data may be nested; normalize to array
-    let items = [];
-    if(Array.isArray(data)) items = data;
-    else if(Array.isArray(data.result)) items = data.result;
-    else if(data.tokens && Array.isArray(data.tokens)) items = data.tokens;
-    else {
-      // try to search for arrays in object
-      for(const k in data) if(Array.isArray(data[k])) { items = data[k]; break; }
-    }
-
-    // Filter tokens only level 2 or 3
-    const filtered = items.filter(it => isLevel2or3(it));
-
-    // Sort by volume or funding if available (desc)
-    filtered.sort((a,b) => (getProp(b,['volume_24h','volume','funding'])||0) - (getProp(a,['volume_24h','volume','funding'])||0));
-
-    // Render
-    tokenContainer.innerHTML = '';
-    if(filtered.length === 0){
-      tokenContainer.innerHTML = `<div class="muted">No Level 2/3 tokens found right now. Waiting for new gems...</div>`;
-    } else {
-      filtered.forEach(item => {
-        const node = createTokenNode(item);
-        tokenContainer.appendChild(node);
-      });
-    }
-
   }catch(err){
     console.error(err);
-    apiStatusEl.textContent = 'Moralis: error';
-    tokenContainer.innerHTML = `<div class="muted">Error getting data — check console and API key.</div>`;
+    apiStatusEl.textContent = 'Moralis: error (network)';
+    tokenContainer.innerHTML = `<div class="muted">Network error — check console.</div>`;
+    lastUpdateEl.textContent = new Date().toLocaleTimeString();
   }
 }
 
 // initial run
 fetchAndRender();
 startPolling();
-
 </script>
-</body>
-</html>
