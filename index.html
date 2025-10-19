@@ -223,292 +223,276 @@
 
   <footer>© 2025 PumpWolf — The Cyber Pack • Dashboard demo</footer>
 
-<script>
-/* ===== PumpWolf Dashboard — Modal links + Share + Copy =====
-   REPLACE entire existing <script> ... </script> with this block.
-   Then commit. Make sure MORALIS_API_KEY is your real key.
-*/
+  <script>
+  /* ===== PumpWolf Dashboard — Modal links + Share + Copy =====
+     Paste this block once only here. After paste: commit and test.
+     IMPORTANT: replace MORALIS_API_KEY value with your real key.
+  */
 
-const MORALIS_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY"; // <-- ganti dengan API key kamu
-const ENDPOINT = "https://solana-gateway.moralis.io/token/mainnet/exchange/pumpfun/new?limit=100";
-const POLL_INTERVAL = 60 * 1000;
-const MIN_LIQUIDITY = 5000; // proxy filter
+  const MORALIS_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY";
+  const ENDPOINT = "https://solana-gateway.moralis.io/token/mainnet/exchange/pumpfun/new?limit=100";
+  const POLL_INTERVAL = 60 * 1000;
+  const MIN_LIQUIDITY = 5000; // proxy filter
 
-// basic UI refs (must match your page)
-const tokenContainer = document.getElementById('tokenContainer');
-const apiStatusEl = document.getElementById('api-status');
-const lastUpdateEl = document.getElementById('last-update');
+  const tokenContainer = document.getElementById('tokenContainer');
+  const apiStatusEl = document.getElementById('api-status');
+  const lastUpdateEl = document.getElementById('last-update');
 
-let pollHandle = null;
-let paused = false;
-function startPolling(){ stopPolling(); pollHandle = setInterval(fetchAndRender, POLL_INTERVAL); }
-function stopPolling(){ if(pollHandle) clearInterval(pollHandle); pollHandle = null; }
+  let pollHandle = null;
+  let paused = false;
+  function startPolling(){ stopPolling(); pollHandle = setInterval(fetchAndRender, POLL_INTERVAL); }
+  function stopPolling(){ if(pollHandle) clearInterval(pollHandle); pollHandle = null; }
 
-// --- create modal (if not present) ---
-let modal = document.querySelector('.pw-modal');
-if(!modal) {
-  modal = document.createElement('div');
-  modal.className = 'pw-modal';
-  modal.innerHTML = `
-    <div class="card">
-      <button class="closeBtn" aria-label="Close">✕</button>
-      <div class="row">
-        <img class="logoBig" src="" alt="logo"/>
-        <div class="metaBig">
-          <h2 id="m-name">Name</h2>
-          <div class="sub" id="m-symbol">SYMBOL</div>
+  // --- create modal (if not present) ---
+  let modal = document.querySelector('.pw-modal');
+  if(!modal) {
+    modal = document.createElement('div');
+    modal.className = 'pw-modal';
+    modal.innerHTML = `
+      <div class="card">
+        <button class="closeBtn" aria-label="Close">✕</button>
+        <div class="row">
+          <img class="logoBig" src="" alt="logo"/>
+          <div class="metaBig">
+            <h2 id="m-name">Name</h2>
+            <div class="sub" id="m-symbol">SYMBOL</div>
+          </div>
         </div>
+        <canvas id="mChart" style="width:100%;height:140px"></canvas>
+        <div class="detailsGrid" id="m-details"></div>
+
+        <div style="margin-top:12px">
+          <div class="muted">Pump Strength</div>
+          <div class="pumpStrength"><div class="fill" id="m-strength"></div></div>
+        </div>
+
+        <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end;">
+          <a id="m-pumpfun" class="btn small" target="_blank">Open on Pump.fun</a>
+          <a id="m-dex" class="btn small" target="_blank">Open on Explorer</a>
+          <a id="m-solscan" class="btn small" target="_blank">Open on Solscan</a>
+          <a id="m-share"  class="btn small" target="_blank" rel="noopener">Share to X</a>
+          <button id="m-copy" class="btn small" style="cursor:pointer;">Copy Tweet</button>
+        </div>
+
+        <div id="copyAlert" style="display:none;"></div>
       </div>
-      <canvas id="mChart" style="width:100%;height:140px"></canvas>
-      <div class="detailsGrid" id="m-details"></div>
-
-      <div style="margin-top:12px">
-        <div class="muted">Pump Strength</div>
-        <div class="pumpStrength"><div class="fill" id="m-strength"></div></div>
-      </div>
-
-      <!-- Buttons -->
-      <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end;">
-        <a id="m-pumpfun" class="btn small" target="_blank">Open on Pump.fun</a>
-        <a id="m-dex" class="btn small" target="_blank">Open on Explorer</a>
-        <a id="m-solscan" class="btn small" target="_blank">Open on Solscan</a>
-        <a id="m-share"  class="btn small" target="_blank" rel="noopener">Share to X</a>
-        <button id="m-copy" class="btn small" style="cursor:pointer;">Copy Tweet</button>
-      </div>
-
-      <div id="copyAlert" style="display:none;"></div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-const closeBtn = modal.querySelector('.closeBtn');
-closeBtn.onclick = () => modal.classList.remove('open');
-
-// --- helpers: sparkline with Chart.js ---
-function makeSparkline(data){
-  const canvas = document.createElement('canvas');
-  canvas.className = 'spark';
-  canvas.style.width = '140px';
-  canvas.style.height = '40px';
-  const ctx = canvas.getContext('2d');
-  new Chart(ctx, {
-    type:'line',
-    data: { labels: data.map((_,i)=>i), datasets:[{ data, borderColor:'rgba(0,240,255,0.92)', borderWidth:1.4, pointRadius:0, fill:false }]},
-    options:{ responsive:true, maintainAspectRatio:false, elements:{line:{tension:0.25}}, scales:{x:{display:false}, y:{display:false}}, plugins:{legend:{display:false}, tooltip:{enabled:false}} }
-  });
-  return canvas;
-}
-function formatNum(n){ if(n===null||n===undefined) return '—'; if(!isNaN(Number(n))) return Number(n).toLocaleString(); return n; }
-
-// pump strength scoring (heuristic)
-function calcPumpStrength(item){
-  const liquidity = Number(item.liquidity || 0);
-  const fdv = Number(item.fullyDilutedValuation || item.fdv || 0);
-  const vol = Number(item.volume_24h || item.volume || 0);
-  const ageHours = item.createdAt ? ( (Date.now() - new Date(item.createdAt).getTime()) / (1000*60*60) ) : 1;
-  let score = 0;
-  score += Math.min(1, liquidity / 20000) * 40;
-  score += Math.min(1, vol / 10000) * 25;
-  score += Math.max(0, (1 - Math.min(1, fdv / 50000))) * 20;
-  score += Math.max(0, (1 - Math.min(1, ageHours / 72))) * 15;
-  return Math.round(Math.max(0, Math.min(100, score)));
-}
-
-// create card node
-function createTokenNode(item){
-  const addr = item.tokenAddress || item.address || '';
-  const name = item.name || item.token_name || 'Unknown';
-  const symbol = item.symbol || item.ticker || '—';
-  const logo = item.logo || '';
-  const priceUsd = Number(item.priceUsd || item.price_usd || 0);
-  const liquidity = Number(item.liquidity || 0);
-  const holders = item.holders || item.holders_count || '—';
-
-  const card = document.createElement('div');
-  card.className = 'token';
-
-  const meta = document.createElement('div'); meta.className = 'meta';
-  const h = document.createElement('h3'); h.innerHTML = `<span class="ticker">${symbol}</span> — ${name}`;
-  const p = document.createElement('div'); p.className = 'tiny';
-  p.innerHTML = `Price: <b style="color:var(--neon)">$${priceUsd ? priceUsd.toLocaleString() : '0'}</b> &nbsp; • &nbsp; Liquidity: <b>$${formatNum(liquidity)}</b> &nbsp; • &nbsp; Holders: <b>${holders}</b>`;
-  meta.appendChild(h); meta.appendChild(p);
-
-  const sparkWrap = document.createElement('div');
-  let sparkData = Array.from({length:20}, (_,i) => (priceUsd || (Math.random()*0.00001)) * (1 + (Math.sin(i/3)*0.002 + (Math.random()-0.5)*0.01)));
-  if(Array.isArray(item.price_history) && item.price_history.length) {
-    try { sparkData = item.price_history.map(x => Number(x)).slice(-20); } catch(e) {}
+    `;
+    document.body.appendChild(modal);
   }
-  const spark = makeSparkline(sparkData);
-  sparkWrap.appendChild(spark);
+  const closeBtn = modal.querySelector('.closeBtn');
+  closeBtn.onclick = () => modal.classList.remove('open');
 
-  card.appendChild(meta); card.appendChild(sparkWrap);
-
-  // click -> modal
-  card.addEventListener('click', () => openModalFor(item));
-  return card;
-}
-
-// open modal and fill data, attach share/copy handlers
-function openModalFor(item){
-  const addr = item.tokenAddress || item.address || '';
-  modal.querySelector('img.logoBig').src = item.logo || ('https://logo.moralis.io/solana-mainnet_' + addr + '_placeholder.png');
-  modal.querySelector('#m-name').textContent = item.name || item.token_name || 'Unknown';
-  modal.querySelector('#m-symbol').textContent = (item.symbol || item.ticker || '—') + ' • ' + (addr ? (addr.slice(0,6)+'...') : '');
-
-  // modal chart
-  const sparkData = (Array.isArray(item.price_history) && item.price_history.length) ? item.price_history.map(x=>Number(x)).slice(-40) : Array.from({length:20}, (_,i)=> (Number(item.priceUsd||0) || Math.random()*0.00001) * (1 + (Math.sin(i/3)*0.002 + (Math.random()-0.5)*0.01)));
-  const mctx = document.getElementById('mChart').getContext('2d');
-  if(window._mChart){ window._mChart.destroy(); window._mChart = null; }
-  window._mChart = new Chart(mctx, {
-    type:'line',
-    data:{ labels: sparkData.map((_,i)=>i), datasets:[{ data: sparkData, borderColor:'rgba(0,240,255,0.95)', borderWidth:1.6, pointRadius:0, fill:true, backgroundColor:'rgba(0,240,255,0.04)'}] },
-    options:{ responsive:true, maintainAspectRatio:false, scales:{x:{display:false}, y:{display:false}}, plugins:{legend:{display:false}} }
-  });
-
-  // details grid
-  const details = document.getElementById('m-details');
-  details.innerHTML = '';
-  const detailsList = [
-    ['Price (USD)', `$${formatNum(Number(item.priceUsd || 0))}`],
-    ['Liquidity', `$${formatNum(Number(item.liquidity || 0))}`],
-    ['FDV', `$${formatNum(Number(item.fullyDilutedValuation || item.fdv || '—'))}`],
-    ['Volume 24h', `$${formatNum(Number(item.volume_24h || item.volume || 0))}`],
-    ['Decimals', item.decimals || '—'],
-    ['Created', item.createdAt ? new Date(item.createdAt).toLocaleString() : '—']
-  ];
-  detailsList.forEach(([k,v])=>{
-    const d = document.createElement('div'); d.className='detailItem'; d.innerHTML = `<div class="muted">${k}</div><div><b>${v}</b></div>`;
-    details.appendChild(d);
-  });
-
-  // pump strength
-  const score = calcPumpStrength(item);
-  const fill = document.getElementById('m-strength');
-  fill.style.width = Math.max(6, score) + '%';
-  fill.title = `Score ${score}`;
-
-  // LINKS: pumpfun + explorer + solscan
-  const pumpfunUrl = addr ? `https://pump.fun/coin/${addr}` : '#';
-  const solanaExplorer = addr ? `https://explorer.solana.com/address/${encodeURIComponent(addr)}?cluster=mainnet` : '#';
-  const solscanToken = addr ? `https://solscan.io/token/${encodeURIComponent(addr)}?cluster=mainnet` : '#';
-
-  modal.querySelector('#m-pumpfun').href = pumpfunUrl;
-  const dexBtn = modal.querySelector('#m-dex');
-  dexBtn.href = solanaExplorer;
-  dexBtn.dataset.fallback = solscanToken;
-  let solscanBtn = modal.querySelector('#m-solscan');
-  if(!solscanBtn){
-    solscanBtn = document.createElement('a');
-    solscanBtn.id = 'm-solscan';
-    solscanBtn.className = 'btn small';
-    solscanBtn.target = '_blank';
-    solscanBtn.textContent = 'Open on Solscan';
-    dexBtn.parentElement.appendChild(solscanBtn);
+  // small helpers (Chart.js required)
+  function makeSparkline(data){
+    const canvas = document.createElement('canvas');
+    canvas.className = 'spark';
+    canvas.style.width = '140px';
+    canvas.style.height = '40px';
+    const ctx = canvas.getContext('2d');
+    new Chart(ctx, {
+      type:'line',
+      data: { labels: data.map((_,i)=>i), datasets:[{ data, borderColor:'rgba(0,240,255,0.92)', borderWidth:1.4, pointRadius:0, fill:false }]},
+      options:{ responsive:true, maintainAspectRatio:false, elements:{line:{tension:0.25}}, scales:{x:{display:false}, y:{display:false}}, plugins:{legend:{display:false}, tooltip:{enabled:false}} }
+    });
+    return canvas;
   }
-  solscanBtn.href = solscanToken;
+  function formatNum(n){ if(n===null||n===undefined) return '—'; if(!isNaN(Number(n))) return Number(n).toLocaleString(); return n; }
 
-  // explorer click: open primary + fallback after short delay
-  dexBtn.onclick = (e) => {
-    e.preventDefault();
-    if(solanaExplorer !== '#') {
-      window.open(solanaExplorer, '_blank');
-      setTimeout(()=> { window.open(solscanToken, '_blank'); }, 900);
+  function calcPumpStrength(item){
+    const liquidity = Number(item.liquidity || 0);
+    const fdv = Number(item.fullyDilutedValuation || item.fdv || 0);
+    const vol = Number(item.volume_24h || item.volume || 0);
+    const ageHours = item.createdAt ? ( (Date.now() - new Date(item.createdAt).getTime()) / (1000*60*60) ) : 1;
+    let score = 0;
+    score += Math.min(1, liquidity / 20000) * 40;
+    score += Math.min(1, vol / 10000) * 25;
+    score += Math.max(0, (1 - Math.min(1, fdv / 50000))) * 20;
+    score += Math.max(0, (1 - Math.min(1, ageHours / 72))) * 15;
+    return Math.round(Math.max(0, Math.min(100, score)));
+  }
+
+  function createTokenNode(item){
+    const addr = item.tokenAddress || item.address || '';
+    const name = item.name || item.token_name || 'Unknown';
+    const symbol = item.symbol || item.ticker || '—';
+    const logo = item.logo || '';
+    const priceUsd = Number(item.priceUsd || item.price_usd || 0);
+    const liquidity = Number(item.liquidity || 0);
+    const holders = item.holders || item.holders_count || '—';
+
+    const card = document.createElement('div');
+    card.className = 'token';
+
+    const meta = document.createElement('div'); meta.className = 'meta';
+    const h = document.createElement('h3'); h.innerHTML = `<span class="ticker">${symbol}</span> — ${name}`;
+    const p = document.createElement('div'); p.className = 'tiny';
+    p.innerHTML = `Price: <b style="color:var(--neon)">$${priceUsd ? priceUsd.toLocaleString() : '0'}</b> &nbsp; • &nbsp; Liquidity: <b>$${formatNum(liquidity)}</b> &nbsp; • &nbsp; Holders: <b>${holders}</b>`;
+    meta.appendChild(h); meta.appendChild(p);
+
+    const sparkWrap = document.createElement('div');
+    let sparkData = Array.from({length:20}, (_,i) => (priceUsd || (Math.random()*0.00001)) * (1 + (Math.sin(i/3)*0.002 + (Math.random()-0.5)*0.01)));
+    if(Array.isArray(item.price_history) && item.price_history.length) {
+      try { sparkData = item.price_history.map(x => Number(x)).slice(-20); } catch(e) {}
     }
-  };
+    const spark = makeSparkline(sparkData);
+    sparkWrap.appendChild(spark);
 
-  // === Share to X (Twitter intent) & Copy to clipboard ===
-  const shareBtn = modal.querySelector('#m-share');
-  const copyBtn = modal.querySelector('#m-copy');
-  const copyAlert = document.getElementById('copyAlert');
-
-  function buildTweetText(it, address){
-    const name = it.name || it.token_name || 'Unknown';
-    const symbol = it.symbol || it.ticker || 'WOLF';
-    const liquidity = it.liquidity ? `$${Number(it.liquidity).toLocaleString()}` : '—';
-    const strength = calcPumpStrength(it);
-    const pf = address ? `https://pump.fun/coin/${address}` : '';
-    const ss = address ? `https://solscan.io/token/${address}?cluster=mainnet` : '';
-    const text = `🚨 New Gem Spotted: ${name} (${symbol})\n💧 Liquidity: ${liquidity}\n⚡ Pump Strength: ${strength}/100\n🔗 Buy: ${pf}\n🔎 Details: ${ss}\n\n#PumpWolf #Solana @PumpWolfHQ`;
-    return text;
+    card.appendChild(meta); card.appendChild(sparkWrap);
+    card.addEventListener('click', () => openModalFor(item));
+    return card;
   }
 
-  const tweetText = buildTweetText(item, addr);
-  shareBtn.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
-  shareBtn.onclick = (e) => { e.preventDefault(); window.open(shareBtn.href, '_blank', 'noopener,noreferrer,width=600,height=450'); };
+  function openModalFor(item){
+    const addr = item.tokenAddress || item.address || '';
+    modal.querySelector('img.logoBig').src = item.logo || ('https://logo.moralis.io/solana-mainnet_' + addr + '_placeholder.png');
+    modal.querySelector('#m-name').textContent = item.name || item.token_name || 'Unknown';
+    modal.querySelector('#m-symbol').textContent = (item.symbol || item.ticker || '—') + ' • ' + (addr ? (addr.slice(0,6)+'...') : '');
 
-  copyBtn.onclick = async (e) => {
-    e.preventDefault();
-    try {
-      await navigator.clipboard.writeText(tweetText);
-      copyAlert.style.display = 'block';
-      copyAlert.textContent = '✅ Copied to clipboard!';
-      setTimeout(()=> { copyAlert.style.display = 'none'; }, 2000);
-    } catch(err){
-      copyAlert.style.display = 'block';
-      copyAlert.textContent = '❌ Copy failed';
-      setTimeout(()=> { copyAlert.style.display = 'none'; }, 2000);
+    const sparkData = (Array.isArray(item.price_history) && item.price_history.length) ? item.price_history.map(x=>Number(x)).slice(-40) : Array.from({length:20}, (_,i)=> (Number(item.priceUsd||0) || Math.random()*0.00001) * (1 + (Math.sin(i/3)*0.002 + (Math.random()-0.5)*0.01)));
+    const mctx = document.getElementById('mChart').getContext('2d');
+    if(window._mChart){ window._mChart.destroy(); window._mChart = null; }
+    window._mChart = new Chart(mctx, {
+      type:'line',
+      data:{ labels: sparkData.map((_,i)=>i), datasets:[{ data: sparkData, borderColor:'rgba(0,240,255,0.95)', borderWidth:1.6, pointRadius:0, fill:true, backgroundColor:'rgba(0,240,255,0.04)'}] },
+      options:{ responsive:true, maintainAspectRatio:false, scales:{x:{display:false}, y:{display:false}}, plugins:{legend:{display:false}} }
+    });
+
+    const details = document.getElementById('m-details');
+    details.innerHTML = '';
+    const detailsList = [
+      ['Price (USD)', `$${formatNum(Number(item.priceUsd || 0))}`],
+      ['Liquidity', `$${formatNum(Number(item.liquidity || 0))}`],
+      ['FDV', `$${formatNum(Number(item.fullyDilutedValuation || item.fdv || '—'))}`],
+      ['Volume 24h', `$${formatNum(Number(item.volume_24h || item.volume || 0))}`],
+      ['Decimals', item.decimals || '—'],
+      ['Created', item.createdAt ? new Date(item.createdAt).toLocaleString() : '—']
+    ];
+    detailsList.forEach(([k,v])=>{
+      const d = document.createElement('div'); d.className='detailItem'; d.innerHTML = `<div class="muted">${k}</div><div><b>${v}</b></div>`;
+      details.appendChild(d);
+    });
+
+    const score = calcPumpStrength(item);
+    const fill = document.getElementById('m-strength');
+    fill.style.width = Math.max(6, score) + '%';
+    fill.title = `Score ${score}`;
+
+    const pumpfunUrl = addr ? `https://pump.fun/coin/${addr}` : '#';
+    const solanaExplorer = addr ? `https://explorer.solana.com/address/${encodeURIComponent(addr)}?cluster=mainnet` : '#';
+    const solscanToken = addr ? `https://solscan.io/token/${encodeURIComponent(addr)}?cluster=mainnet` : '#';
+
+    modal.querySelector('#m-pumpfun').href = pumpfunUrl;
+    const dexBtn = modal.querySelector('#m-dex');
+    dexBtn.href = solanaExplorer;
+    dexBtn.dataset.fallback = solscanToken;
+    let solscanBtn = modal.querySelector('#m-solscan');
+    if(!solscanBtn){
+      solscanBtn = document.createElement('a');
+      solscanBtn.id = 'm-solscan';
+      solscanBtn.className = 'btn small';
+      solscanBtn.target = '_blank';
+      solscanBtn.textContent = 'Open on Solscan';
+      dexBtn.parentElement.appendChild(solscanBtn);
     }
-  };
+    solscanBtn.href = solscanToken;
 
-  // open modal
-  modal.classList.add('open');
-  modal.querySelector('.card').scrollTop = 0;
-}
+    dexBtn.onclick = (e) => {
+      e.preventDefault();
+      if(solanaExplorer !== '#') {
+        window.open(solanaExplorer, '_blank');
+        setTimeout(()=> { window.open(solscanToken, '_blank'); }, 900);
+      }
+    };
 
-// fetch & render main
-async function fetchAndRender(){
-  apiStatusEl.textContent = 'Fetching...';
-  try{
-    const res = await fetch(ENDPOINT, { headers: { "X-API-Key": MORALIS_API_KEY, "accept": "application/json" }});
-    const text = await res.text();
-    if(!res.ok){
-      apiStatusEl.textContent = `Moralis: error ${res.status}`;
-      tokenContainer.innerHTML = `<div class="muted">Moralis returned ${res.status}. Try refresh.</div>`;
+    const shareBtn = modal.querySelector('#m-share');
+    const copyBtn = modal.querySelector('#m-copy');
+    const copyAlert = document.getElementById('copyAlert');
+
+    function buildTweetText(it, address){
+      const name = it.name || it.token_name || 'Unknown';
+      const symbol = it.symbol || it.ticker || 'WOLF';
+      const liquidity = it.liquidity ? `$${Number(it.liquidity).toLocaleString()}` : '—';
+      const strength = calcPumpStrength(it);
+      const pf = address ? `https://pump.fun/coin/${address}` : '';
+      const ss = address ? `https://solscan.io/token/${address}?cluster=mainnet` : '';
+      const text = `🚨 New Gem Spotted: ${name} (${symbol})\n💧 Liquidity: ${liquidity}\n⚡ Pump Strength: ${strength}/100\n🔗 Buy: ${pf}\n🔎 Details: ${ss}\n\n#PumpWolf #Solana @PumpWolfHQ`;
+      return text;
+    }
+
+    const tweetText = buildTweetText(item, addr);
+    shareBtn.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+    shareBtn.onclick = (e) => { e.preventDefault(); window.open(shareBtn.href, '_blank', 'noopener,noreferrer,width=600,height=450'); };
+
+    copyBtn.onclick = async (e) => {
+      e.preventDefault();
+      try {
+        await navigator.clipboard.writeText(tweetText);
+        copyAlert.style.display = 'block';
+        copyAlert.textContent = '✅ Copied to clipboard!';
+        setTimeout(()=> { copyAlert.style.display = 'none'; }, 2000);
+      } catch(err){
+        copyAlert.style.display = 'block';
+        copyAlert.textContent = '❌ Copy failed';
+        setTimeout(()=> { copyAlert.style.display = 'none'; }, 2000);
+      }
+    };
+
+    modal.classList.add('open');
+    modal.querySelector('.card').scrollTop = 0;
+  }
+
+  async function fetchAndRender(){
+    apiStatusEl.textContent = 'Fetching...';
+    try{
+      const res = await fetch(ENDPOINT, { headers: { "X-API-Key": MORALIS_API_KEY, "accept": "application/json" }});
+      const text = await res.text();
+      if(!res.ok){
+        apiStatusEl.textContent = `Moralis: error ${res.status}`;
+        tokenContainer.innerHTML = `<div class="muted">Moralis returned ${res.status}. Try refresh.</div>`;
+        lastUpdateEl.textContent = new Date().toLocaleTimeString();
+        return;
+      }
+      const data = JSON.parse(text);
+      let items = Array.isArray(data.result) ? data.result : (Array.isArray(data) ? data : []);
+      if(!items || items.length === 0){
+        tokenContainer.innerHTML = `<div class="muted">No tokens right now.</div>`;
+        apiStatusEl.textContent = 'Moralis: OK (no tokens)';
+        lastUpdateEl.textContent = new Date().toLocaleTimeString();
+        return;
+      }
+
+      const filtered = items.filter(it => Number(it.liquidity || 0) >= MIN_LIQUIDITY);
+      filtered.sort((a,b)=> Number(b.liquidity||0) - Number(a.liquidity||0));
+
+      tokenContainer.innerHTML = '';
+      if(filtered.length === 0){
+        tokenContainer.innerHTML = `<div class="muted">No tokens passed liquidity filter (>= ${MIN_LIQUIDITY}).</div>`;
+      } else {
+        filtered.forEach(it => tokenContainer.appendChild(createTokenNode(it)));
+      }
+
+      apiStatusEl.textContent = 'Moralis: OK';
       lastUpdateEl.textContent = new Date().toLocaleTimeString();
-      return;
-    }
-    const data = JSON.parse(text);
-    let items = Array.isArray(data.result) ? data.result : (Array.isArray(data) ? data : []);
-    if(!items || items.length === 0){
-      tokenContainer.innerHTML = `<div class="muted">No tokens right now.</div>`;
-      apiStatusEl.textContent = 'Moralis: OK (no tokens)';
+    }catch(err){
+      console.error(err);
+      apiStatusEl.textContent = 'Moralis: error';
+      tokenContainer.innerHTML = `<div class="muted">Network error — check console.</div>`;
       lastUpdateEl.textContent = new Date().toLocaleTimeString();
-      return;
     }
-
-    const filtered = items.filter(it => Number(it.liquidity || 0) >= MIN_LIQUIDITY);
-    filtered.sort((a,b)=> Number(b.liquidity||0) - Number(a.liquidity||0));
-
-    tokenContainer.innerHTML = '';
-    if(filtered.length === 0){
-      tokenContainer.innerHTML = `<div class="muted">No tokens passed liquidity filter (>= ${MIN_LIQUIDITY}).</div>`;
-    } else {
-      filtered.forEach(it => tokenContainer.appendChild(createTokenNode(it)));
-    }
-
-    apiStatusEl.textContent = 'Moralis: OK';
-    lastUpdateEl.textContent = new Date().toLocaleTimeString();
-  }catch(err){
-    console.error(err);
-    apiStatusEl.textContent = 'Moralis: error';
-    tokenContainer.innerHTML = `<div class="muted">Network error — check console.</div>`;
-    lastUpdateEl.textContent = new Date().toLocaleTimeString();
   }
-}
 
-// attach refresh/pause if present
-const refreshBtn = document.getElementById('refreshBtn');
-if(refreshBtn) refreshBtn.addEventListener('click', fetchAndRender);
-const pauseBtn = document.getElementById('pauseBtn');
-if(pauseBtn) pauseBtn.addEventListener('click', () => {
-  paused = !paused;
-  pauseBtn.textContent = paused ? 'Resume' : 'Pause';
-  if(!paused) startPolling(); else stopPolling();
-});
+  const refreshBtn = document.getElementById('refreshBtn');
+  if(refreshBtn) refreshBtn.addEventListener('click', fetchAndRender);
+  const pauseBtn = document.getElementById('pauseBtn');
+  if(pauseBtn) pauseBtn.addEventListener('click', () => {
+    paused = !paused;
+    pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+    if(!paused) startPolling(); else stopPolling();
+  });
 
-// init
-fetchAndRender();
-startPolling();
-</script>
+  // init
+  fetchAndRender();
+  startPolling();
+  </script>
 </body>
 </html>
