@@ -154,7 +154,9 @@
 <footer>© 2025 PumpWolf — The Cyber Pack • v2.1 (Mobile Optimized)</footer>
 
 <script>
-const MORALIS_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY";
+/* ===== Enhanced token rendering + modal (paste/replace script block) ===== */
+
+const MORALIS_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY"; // ganti
 const ENDPOINT = "https://solana-gateway.moralis.io/token/mainnet/exchange/pumpfun/new?limit=100";
 const MIN_LIQUIDITY = 5000;
 const POLL_INTERVAL = 60000;
@@ -163,52 +165,157 @@ const apiStatusEl = document.getElementById('api-status');
 const lastUpdateEl = document.getElementById('last-update');
 const tokenContainer = document.getElementById('tokenContainer');
 
+window.tokenMap = {}; // global store: addr -> item
+
+// --- enhanced fetchTokens (stores items and adds data-addr to cards) ---
 async function fetchTokens(){
-  apiStatusEl.textContent='Fetching...';
+  apiStatusEl.textContent = 'Fetching...';
   try{
-    const res=await fetch(ENDPOINT,{headers:{"X-API-Key":MORALIS_API_KEY,"accept":"application/json"}});
-    const data=await res.json();
-    const items=Array.isArray(data.result)?data.result:[];
-    const filtered=items.filter(it=>Number(it.liquidity||0)>=MIN_LIQUIDITY);
-    tokenContainer.innerHTML='';
-    filtered.forEach(it=>{
-      const div=document.createElement('div');
-      div.className='token';
-      div.innerHTML=`
+    const res = await fetch(ENDPOINT, { headers: { "X-API-Key": MORALIS_API_KEY, "accept": "application/json" }});
+    const data = await res.json();
+    const items = Array.isArray(data.result) ? data.result : [];
+    const filtered = items.filter(it => Number(it.liquidity || 0) >= MIN_LIQUIDITY);
+
+    // clear previous map & DOM
+    window.tokenMap = {};
+    tokenContainer.innerHTML = '';
+
+    filtered.forEach(it => {
+      // normalize address key (Moralis uses tokenAddress)
+      const addr = it.tokenAddress || it.address || it.token_address || ('addr_' + Math.random().toString(36).slice(2,9));
+      window.tokenMap[addr] = it;
+
+      const div = document.createElement('div');
+      div.className = 'token';
+      // store address on element so delegated handler can find it
+      div.dataset.addr = addr;
+
+      // safe formatting
+      const liquidity = Number(it.liquidity || 0);
+      const fdv = Number(it.fullyDilutedValuation || it.fdv || 0);
+      const createdAt = it.createdAt ? new Date(it.createdAt).toLocaleTimeString() : '—';
+
+      div.innerHTML = `
         <div>
-          <div><b style="color:var(--neon)">${it.symbol||'?'}</b> — ${it.name||'Unnamed'}</div>
-          <div class="tiny">💧 $${Number(it.liquidity).toLocaleString()} • 🧮 FDV: $${Number(it.fullyDilutedValuation).toLocaleString()}</div>
+          <div><b style="color:var(--neon)">${it.symbol || '?'}</b> — ${it.name || 'Unnamed'}</div>
+          <div class="tiny">💧 $${isFinite(liquidity) ? liquidity.toLocaleString() : '—'} • 🧮 FDV: $${isFinite(fdv) ? fdv.toLocaleString() : '—'}</div>
         </div>
-        <div class="tiny">${new Date(it.createdAt).toLocaleTimeString()}</div>`;
+        <div class="tiny">${createdAt}</div>
+      `;
       tokenContainer.appendChild(div);
     });
-    apiStatusEl.textContent='Moralis: OK';
-    lastUpdateEl.textContent=new Date().toLocaleTimeString();
-  }catch(e){
-    apiStatusEl.textContent='Error fetching';
+
+    apiStatusEl.textContent = 'Moralis: OK';
+    lastUpdateEl.textContent = new Date().toLocaleTimeString();
+  } catch (e) {
+    console.error(e);
+    apiStatusEl.textContent = 'Error fetching';
   }
 }
 
-setInterval(fetchTokens,POLL_INTERVAL);
+// periodic refresh
+setInterval(fetchTokens, POLL_INTERVAL);
 fetchTokens();
 
-async function loadFeaturedToken(){
-  const addr="YOUR_TOKEN_ADDRESS";
-  const url=`https://solana-gateway.moralis.io/token/mainnet/${addr}/price`;
-  try{
-    const res=await fetch(url,{headers:{"X-API-Key":MORALIS_API_KEY}});
-    const data=await res.json();
-    if(data.usdPrice){
-      document.getElementById("wolfData").innerHTML=`💰 Price: <b>$${Number(data.usdPrice).toFixed(6)}</b> • ⏱️ ${new Date().toLocaleTimeString()}`;
-    }else{
-      document.getElementById("wolfData").innerText="No live data.";
-    }
-  }catch(e){
-    document.getElementById("wolfData").innerText="⚠️ Error loading data.";
-  }
-}
-loadFeaturedToken();
-</script>
+/* ===== delegated click handler for token cards =====
+   Finds the clicked .token element, reads data-addr, looks up tokenMap,
+   opens modal with details and buttons to Pump.fun / Solscan.
+*/
+(function setupTokenClickModal(){
+  // create modal element (lightweight)
+  let modal = document.createElement('div');
+  modal.className = 'pw-modal';
+  modal.style.position = 'fixed';
+  modal.style.inset = '0';
+  modal.style.display = 'none';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
+  modal.style.zIndex = 9999;
+  modal.style.backdropFilter = 'blur(6px) saturate(120%)';
+  modal.innerHTML = `
+    <div style="width:min(720px,94%);max-height:86vh;overflow:auto;padding:18px;border-radius:12px;background:linear-gradient(135deg, rgba(2,6,10,0.96), rgba(6,8,16,0.99));border:1px solid rgba(0,240,255,0.06);box-shadow:0 30px 80px rgba(0,0,0,0.7);color:#dff">
+      <button class="closeBtn" style="float:right;background:transparent;border:0;color:#9fe;font-size:20px;cursor:pointer">✕</button>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <img id="mLogo" src="" style="width:64px;height:64px;border-radius:8px;object-fit:cover;box-shadow:0 0 20px rgba(0,240,255,0.08)"/>
+        <div>
+          <h2 id="mName" style="margin:0;color:var(--neon)"></h2>
+          <div id="mSymbol" class="tiny" style="margin-top:6px"></div>
+        </div>
+      </div>
+      <div id="mChartWrap" style="height:110px;margin-top:12px;background:linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.04));border-radius:8px;padding:8px;"></div>
+      <div id="mDetails" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px;"></div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <a id="mPump" class="btn small" target="_blank" style="text-decoration:none">Open on Pump.fun</a>
+        <a id="mExplorer" class="btn small" target="_blank" style="text-decoration:none">Open on Explorer</a>
+        <a id="mSolscan" class="btn small" target="_blank" style="text-decoration:none">Open on Solscan</a>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 
-</body>
-</html>
+  // close button
+  modal.querySelector('.closeBtn').onclick = () => modal.style.display = 'none';
+  // click outside to close
+  modal.addEventListener('click', (ev) => { if(ev.target === modal) modal.style.display = 'none'; });
+
+  // delegated click on container
+  tokenContainer.addEventListener('click', (ev) => {
+    const tokenEl = ev.target.closest('.token');
+    if(!tokenEl) return;
+    const addr = tokenEl.dataset.addr;
+    if(!addr) return;
+    const item = window.tokenMap[addr];
+    if(!item) return;
+
+    // fill modal
+    modal.style.display = 'flex';
+    modal.querySelector('#mLogo').src = item.logo || ('https://logo.moralis.io/solana-mainnet_' + addr + '_placeholder.png');
+    modal.querySelector('#mName').textContent = item.name || 'Unnamed';
+    modal.querySelector('#mSymbol').textContent = (item.symbol || '—') + ' • ' + (addr ? (addr.slice(0,6) + '...') : '');
+    // details grid
+    const details = modal.querySelector('#mDetails');
+    const price = item.priceUsd ? ('$' + Number(item.priceUsd).toLocaleString()) : '—';
+    const liquidity = item.liquidity ? ('$' + Number(item.liquidity).toLocaleString()) : '—';
+    const fdv = item.fullyDilutedValuation ? ('$' + Number(item.fullyDilutedValuation).toLocaleString()) : '—';
+    const created = item.createdAt ? new Date(item.createdAt).toLocaleString() : '—';
+    details.innerHTML = `
+      <div style="background:rgba(255,255,255,0.01);padding:8px;border-radius:8px;border:1px solid rgba(0,240,255,0.03)">
+        <div class="tiny">Price (USD)</div><div style="color:var(--neon);font-weight:700">${price}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.01);padding:8px;border-radius:8px;border:1px solid rgba(0,240,255,0.03)">
+        <div class="tiny">Liquidity</div><div style="color:var(--neon);font-weight:700">${liquidity}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.01);padding:8px;border-radius:8px;border:1px solid rgba(0,240,255,0.03)">
+        <div class="tiny">FDV</div><div style="color:var(--neon);font-weight:700">${fdv}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.01);padding:8px;border-radius:8px;border:1px solid rgba(0,240,255,0.03)">
+        <div class="tiny">Created</div><div style="color:var(--neon);font-weight:700">${created}</div>
+      </div>
+    `;
+
+    // buttons
+    const pumpfunUrl = addr ? `https://pump.fun/coin/${addr}` : '#';
+    const solanaExplorer = addr ? `https://explorer.solana.com/address/${encodeURIComponent(addr)}?cluster=mainnet` : '#';
+    const solscanToken = addr ? `https://solscan.io/token/${encodeURIComponent(addr)}?cluster=mainnet` : '#';
+    modal.querySelector('#mPump').href = pumpfunUrl;
+    modal.querySelector('#mExplorer').href = solanaExplorer;
+    modal.querySelector('#mSolscan').href = solscanToken;
+
+    // small sparkline (if price history exists) else fallback sample
+    const chartWrap = modal.querySelector('#mChartWrap');
+    chartWrap.innerHTML = '';
+    const canvas = document.createElement('canvas');
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    chartWrap.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    const sparkData = (Array.isArray(item.price_history) && item.price_history.length) ? item.price_history.map(x=>Number(x)).slice(-40) : Array.from({length:20}, (_,i)=> (Number(item.priceUsd||0) || Math.random()*0.00001) * (1 + (Math.sin(i/3)*0.002 + (Math.random()-0.5)*0.01)));
+    if(window._mChart){ try{ window._mChart.destroy(); }catch(e){} window._mChart = null; }
+    window._mChart = new Chart(ctx, {
+      type:'line',
+      data:{ labels:sparkData.map((_,i)=>i), datasets:[{ data:sparkData, borderColor:'rgba(0,240,255,0.95)', borderWidth:1.6, pointRadius:0, fill:true, backgroundColor:'rgba(0,240,255,0.04)'}] },
+      options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ display:false }, y:{ display:false } }, plugins:{ legend:{ display:false } } }
+    });
+  });
+})();
+</script>
