@@ -163,7 +163,7 @@
   <script>
     (function() {
       const VERCEL_BASE = "https://pumpwolf.vercel.app";
-      const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100";
+      const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=20"; // Kurangi limit untuk hindari timeout
       const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
       const FEATURED_TOKEN_ADDRESS = "";
       const POLL_INTERVAL = 60000;
@@ -192,7 +192,10 @@
       async function fetchTokens() {
         apiStatusEl.textContent = 'Fetching...';
         try {
-          const res = await fetch(ENDPOINT, { headers: { "accept": "application/json" } });
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout 15 detik untuk hindari 504
+          const res = await fetch(ENDPOINT, { headers: { "accept": "application/json" }, signal: controller.signal });
+          clearTimeout(timeoutId);
           if (!res.ok) {
             apiStatusEl.textContent = `Proxy: error ${res.status}`;
             tokenContainer.innerHTML = `<div class="tiny">Moralis proxy returned ${res.status}</div>`;
@@ -242,7 +245,7 @@
         } catch (err) {
           console.error(err);
           apiStatusEl.textContent = 'Proxy: error';
-          tokenContainer.innerHTML = `<div class="tiny">Network error</div>`;
+          tokenContainer.innerHTML = `<div class="tiny">Network error (timeout?)</div>`;
           debugLog("Fetch error:", err.message);
           lastUpdateEl.textContent = new Date().toLocaleTimeString();
         }
@@ -256,7 +259,7 @@
           <div style="width: min(720px, 94%); max-height: 86vh; overflow: auto; padding: 18px; border-radius: 12px; background: linear-gradient(135deg, rgba(2,6,10,0.96), rgba(6,8,16,0.99)); border: 1px solid rgba(0,240,255,0.06); box-shadow: 0 30px 80px rgba(0,0,0,0.7); color: #dff">
             <button class="closeBtn" style="float: right; background: transparent; border: 0; color: #9fe; font-size: 20px; cursor: pointer">✕</button>
             <div style="display: flex; gap: 12px; align-items: center;">
-              <img id="mLogo" src="" style="width: 64px; height: 64px; border-radius: 8px; object-fit: cover; box-shadow: 0 0 20px rgba(0,240,255,0.08)"/>
+              <img id="mLogo" src="" alt="Token Logo" style="width: 64px; height: 64px; border-radius: 8px; object-fit: cover; box-shadow: 0 0 20px rgba(0,240,255,0.08)"/>
               <div>
                 <h2 id="mName" style="margin: 0; color: var(--neon)"></h2>
                 <div id="mSymbol" class="tiny" style="margin-top: 6px"></div>
@@ -282,7 +285,7 @@
           if (!item) return;
 
           modal.style.display = 'flex';
-          modal.querySelector('#mLogo').src = item.logo || ('https://logo.moralis.io/solana-mainnet_' + addr + '_placeholder.png');
+          modal.querySelector('#mLogo').src = item.logo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9IiMwMEYwRkYiLz4KPC9zdmc+' ; // Fallback logo jika kosong
           modal.querySelector('#mName').textContent = item.name || 'Unnamed';
           modal.querySelector('#mSymbol').textContent = (item.symbol || '—') + ' • ' + (addr ? (addr.slice(0, 6) + '...') : '');
 
@@ -309,21 +312,28 @@
             </div>
           `;
 
-          // Mini chart setup
+          // Mini chart setup dengan fallback data
           const ctx = modal.querySelector('#miniChart').getContext('2d');
           if (!ctx) {
-            debugLog("Error: Canvas context not found for miniChart");
+            console.error("Canvas context not found");
+            debugLog("Error: Canvas context for miniChart not found");
+            return;
+          }
+          if (typeof Chart === 'undefined') {
+            console.error("Chart.js not loaded");
+            debugLog("Error: Chart.js library not loaded");
             return;
           }
           let existingChart = Chart.getChart(ctx);
           if (existingChart) existingChart.destroy();
+          const basePrice = Number(item.priceUsd) || 0.0001; // Fallback jika priceUsd 0 atau undefined
           new Chart(ctx, {
             type: 'line',
             data: {
               labels: ['1h', '2h', '3h', '4h', '5h'],
               datasets: [{
                 label: 'Price (USD)',
-                data: [item.priceUsd || 0, (item.priceUsd || 0) * 1.1, (item.priceUsd || 0) * 1.2, (item.priceUsd || 0) * 1.15, (item.priceUsd || 0) * 1.3],
+                data: [basePrice, basePrice * 1.1, basePrice * 1.2, basePrice * 1.15, basePrice * 1.3],
                 borderColor: 'rgba(0, 240, 255, 0.8)',
                 backgroundColor: 'rgba(0, 240, 255, 0.2)',
                 fill: true,
@@ -334,9 +344,13 @@
               responsive: true,
               maintainAspectRatio: false,
               plugins: { legend: { display: false } },
-              scales: { y: { beginAtZero: true, ticks: { color: '#9bb' } }, x: { ticks: { color: '#9bb' } } }
+              scales: { 
+                y: { beginAtZero: true, ticks: { color: '#9bb' } }, 
+                x: { ticks: { color: '#9bb' } } 
+              }
             }
           });
+          debugLog("Mini chart rendered for token:", item.symbol || 'Unknown');
 
           modal.querySelector('#mPump').href = addr ? `https://pump.fun/coin/${addr}` : '#';
           modal.querySelector('#mSolscan').href = addr ? `https://solscan.io/token/${encodeURIComponent(addr)}?cluster=mainnet` : '#';
