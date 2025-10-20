@@ -126,7 +126,10 @@
   - improved debug output
 */
 
-const ENDPOINT = "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100";
+// gunakan Vercel full URL supaya GitHub Pages tetap menanyakan proxy Vercel
+const VERCEL_BASE = "https://pumpwolf.vercel.app";
+const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100";
+const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
 const FEATURE_PRICE_URL = (addr) => `/api/proxy/token/mainnet/${addr}/price`;
 const FEATURED_TOKEN_ADDRESS = "YOUR_TOKEN_ADDRESS"; // set later
 const POLL_INTERVAL = 60000;
