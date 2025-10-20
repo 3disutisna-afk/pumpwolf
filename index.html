@@ -2,157 +2,416 @@
 <html lang="id">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PumpWolf Dashboard — Cyber Meme Utility</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PumpWolf Dashboard — Neon Cyber</title>
 
-  <meta name="description" content="PumpWolf Dashboard — Cyber Meme Utility tracking clean Solana gems in real time." />
+  <meta name="description" content="PumpWolf Dashboard — Cyber Meme Utility tracking Solana gems in real time." />
   <meta property="og:title" content="🐺 PumpWolf Dashboard — Live Token Feed" />
-  <meta property="og:description" content="Cyber Meme Utility for Solana Gem Hunters. Track clean tokens, live data, and community howls." />
+  <meta property="og:description" content="Track early Solana gems with PumpWolf HQ — powered by Moralis API (proxy)." />
   <meta property="og:image" content="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/pumpwolf_banner.jpg" />
-  <meta property="og:url" content="https://3disutisna-afk.github.io/pumpwolf/" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="🐺 PumpWolf Dashboard — Cyber Meme Utility" />
-  <meta name="twitter:description" content="Track early Solana gems with PumpWolf HQ — powered by Moralis API (proxy)." />
-  <meta name="twitter:image" content="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/pumpwolf_banner.jpg" />
 
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    :root{--bg:#030406;--card:#071018;--neon:#00f0ff;--accent:#8a2be2;--muted:#9bb}
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Inter,system-ui,sans-serif;background:radial-gradient(circle at 10% 10%,#02030a 0%,var(--bg) 60%);color:#dff}
-    header{padding:18px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(0,255,255,0.05)}
-    header .logo{width:52px;height:52px;border-radius:10px;background:radial-gradient(circle at 30% 30%,#002,#013);display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(0,240,255,0.1);font-weight:700}
-    header h1{margin:0;font-size:1.05rem;color:var(--neon)}
-    .muted{color:var(--muted);font-size:0.9rem}
-    .layout{display:flex;gap:16px;padding:16px;align-items:flex-start}
-    .col-left{width:280px;min-width:240px}.col-main{flex:1}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(255,255,255,0.015));border:1px solid rgba(0,240,255,0.06);border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 6px 24px rgba(0,0,0,0.45)}
+    :root{
+      --bg:#030406; --card:#071018; --neon:#00f0ff; --accent:#8a2be2; --muted:#9bb;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Arial;background:radial-gradient(circle at 10% 10%,#02030a 0%,var(--bg) 60%);color:#dff}
+    header{padding:22px 20px;display:flex;align-items:center;gap:18px;border-bottom:1px solid rgba(0,255,255,0.03)}
+    header .logo{width:64px;height:64px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;background:radial-gradient(circle at 30% 30%,#002,#012233);box-shadow:0 0 24px rgba(0,240,255,0.08)}
+    header h1{margin:0;font-size:1.25rem;color:var(--neon)}
+    .layout{display:flex;gap:20px;padding:20px;align-items:flex-start}
+    .col-left{width:320px;min-width:260px}.col-main{flex:1}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(255,255,255,0.015));border:1px solid rgba(0,240,255,0.06);border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 6px 30px rgba(0,0,0,0.6)}
+    .muted{color:var(--muted)}
     .btn{background:linear-gradient(90deg,var(--neon),var(--accent));border:none;color:#001;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
-    .small{padding:6px 10px;font-size:0.85rem}.tiny{font-size:0.82rem;color:var(--muted)}
-    .token-list{display:flex;flex-direction:column;gap:10px;max-height:65vh;overflow:auto;padding-right:6px}
-    .token{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border-radius:10px;background:linear-gradient(90deg,rgba(0,0,0,0.16),rgba(0,0,0,0.06));border:1px solid rgba(0,240,255,0.03);transition:transform .18s ease,box-shadow .18s ease}
-    .token:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,240,255,0.06)}
-    footer{text-align:center;padding:14px 20px;color:var(--muted);font-size:0.85rem}
-    .howl-bar{height:10px;border-radius:8px;background:rgba(255,255,255,0.03);overflow:hidden;margin-top:8px;box-shadow:inset 0 0 6px rgba(0,240,255,0.08)}
-    .howl-bar .fill{height:100%;width:0%;background:linear-gradient(90deg,#00f0ff,#8a2be2);animation:howlGrow 3s ease-in-out infinite alternate}
-    @keyframes howlGrow{0%{width:40%}100%{width:90%}}
-    @media(max-width:900px){.layout{flex-direction:column;padding:12px}.col-left{width:100%}.col-main{width:100%}}
-    @media(max-width:500px){header .logo{width:46px;height:46px}header h1{font-size:1rem}.card{padding:10px}}
-    .pw-fallback{display:none;position:fixed;inset:12px 12px auto 12px;z-index:99999;background:linear-gradient(90deg,rgba(6,8,16,0.98),rgba(3,5,12,0.98));color:#dff;border:1px solid rgba(0,240,255,0.08);padding:12px 14px;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,0.6);max-width:calc(100% - 40px);display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:Inter,system-ui,sans-serif}
-    .pw-fallback .left{display:flex;gap:10px;align-items:center;max-width:70%}
-    .pw-fallback .dot{width:12px;height:12px;border-radius:50%;background:#ff6b6b;box-shadow:0 0 12px rgba(255,107,107,0.12)}
-    .pw-fallback .title{font-weight:700;color:var(--neon);font-size:0.98rem}
-    .pw-fallback .desc{font-size:0.9rem;color:var(--muted);margin-top:4px}
-    .pw-fallback .actions{display:flex;gap:8px;align-items:center}
-    .pw-fallback .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--muted)}
-    .shake{animation:shake 0.3s ease-in-out infinite alternate}
-    @keyframes shake{0%{transform:translateX(0)}100%{transform:translateX(2px)}}
-    @media(max-width:720px){.pw-fallback{flex-direction:column;align-items:flex-start;gap:8px;left:12px;right:12px}.pw-fallback .left{max-width:100%}.pw-fallback .actions{width:100%;justify-content:space-between}}
+    .small{padding:6px 10px;font-size:0.9rem}
+    .tiny{font-size:0.85rem;color:var(--muted)}
+    .token-list{display:flex;flex-direction:column;gap:12px;max-height:65vh;overflow:auto;padding-right:6px}
+    .token{display:flex;gap:12px;align-items:center;border-radius:10px;padding:10px;background:linear-gradient(90deg,rgba(0,0,0,0.14),rgba(0,0,0,0.06));border:1px solid rgba(0,240,255,0.03)}
+    .token:hover{transform:translateY(-6px);box-shadow:0 18px 50px rgba(0,240,255,0.06)}
+    footer{padding:14px 28px;color:var(--muted);font-size:0.9rem;text-align:center}
+    .pw-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);z-index:9999}
+    .pw-modal.open{display:flex}
+    /* fallback banner */
+    .pw-fallback {
+      display:none;
+      position:fixed;
+      inset:12px 12px auto 12px;
+      z-index:99999;
+      background: linear-gradient(90deg, rgba(6,8,16,0.98), rgba(3,5,12,0.98));
+      color:#dff;
+      border:1px solid rgba(0,240,255,0.08);
+      padding:12px 14px;
+      border-radius:12px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+      max-width:calc(100% - 40px);
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      font-family: Inter, system-ui, sans-serif;
+    }
+    .pw-fallback .left { display:flex; gap:10px; align-items:center; max-width:70%; }
+    .pw-fallback .title { font-weight:700; color:var(--neon); font-size:0.98rem }
+    .pw-fallback .desc { font-size:0.9rem; color:var(--muted); margin-top:4px }
+    .pw-fallback .actions { display:flex; gap:8px; align-items:center }
+    .pw-fallback .btn { background:linear-gradient(90deg,var(--neon),var(--accent)); color:#001; padding:8px 10px; border-radius:10px; font-weight:700; text-decoration:none; border:none; cursor:pointer; }
+    .pw-fallback .btn.secondary { background:transparent; border:1px solid rgba(255,255,255,0.03); color:var(--muted); padding:8px 10px; }
+    @media(max-width:720px){
+      .pw-fallback { flex-direction:column; align-items:flex-start; gap:8px; left:12px; right:12px; }
+      .pw-fallback .left { max-width:100%; }
+      .pw-fallback .actions { width:100%; justify-content:space-between; }
+    }
   </style>
 </head>
-
 <body>
-  <div id="pwFallback" class="pw-fallback" role="alert">
-    <div class="left">
-      <div class="dot"></div>
-      <div>
-        <div class="title">Mode statis: fitur server tidak aktif di GitHub Pages</div>
-        <div class="desc">Proxy/API backend tidak tersedia di versi statis. Untuk experience penuh (live data & fungsi), buka versi lengkap.</div>
-      </div>
-    </div>
-    <div class="actions">
-      <a id="openVercel" class="btn" href="https://pumpwolf.vercel.app/" target="_blank" rel="noopener">Buka versi penuh</a>
-      <button id="stayBtn" class="btn secondary" type="button">Tetap di sini</button>
-      <div><span class="count" id="redirectCountdown">↪ otomatis pindah dalam 8s</span></div>
-    </div>
-  </div>
 
-  <header>
-    <div class="logo">PW</div>
+<!-- fallback banner (will be created/shown by script if vercel probe fails) -->
+<div id="pwFallback" class="pw-fallback" role="alert" aria-live="polite" style="display:none;">
+  <div class="left">
+    <div style="width:12px;height:12px;border-radius:50%;background:#ff6b6b;margin-right:8px"></div>
     <div>
-      <h1>PumpWolf Dashboard</h1>
-      <div class="muted">Cyber Meme Utility — Wolf Pack Live 🐺</div>
+      <div class="title">Mode statis: fitur server tidak aktif di GitHub Pages</div>
+      <div class="desc">Proxy/API backend (Vercel) tidak terjangkau dari halaman ini. Untuk pengalaman penuh, buka versi lengkap.</div>
     </div>
-  </header>
-
-  <div class="layout">
-    <aside class="col-left">
-      <div class="card">
-        <div class="muted">API Status</div>
-        <div id="api-status" style="color:var(--neon);margin-top:6px">Proxy: ready</div>
-        <div class="muted" style="margin-top:8px">Last update: <span id="last-update">—</span></div>
-      </div>
-
-      <div class="card">
-        <div class="muted">Controls</div>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn small" id="refreshBtn">Refresh</button>
-          <button class="btn small" id="pauseBtn">Pause</button>
-        </div>
-      </div>
-    </aside>
-
-    <main class="col-main">
-      <div class="card">
-        <div><b style="color:var(--neon)">Live Tokens</b></div>
-        <div id="tokenContainer" class="token-list"></div>
-      </div>
-    </main>
   </div>
+  <div class="actions">
+    <a id="openVercel" class="btn" href="https://pumpwolf.vercel.app/" target="_blank" rel="noopener">Buka versi penuh</a>
+    <button id="stayBtn" class="btn secondary" type="button">Tetap di sini</button>
+    <div style="display:flex;align-items:center"><span class="count" id="redirectCountdown">↪ otomatis pindah dalam 8s</span></div>
+  </div>
+</div>
 
-  <footer>© 2025 PumpWolf — The Cyber Pack • v2.2</footer>
+<header>
+  <div class="logo">PW</div>
+  <div>
+    <h1>PumpWolf Dashboard</h1>
+    <div class="muted">Live feed — only Level 2 &amp; Level 3 tokens</div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="col-left">
+    <div class="card">
+      <div class="muted">Connected API</div>
+      <div style="margin-top:6px"><b id="api-status" style="color:var(--neon)">Proxy: ready</b></div>
+      <div style="margin-top:8px" class="muted">Last update: <span id="last-update">—</span></div>
+    </div>
+
+    <div class="card">
+      <div class="muted">Filters</div>
+      <div style="height:8px"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn small" id="refreshBtn">Refresh</button>
+        <button class="btn small" id="pauseBtn">Pause</button>
+      </div>
+      <div style="height:10px"></div>
+      <div class="muted">Info</div>
+      <div class="tiny" style="margin-top:8px">Dashboard mengambil endpoint Pump.fun via Moralis melalui proxy Vercel. Di GitHub Pages proxy tidak tersedia.</div>
+    </div>
+  </aside>
+
+  <main class="col-main">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+        <div><b style="color:var(--neon)">Live Tokens</b> <span class="muted"> — showing tokens that passed filters</span></div>
+        <div class="muted">Auto refresh: <span id="interval-label">60s</span></div>
+      </div>
+      <div id="tokenContainer" class="token-list">
+        <!-- token cards injected here -->
+      </div>
+    </div>
+  </main>
+</div>
+
+<footer>© 2025 PumpWolf — The Cyber Pack • Dashboard demo</footer>
 
 <script>
-(function(){
+/*
+ Full combined script:
+  - Uses the old working token rendering + modal (same logic)
+  - Adds a robust Vercel probe + fallback banner + auto-redirect countdown
+  - Replace whole index.html with this file. Do NOT put Moralis key in client.
+*/
+
+/* CONFIG */
+const ENDPOINT = "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100";
+const FEATURE_PRICE_URL = (addr) => `/api/proxy/token/mainnet/${addr}/price`;
+const FEATURED_TOKEN_ADDRESS = "YOUR_TOKEN_ADDRESS"; // replace after launch if needed
+const POLL_INTERVAL = 60 * 1000;
+let MIN_LIQUIDITY = 5000; // adjust if needed
+
+/* UI refs */
+const tokenContainer = document.getElementById('tokenContainer');
+const apiStatusEl = document.getElementById('api-status');
+const lastUpdateEl = document.getElementById('last-update');
+
+window.tokenMap = {}; // address -> item
+
+/* HELPERS */
+function formatNum(n){ if(n===null||n===undefined) return '—'; if(!isNaN(Number(n))) return Number(n).toLocaleString(); return n; }
+
+/* Create token card (same style as before) */
+function createTokenNode(item){
+  const addr = item.tokenAddress || item.address || '';
+  const name = item.name || item.token_name || 'Unknown';
+  const symbol = item.symbol || item.ticker || '—';
+  const priceUsd = Number(item.priceUsd || item.price_usd || 0);
+  const liquidity = Number(item.liquidity || 0);
+  const holders = item.holders || item.holders_count || '—';
+
+  const card = document.createElement('div');
+  card.className = 'token';
+  card.dataset.addr = addr || '';
+
+  const meta = document.createElement('div');
+  meta.style.flex = '1';
+  const h = document.createElement('div');
+  h.innerHTML = `<b style="color:var(--neon)">${symbol}</b> — ${name}`;
+  const p = document.createElement('div');
+  p.className = 'tiny';
+  p.innerHTML = `Price: <b style="color:var(--neon)">$${priceUsd ? priceUsd.toLocaleString() : '0'}</b> &nbsp; • &nbsp; Liquidity: <b>$${formatNum(liquidity)}</b> &nbsp; • &nbsp; Holders: <b>${holders}</b>`;
+  meta.appendChild(h); meta.appendChild(p);
+
+  const createdAt = item.createdAt ? new Date(item.createdAt).toLocaleTimeString() : '—';
+  const right = document.createElement('div'); right.className='tiny'; right.textContent = createdAt;
+
+  card.appendChild(meta); card.appendChild(right);
+
+  // click opens modal
+  card.addEventListener('click', () => openModalFor(item));
+  return card;
+}
+
+/* FETCH & RENDER */
+async function fetchAndRender(){
+  apiStatusEl.textContent = 'Fetching...';
+  try{
+    const res = await fetch(ENDPOINT, { headers: { "accept": "application/json" }});
+    if(!res.ok){
+      apiStatusEl.textContent = `Proxy: error ${res.status}`;
+      tokenContainer.innerHTML = `<div class="tiny">Proxy returned ${res.status}. Try refresh.</div>`;
+      lastUpdateEl.textContent = new Date().toLocaleTimeString();
+      return;
+    }
+    const data = await res.json();
+    const items = Array.isArray(data.result) ? data.result : [];
+    const filtered = items.filter(it => Number(it.liquidity || 0) >= MIN_LIQUIDITY);
+    tokenContainer.innerHTML = '';
+    window.tokenMap = {};
+    if(filtered.length === 0){
+      tokenContainer.innerHTML = `<div class="tiny">No tokens passed liquidity filter (>= ${MIN_LIQUIDITY}).</div>`;
+    } else {
+      filtered.sort((a,b)=> Number(b.liquidity||0) - Number(a.liquidity||0));
+      filtered.forEach(it => {
+        const addr = it.tokenAddress || it.address || ('addr_' + Math.random().toString(36).slice(2,9));
+        window.tokenMap[addr] = it;
+        tokenContainer.appendChild(createTokenNode(it));
+      });
+    }
+    apiStatusEl.textContent = 'Proxy: OK';
+    lastUpdateEl.textContent = new Date().toLocaleTimeString();
+  }catch(err){
+    console.error(err);
+    apiStatusEl.textContent = 'Proxy: error';
+    tokenContainer.innerHTML = `<div class="tiny">Network error — check proxy & console.</div>`;
+    lastUpdateEl.textContent = new Date().toLocaleTimeString();
+  }
+}
+
+/* MODAL (detail) - lightweight */
+let modal;
+(function ensureModal(){
+  modal = document.createElement('div');
+  modal.className = 'pw-modal';
+  modal.innerHTML = `
+    <div style="width:min(720px,94%);max-height:86vh;overflow:auto;padding:18px;border-radius:12px;background:linear-gradient(135deg, rgba(2,6,10,0.96), rgba(6,8,16,0.99));border:1px solid rgba(0,240,255,0.06);box-shadow:0 30px 80px rgba(0,0,0,0.7);color:#dff">
+      <button class="closeBtn" style="float:right;background:transparent;border:0;color:#9fe;font-size:20px;cursor:pointer">✕</button>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <img id="mLogo" src="" style="width:64px;height:64px;border-radius:8px;object-fit:cover;box-shadow:0 0 20px rgba(0,240,255,0.08)"/>
+        <div><h2 id="mName" style="margin:0;color:var(--neon)"></h2><div id="mSymbol" class="tiny" style="margin-top:6px"></div></div>
+      </div>
+      <div id="mChartWrap" style="height:110px;margin-top:12px;background:linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.04));border-radius:8px;padding:8px;"></div>
+      <div id="mDetails" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px;"></div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <a id="mPump" class="btn small" target="_blank" style="text-decoration:none">Open on Pump.fun</a>
+        <a id="mExplorer" class="btn small" target="_blank" style="text-decoration:none">Open on Explorer</a>
+        <a id="mSolscan" class="btn small" target="_blank" style="text-decoration:none">Open on Solscan</a>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector('.closeBtn').onclick = () => { modal.classList.remove('open'); };
+  modal.addEventListener('click', (ev) => { if(ev.target === modal) modal.classList.remove('open'); });
+})();
+
+function openModalFor(item){
+  const addr = item.tokenAddress || item.address || '';
+  modal.querySelector('#mLogo').src = item.logo || ('https://logo.moralis.io/solana-mainnet_' + addr + '_placeholder.png');
+  modal.querySelector('#mName').textContent = item.name || 'Unnamed';
+  modal.querySelector('#mSymbol').textContent = (item.symbol || '—') + ' • ' + (addr ? (addr.slice(0,6) + '...') : '');
+
+  const details = modal.querySelector('#mDetails');
+  const price = item.priceUsd ? ('$' + Number(item.priceUsd).toLocaleString()) : '—';
+  const liquidity = item.liquidity ? ('$' + Number(item.liquidity).toLocaleString()) : '—';
+  const fdv = item.fullyDilutedValuation ? ('$' + Number(item.fullyDilutedValuation).toLocaleString()) : '—';
+  const created = item.createdAt ? new Date(item.createdAt).toLocaleString() : '—';
+  details.innerHTML = `
+    <div style="background:rgba(255,255,255,0.01);padding:8px;border-radius:8px;border:1px solid rgba(0,240,255,0.03)"><div class="tiny">Price (USD)</div><div style="color:var(--neon);font-weight:700">${price}</div></div>
+    <div style="background:rgba(255,255,255,0.01);padding:8px;border-radius:8px;border:1px solid rgba(0,240,255,0.03)"><div class="tiny">Liquidity</div><div style="color:var(--neon);font-weight:700">${liquidity}</div></div>
+    <div style="background:rgba(255,255,255,0.01);padding:8px;border-radius:8px;border:1px solid rgba(0,240,255,0.03)"><div class="tiny">FDV</div><div style="color:var(--neon);font-weight:700">${fdv}</div></div>
+    <div style="background:rgba(255,255,255,0.01);padding:8px;border-radius:8px;border:1px solid rgba(0,240,255,0.03)"><div class="tiny">Created</div><div style="color:var(--neon);font-weight:700">${created}</div></div>
+  `;
+
+  const pumpfunUrl = addr ? `https://pump.fun/coin/${addr}` : '#';
+  const solanaExplorer = addr ? `https://explorer.solana.com/address/${encodeURIComponent(addr)}?cluster=mainnet` : '#';
+  const solscanToken = addr ? `https://solscan.io/token/${encodeURIComponent(addr)}?cluster=mainnet` : '#';
+  modal.querySelector('#mPump').href = pumpfunUrl;
+  modal.querySelector('#mExplorer').href = solanaExplorer;
+  modal.querySelector('#mSolscan').href = solscanToken;
+
+  // sparkline chart
+  const chartWrap = modal.querySelector('#mChartWrap');
+  chartWrap.innerHTML = '';
+  const canvas = document.createElement('canvas');
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  chartWrap.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const sparkData = (Array.isArray(item.price_history) && item.price_history.length) ? item.price_history.map(x=>Number(x)).slice(-40) : Array.from({length:20}, (_,i)=> (Number(item.priceUsd||0) || Math.random()*0.00001) * (1 + (Math.sin(i/3)*0.002 + (Math.random()-0.5)*0.01)));
+  if (window._mChart) try{ window._mChart.destroy(); }catch(e){}
+  window._mChart = new Chart(ctx, {
+    type:'line',
+    data:{ labels: sparkData.map((_,i)=>i), datasets:[{ data: sparkData, borderColor:'rgba(0,240,255,0.95)', borderWidth:1.6, pointRadius:0, fill:true, backgroundColor:'rgba(0,240,255,0.04)'}] },
+    options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ display:false }, y:{ display:false } }, plugins:{ legend:{ display:false } } }
+  });
+
+  modal.classList.add('open');
+}
+
+/* Controls */
+const refreshBtn = document.getElementById('refreshBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+let paused = false;
+let pollHandle = null;
+function startPolling(){ stopPolling(); pollHandle = setInterval(fetchAndRender, POLL_INTERVAL); }
+function stopPolling(){ if(pollHandle) clearInterval(pollHandle); pollHandle = null; }
+if(refreshBtn) refreshBtn.addEventListener('click', fetchAndRender);
+if(pauseBtn) pauseBtn.addEventListener('click', () => {
+  paused = !paused;
+  pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+  if(!paused) startPolling(); else stopPolling();
+});
+
+/* INIT fetch */
+fetchAndRender();
+startPolling();
+
+/* FEATURED token fetcher (optional) */
+async function loadFeaturedToken(){
+  if(!FEATURED_TOKEN_ADDRESS || FEATURED_TOKEN_ADDRESS === 'YOUR_TOKEN_ADDRESS') return;
+  try{
+    const r = await fetch(FEATURE_PRICE_URL(FEATURED_TOKEN_ADDRESS), { headers:{ accept:'application/json' }});
+    if(!r.ok) return;
+    const d = await r.json();
+    // apply to UI if you added featured elements
+  }catch(e){ console.warn('featured load error', e); }
+}
+
+/* ======================== FALLBACK + PROBE + REDIRECT ======================== */
+/*
+  Behavior:
+   - when page loaded on GitHub Pages (or non-vercel hostname) probe Vercel proxy
+   - if probe ok => hide fallback and keep normal operation
+   - if probe fails => show banner and start countdown (default 8s) then redirect current tab to Vercel
+*/
+
+(function fallbackProbe(){
   const VERCEL_PROBE = 'https://pumpwolf.vercel.app/api/proxy/token/mainnet/exchange/pumpfun/new?limit=1';
   const REDIRECT_URL = 'https://pumpwolf.vercel.app/';
-  const TIMEOUT_MS = 3500;
-  const COUNTDOWN_SEC = 8;
+  const fallback = document.getElementById('pwFallback');
+  const openVercel = document.getElementById('openVercel');
+  const stayBtn = document.getElementById('stayBtn');
+  const countdownEl = document.getElementById('redirectCountdown');
 
-  function probe(url, timeout = TIMEOUT_MS){
-    return new Promise(res=>{
-      let done=false;
-      const t=setTimeout(()=>{if(!done){done=true;res(false)}},timeout);
-      fetch(url).then(r=>{if(done)return;done=true;clearTimeout(t);res(r.ok)}).catch(()=>{if(!done){done=true;clearTimeout(t);res(false)}})
-    })
+  // if we are already on vercel domain, hide fallback and stop
+  if(location.hostname.endsWith('vercel.app') || location.hostname === 'pumpwolf.vercel.app'){
+    if(fallback) fallback.style.display = 'none';
+    return;
   }
 
-  async function init(){
-    if(location.hostname.endsWith('vercel.app')){document.getElementById('pwFallback').style.display='none';return;}
-    const fallback=document.getElementById('pwFallback');
-    const ok=await probe(VERCEL_PROBE,3500);
-    if(ok){fallback.style.display='none';return;}
-    fallback.style.display='flex';
-    const stayBtn=document.getElementById('stayBtn');
-    const countdownEl=document.getElementById('redirectCountdown');
-    const openBtn=document.getElementById('openVercel');
-    let c=COUNTDOWN_SEC;
-    countdownEl.textContent=`↪ otomatis pindah dalam ${c}s`;
-    const t=setInterval(()=>{
-      c--;
-      countdownEl.textContent=`↪ otomatis pindah dalam ${c}s`;
-      if(c<=0){
-        clearInterval(t);
-        try{
-          const w=window.open(REDIRECT_URL,'_blank','noopener');
-          if(!w||w.closed){throw new Error('popup blocked')}
-        }catch(e){
-          openBtn.classList.add('shake');
-          openBtn.style.outline='2px solid var(--neon)';
-          countdownEl.textContent='Redirect diblokir — klik tombol di atas';
-        }
-      }
-    },1000);
-    stayBtn.addEventListener('click',()=>{
-      clearInterval(t);
-      countdownEl.textContent='Redirect dibatalkan — tetap di halaman ini';
-      stayBtn.disabled=true;
-      stayBtn.textContent='Menetap';
+  // probe with timeout
+  function probe(url, timeout = 3500){
+    return new Promise((resolve) => {
+      let done = false;
+      const timer = setTimeout(()=>{ if(!done){ done=true; resolve(false); } }, timeout);
+      fetch(url, { method:'GET', mode:'cors' }).then(r => {
+        if(done) return;
+        done = true; clearTimeout(timer);
+        resolve(!!(r && r.ok));
+      }).catch(()=>{ if(!done){ done=true; clearTimeout(timer); resolve(false); } });
     });
   }
-  init();
+
+  (async function main(){
+    try{
+      const ok = await probe(VERCEL_PROBE, 3500);
+      if(ok){
+        // reachable
+        if(fallback) fallback.style.display = 'none';
+        return;
+      }
+
+      // unreachable -> show banner and start countdown
+      if(fallback) fallback.style.display = 'flex';
+
+      let count = 8;
+      countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+      const t = setInterval(()=>{
+        count--;
+        countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+        if(count <= 0){
+          clearInterval(t);
+          // perform redirect in same tab (less likely blocked)
+          window.location.href = REDIRECT_URL;
+        }
+      }, 1000);
+
+      // cancel redirect (stay)
+      stayBtn && stayBtn.addEventListener('click', () => {
+        clearInterval(t);
+        countdownEl.textContent = 'Redirect dibatalkan — tetap di halaman ini';
+        stayBtn.disabled = true;
+        stayBtn.textContent = 'Menetap';
+      });
+
+      // open vercel link is normal anchor (users can open in new tab)
+      openVercel && openVercel.addEventListener('click', ()=>{ /* anchor already does it */ });
+
+    }catch(e){
+      console.error('[pw fallback] probe error', e);
+      if(fallback) fallback.style.display = 'flex';
+      countdownEl.textContent = 'Tidak dapat memeriksa versi penuh — klik "Buka versi penuh"';
+    }
+  })();
 })();
+
+/* Optional: expose a debug helper (paste to console if needed) */
+window.pw_debug = {
+  fetchRaw: async (limit=10) => {
+    const r = await fetch(`/api/proxy/token/mainnet/exchange/pumpfun/new?limit=${limit}`, { headers:{ accept:'application/json' }});
+    console.log('status', r.status);
+    const j = await r.json();
+    console.log(j);
+    return j;
+  },
+  lowerLiquidity: (v) => { MIN_LIQUIDITY = v; console.log('MIN_LIQUIDITY set to', v); }
+};
 </script>
+
 </body>
 </html>
