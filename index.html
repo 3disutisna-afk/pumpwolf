@@ -384,104 +384,35 @@ pauseBtn.addEventListener('click', () => {
 fetchTokens();
 loadFeaturedToken();
 startPolling();
-/*
-  Fallback behavior:
-  - Try to call Vercel proxy endpoint once.
-  - If success => hide banner and let page run normally.
-  - If failure => show banner, start countdown to redirect to Vercel (can cancel via "Tetap di sini").
-  - Safe: no API keys used here.
-*/
-
-(async function(){
-  const VERK = "https://pumpwolf.vercel.app/api/proxy/token/mainnet/exchange/pumpfun/new?limit=1";
-  const fallback = document.getElementById('pwFallback');
-  const openBtn = document.getElementById('openVercel');
-  const stayBtn = document.getElementById('stayBtn');
-  const countdownEl = document.getElementById('redirectCountdown');
-
-  // if running already on Vercel domain, do nothing
-  if (location.hostname.endsWith('vercel.app') || location.hostname === 'pumpwolf.vercel.app') {
-    // hide fallback immediately
-    if (fallback) fallback.style.display = 'none';
-    return;
-  }
-
-  // quick probe to Vercel proxy (timeout-controlled)
-  function probe(url, timeout = 3500) {
-    return new Promise((resolve) => {
-      let timedOut = false;
-      const timer = setTimeout(() => { timedOut = true; resolve(false); }, timeout);
-      fetch(url, { method:'GET', mode:'cors' }).then(r => {
-        if (timedOut) return;
-        clearTimeout(timer);
-        resolve(r && r.ok);
-      }).catch(() => {
-        if (!timedOut) { clearTimeout(timer); resolve(false); }
-      });
-    });
-  }
-
-  const ok = await probe(VERK, 3500);
-  if (ok) {
-    // Vercel proxy reachable — hide fallback and continue
-    if (fallback) fallback.style.display = 'none';
-    return;
-  }
-
-  // show fallback
-  if (fallback) fallback.style.display = 'flex';
-
-  // start redirect countdown
-  let count = 8; // seconds
-  let timerId = null;
-  countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
-
-  function startCountdown(){
-    timerId = setInterval(() => {
-      count--;
-      countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
-      if (count <= 0) {
-        clearInterval(timerId);
-        // Redirect to full Vercel site
-        window.location.href = "https://pumpwolf.vercel.app/";
-      }
-    }, 1000);
-  }
-  startCountdown();
-
-  // stay on page - cancel redirect
-  stayBtn.addEventListener('click', () => {
-    if (timerId) clearInterval(timerId);
-    countdownEl.textContent = 'Redirect dibatalkan — tetap di halaman ini';
-    stayBtn.disabled = true;
-    stayBtn.textContent = 'Menetap';
-  });
-
-  // open Vercel in new tab (already set via link). No further action needed.
-})();
-</script>
-<!-- Robust fallback inserter & probe — paste before </body> -->
 <script>
 /*
- Robust fallback script:
- - Creates banner if missing
- - Probes Vercel proxy (with timeout)
- - Shows banner + countdown if probe fails
- - Safe: no secrets
+  Unified fallback script — replace all fallback blocks with this one.
+  Place this single script before </body>.
 */
-
 (function(){
   const VERCEL_PROBE = 'https://pumpwolf.vercel.app/api/proxy/token/mainnet/exchange/pumpfun/new?limit=1';
   const REDIRECT_URL = 'https://pumpwolf.vercel.app/';
+  const TIMEOUT_MS = 3500;
+  const COUNTDOWN_SEC = 8;
 
-  // helper to create banner HTML (same style as earlier)
-  function createBanner() {
-    if (document.getElementById('pwFallback')) return document.getElementById('pwFallback');
-    const s = document.createElement('div');
-    s.id = 'pwFallback';
-    s.className = 'pw-fallback';
-    s.style.display = 'none';
-    s.innerHTML = `
+  // ensure DOM ready
+  function onReady(fn) {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(fn, 0);
+    } else {
+      document.addEventListener('DOMContentLoaded', fn);
+    }
+  }
+
+  // create banner if missing (re-uses existing #pwFallback if present)
+  function ensureBanner() {
+    let el = document.getElementById('pwFallback');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'pwFallback';
+    el.className = 'pw-fallback';
+    el.style.display = 'none';
+    el.innerHTML = `
       <div class="left">
         <div class="dot" aria-hidden="true"></div>
         <div>
@@ -492,35 +423,37 @@ startPolling();
       <div class="actions">
         <a id="openVercel" class="btn" href="${REDIRECT_URL}" target="_blank" rel="noopener">Buka versi penuh</a>
         <button id="stayBtn" class="btn secondary" type="button">Tetap di sini</button>
-        <div style="display:flex;align-items:center"><span class="count" id="redirectCountdown">↪ otomatis pindah dalam 8s</span></div>
+        <div style="display:flex;align-items:center"><span class="count" id="redirectCountdown">↪ otomatis pindah dalam ${COUNTDOWN_SEC}s</span></div>
       </div>
     `;
-    // ensure some minimal inline styles exist in case CSS didn't load
+    // minimal inline CSS fallback if not loaded
     if (!document.querySelector('style[data-pw-fallback]')) {
       const css = document.createElement('style');
       css.setAttribute('data-pw-fallback','1');
       css.textContent = `
-      .pw-fallback{display:none;position:fixed;inset:12px 12px auto 12px;z-index:99999;background:linear-gradient(90deg,rgba(6,8,16,0.98),rgba(3,5,12,0.98));color:#dff;border:1px solid rgba(0,240,255,0.08);padding:12px 14px;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,0.6);max-width:calc(100% - 40px);display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:Inter,system-ui,sans-serif}
-      .pw-fallback .left{display:flex;gap:10px;align-items:center;max-width:70%}
-      .pw-fallback .dot{width:12px;height:12px;border-radius:50%;background:#ff6b6b;box-shadow:0 0 12px rgba(255,107,107,0.12)}
-      .pw-fallback .title{font-weight:700;color:var(--neon);font-size:0.98rem}
-      .pw-fallback .desc{font-size:0.9rem;color:var(--muted);margin-top:4px}
-      .pw-fallback .actions{display:flex;gap:8px;align-items:center}
-      .pw-fallback .btn{background:linear-gradient(90deg,var(--neon),var(--accent));color:#001;padding:8px 10px;border-radius:10px;font-weight:700;text-decoration:none;border:none;cursor:pointer}
-      .pw-fallback .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--muted);padding:8px 10px}
-      @media(max-width:720px){.pw-fallback{flex-direction:column;align-items:flex-start;gap:8px;left:12px;right:12px}.pw-fallback .left{max-width:100%}.pw-fallback .actions{width:100%;justify-content:space-between}}
+        .pw-fallback{display:none;position:fixed;inset:12px 12px auto 12px;z-index:99999;background:linear-gradient(90deg,rgba(6,8,16,0.98),rgba(3,5,12,0.98));color:#dff;border:1px solid rgba(0,240,255,0.08);padding:12px 14px;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,0.6);max-width:calc(100% - 40px);display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:Inter,system-ui,sans-serif}
+        .pw-fallback .left{display:flex;gap:10px;align-items:center;max-width:70%}
+        .pw-fallback .dot{width:12px;height:12px;border-radius:50%;background:#ff6b6b;box-shadow:0 0 12px rgba(255,107,107,0.12)}
+        .pw-fallback .title{font-weight:700;color:var(--neon);font-size:0.98rem}
+        .pw-fallback .desc{font-size:0.9rem;color:var(--muted);margin-top:4px}
+        .pw-fallback .actions{display:flex;gap:8px;align-items:center}
+        .pw-fallback .btn{background:linear-gradient(90deg,var(--neon),var(--accent));color:#001;padding:8px 10px;border-radius:10px;font-weight:700;text-decoration:none;border:none;cursor:pointer}
+        .pw-fallback .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--muted);padding:8px 10px}
+        @media(max-width:720px){.pw-fallback{flex-direction:column;align-items:flex-start;gap:8px;left:12px;right:12px}.pw-fallback .left{max-width:100%}.pw-fallback .actions{width:100%;justify-content:space-between}}
       `;
       document.head.appendChild(css);
     }
-    document.body.insertBefore(s, document.body.firstChild);
-    return s;
+    document.body.insertBefore(el, document.body.firstChild);
+    return el;
   }
 
-  // probe with timeout
-  function probe(url, timeout = 3500) {
+  // probe with timeout, return boolean
+  function probe(url, timeout = TIMEOUT_MS) {
     return new Promise((resolve) => {
       let done = false;
-      const timer = setTimeout(() => { if (!done) { done = true; resolve(false); } }, timeout);
+      const timer = setTimeout(() => {
+        if (!done) { done = true; resolve(false); }
+      }, timeout);
       fetch(url, { method:'GET', mode:'cors' }).then(r => {
         if (done) return;
         done = true; clearTimeout(timer);
@@ -529,54 +462,54 @@ startPolling();
     });
   }
 
-  // main flow
-  (async function main() {
+  onReady(async function(){
     try {
-      // if already on Vercel domain -> nothing
+      // don't run on Vercel domain
       const host = location.hostname;
-      if (host === 'pumpwolf.vercel.app' || host.endsWith('.vercel.app')) {
-        console.log('[PW] on Vercel; fallback not needed');
-        return;
-      }
+      if (host === 'pumpwolf.vercel.app' || host.endsWith('.vercel.app')) return;
 
-      const fallback = createBanner();
-      console.log('[PW] probing vercel proxy...', VERCEL_PROBE);
+      const banner = ensureBanner();
+      // small delay to let other scripts run first
+      await new Promise(r => setTimeout(r, 120));
 
-      const ok = await probe(VERCEL_PROBE, 3500);
-      console.log('[PW] probe result:', ok);
-
+      const ok = await probe(VERCEL_PROBE, TIMEOUT_MS);
       if (ok) {
-        // reachable — hide fallback if present
-        fallback.style.display = 'none';
+        // reachable -> make sure banner hidden
+        banner.style.display = 'none';
         return;
       }
 
       // not reachable -> show banner and start countdown
-      fallback.style.display = 'flex';
+      banner.style.display = 'flex';
       const stayBtn = document.getElementById('stayBtn');
       const countdownEl = document.getElementById('redirectCountdown');
-      let count = 8;
-      countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+      let count = COUNTDOWN_SEC;
 
-      const timerId = setInterval(() => {
+      countdownEl && (countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`);
+      const t = setInterval(() => {
         count--;
-        countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
-        if (count <= 0) { clearInterval(timerId); window.location.href = REDIRECT_URL; }
+        if (countdownEl) countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+        if (count <= 0) {
+          clearInterval(t);
+          window.location.href = REDIRECT_URL;
+        }
       }, 1000);
 
-      stayBtn.addEventListener('click', () => {
-        clearInterval(timerId);
-        countdownEl.textContent = 'Redirect dibatalkan — tetap di halaman ini';
+      stayBtn && stayBtn.addEventListener('click', () => {
+        clearInterval(t);
+        if (countdownEl) countdownEl.textContent = 'Redirect dibatalkan — tetap di halaman ini';
         stayBtn.disabled = true;
         stayBtn.textContent = 'Menetap';
       });
 
     } catch (err) {
-      console.error('[PW fallback] error', err);
+      console.error('PW fallback error', err);
     }
-  })();
+  });
 
 })();
+</script>      
+
 </script>
 </body>
 </html>
