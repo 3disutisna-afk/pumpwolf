@@ -1,13 +1,8 @@
 // pages/api/proxy/[...path].js
-// Catch-all Next API route that proxies any /api/proxy/... request to Moralis
-// Put this file at: pages/api/proxy/[...path].js
-// Do NOT place your Moralis API key here; set MORALIS_KEY in Vercel Environment Variables.
-
 export default async function handler(req, res) {
-  // CORS preflight
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
 
   if (req.method === 'OPTIONS') {
     res.status(204).end();
@@ -17,11 +12,11 @@ export default async function handler(req, res) {
   const MORALIS_KEY = process.env.MORALIS_KEY;
   if (!MORALIS_KEY) {
     res.status(500).json({ error: 'Missing MORALIS_KEY in server environment' });
+    console.error('Missing MORALIS_KEY');
     return;
   }
 
   try {
-    // req.url includes prefix /api/proxy/... plus query string
     const rawUrl = req.url || '';
     const upstreamPath = rawUrl.replace(/^\/api\/proxy/, '') || '/';
     const upstreamUrl = `https://solana-gateway.moralis.io${upstreamPath}`;
@@ -34,7 +29,6 @@ export default async function handler(req, res) {
 
     const opts = { method: req.method, headers: upstreamHeaders };
 
-    // forward body for non-GET/HEAD
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       if (typeof req.body === 'string' || req.body instanceof Buffer) {
         opts.body = req.body;
@@ -43,14 +37,28 @@ export default async function handler(req, res) {
       }
     }
 
+    const debug = req.query && req.query.debug === '1';
     const upstreamRes = await fetch(upstreamUrl, opts);
     const text = await upstreamRes.text();
 
     res.setHeader('Content-Type', upstreamRes.headers.get('content-type') || 'application/json');
     res.setHeader('Cache-Control', 'no-store');
+
+    if (debug) {
+      const meta = {
+        upstreamUrl,
+        status: upstreamRes.status,
+        contentType: upstreamRes.headers.get('content-type'),
+        bodyPreview: (typeof text === 'string') ? text.slice(0, 4000) : String(text)
+      };
+      console.log('PROXY debug:', meta);
+      res.status(200).json(meta);
+      return;
+    }
+
     res.status(upstreamRes.status).send(text);
   } catch (err) {
-    console.error('proxy error', err && (err.stack || err.message || err));
+    console.error('proxy internal error', err && (err.stack || err.message || err));
     res.status(500).json({ error: 'Proxy internal error' });
   }
 }
