@@ -460,6 +460,123 @@ startPolling();
   // open Vercel in new tab (already set via link). No further action needed.
 })();
 </script>
+<!-- Robust fallback inserter & probe — paste before </body> -->
+<script>
+/*
+ Robust fallback script:
+ - Creates banner if missing
+ - Probes Vercel proxy (with timeout)
+ - Shows banner + countdown if probe fails
+ - Safe: no secrets
+*/
 
+(function(){
+  const VERCEL_PROBE = 'https://pumpwolf.vercel.app/api/proxy/token/mainnet/exchange/pumpfun/new?limit=1';
+  const REDIRECT_URL = 'https://pumpwolf.vercel.app/';
+
+  // helper to create banner HTML (same style as earlier)
+  function createBanner() {
+    if (document.getElementById('pwFallback')) return document.getElementById('pwFallback');
+    const s = document.createElement('div');
+    s.id = 'pwFallback';
+    s.className = 'pw-fallback';
+    s.style.display = 'none';
+    s.innerHTML = `
+      <div class="left">
+        <div class="dot" aria-hidden="true"></div>
+        <div>
+          <div class="title">Mode statis: fitur server tidak aktif di GitHub Pages</div>
+          <div class="desc">Proxy/API backend tidak tersedia di versi statis. Untuk experience penuh (live data & fungsi), buka versi lengkap.</div>
+        </div>
+      </div>
+      <div class="actions">
+        <a id="openVercel" class="btn" href="${REDIRECT_URL}" target="_blank" rel="noopener">Buka versi penuh</a>
+        <button id="stayBtn" class="btn secondary" type="button">Tetap di sini</button>
+        <div style="display:flex;align-items:center"><span class="count" id="redirectCountdown">↪ otomatis pindah dalam 8s</span></div>
+      </div>
+    `;
+    // ensure some minimal inline styles exist in case CSS didn't load
+    if (!document.querySelector('style[data-pw-fallback]')) {
+      const css = document.createElement('style');
+      css.setAttribute('data-pw-fallback','1');
+      css.textContent = `
+      .pw-fallback{display:none;position:fixed;inset:12px 12px auto 12px;z-index:99999;background:linear-gradient(90deg,rgba(6,8,16,0.98),rgba(3,5,12,0.98));color:#dff;border:1px solid rgba(0,240,255,0.08);padding:12px 14px;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,0.6);max-width:calc(100% - 40px);display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:Inter,system-ui,sans-serif}
+      .pw-fallback .left{display:flex;gap:10px;align-items:center;max-width:70%}
+      .pw-fallback .dot{width:12px;height:12px;border-radius:50%;background:#ff6b6b;box-shadow:0 0 12px rgba(255,107,107,0.12)}
+      .pw-fallback .title{font-weight:700;color:var(--neon);font-size:0.98rem}
+      .pw-fallback .desc{font-size:0.9rem;color:var(--muted);margin-top:4px}
+      .pw-fallback .actions{display:flex;gap:8px;align-items:center}
+      .pw-fallback .btn{background:linear-gradient(90deg,var(--neon),var(--accent));color:#001;padding:8px 10px;border-radius:10px;font-weight:700;text-decoration:none;border:none;cursor:pointer}
+      .pw-fallback .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--muted);padding:8px 10px}
+      @media(max-width:720px){.pw-fallback{flex-direction:column;align-items:flex-start;gap:8px;left:12px;right:12px}.pw-fallback .left{max-width:100%}.pw-fallback .actions{width:100%;justify-content:space-between}}
+      `;
+      document.head.appendChild(css);
+    }
+    document.body.insertBefore(s, document.body.firstChild);
+    return s;
+  }
+
+  // probe with timeout
+  function probe(url, timeout = 3500) {
+    return new Promise((resolve) => {
+      let done = false;
+      const timer = setTimeout(() => { if (!done) { done = true; resolve(false); } }, timeout);
+      fetch(url, { method:'GET', mode:'cors' }).then(r => {
+        if (done) return;
+        done = true; clearTimeout(timer);
+        resolve(!!(r && r.ok));
+      }).catch(() => { if (!done) { done = true; clearTimeout(timer); resolve(false); } });
+    });
+  }
+
+  // main flow
+  (async function main() {
+    try {
+      // if already on Vercel domain -> nothing
+      const host = location.hostname;
+      if (host === 'pumpwolf.vercel.app' || host.endsWith('.vercel.app')) {
+        console.log('[PW] on Vercel; fallback not needed');
+        return;
+      }
+
+      const fallback = createBanner();
+      console.log('[PW] probing vercel proxy...', VERCEL_PROBE);
+
+      const ok = await probe(VERCEL_PROBE, 3500);
+      console.log('[PW] probe result:', ok);
+
+      if (ok) {
+        // reachable — hide fallback if present
+        fallback.style.display = 'none';
+        return;
+      }
+
+      // not reachable -> show banner and start countdown
+      fallback.style.display = 'flex';
+      const stayBtn = document.getElementById('stayBtn');
+      const countdownEl = document.getElementById('redirectCountdown');
+      let count = 8;
+      countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+
+      const timerId = setInterval(() => {
+        count--;
+        countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+        if (count <= 0) { clearInterval(timerId); window.location.href = REDIRECT_URL; }
+      }, 1000);
+
+      stayBtn.addEventListener('click', () => {
+        clearInterval(timerId);
+        countdownEl.textContent = 'Redirect dibatalkan — tetap di halaman ini';
+        stayBtn.disabled = true;
+        stayBtn.textContent = 'Menetap';
+      });
+
+    } catch (err) {
+      console.error('[PW fallback] error', err);
+    }
+  })();
+
+})();
+</script>
 </body>
 </html>
