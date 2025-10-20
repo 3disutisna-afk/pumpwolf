@@ -11,7 +11,7 @@
   <meta property="og:image" content="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/pumpwolf_banner.jpg" />
   <meta property="og:url" content="https://3disutisna-afk.github.io/pumpwolf/" />
   <meta name="twitter:card" content="summary_large_image" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script> <!-- Versi spesifik untuk stabilitas -->
 
   <style>
     :root {
@@ -20,7 +20,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0 }
     body { font-family: Inter, system-ui, sans-serif; background: radial-gradient(circle at 10% 10%, #02030a 0%, var(--bg) 60%); color: #dff }
     header { padding: 18px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(0,255,255,0.05) }
-    header .logo { width: 52px; height: 52px; border-radius: 10px; background: radial-gradient(circle at 30% 30%, #002, #013); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 18px rgba(0,240,255,0.1); font-weight: 700 }
+    header .logo { width: 52px; height: 52px; border-radius: 10px; object-fit: contain; box-shadow: 0 0 18px rgba(0,240,255,0.1) }
     header h1 { margin: 0; font-size: 1.05rem; color: var(--neon) } .muted { color: var(--muted); font-size: 0.9rem }
     .layout { display: flex; gap: 16px; padding: 16px; align-items: flex-start }
     .col-left { width: 280px; min-width: 240px } .col-main { flex: 1 }
@@ -38,7 +38,6 @@
     .pw-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(6px) saturate(120%) }
     .pw-modal.open { display: flex }
 
-    /* Fallback banner style */
     .pw-fallback {
       display: none;
       position: fixed;
@@ -71,11 +70,9 @@
       .pw-fallback .actions { width: 100%; justify-content: space-between; }
     }
 
-    /* Debug panel hidden by default */
     .debug { display: none; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size: 13px; color: #c8fff6; white-space: pre-wrap; overflow: auto; max-height: 220px; padding: 12px; background: rgba(0,0,0,0.22); border-radius: 8px; border: 1px solid rgba(0,240,255,0.03) }
     .debug.visible { display: block }
 
-    /* Mini chart style */
     .mini-chart {
       width: 100%;
       height: 100px;
@@ -100,7 +97,7 @@
   </div>
 
   <header>
-    <div class="logo">PW</div>
+    <img class="logo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="PumpWolf Logo" onerror="this.src='https://via.placeholder.com/52?text=No+Logo';this.onerror=null;" />
     <div>
       <h1>PumpWolf Dashboard</h1>
       <div class="muted">Cyber Meme Utility — Wolf Pack Live 🐺</div>
@@ -137,7 +134,7 @@
             <h2 style="color: var(--neon); margin: 6px 0" id="featuredTitle">$WOLF — The Cyber Meme Wolf</h2>
             <div class="tiny" id="wolfData">Loading live data...</div>
           </div>
-          <img id="featuredLogo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="$WOLF" style="width: 60px; height: 60px; border-radius: 12px; box-shadow: 0 0 18px rgba(0,240,255,0.25); margin-top: 6px">
+          <img id="featuredLogo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="$WOLF" style="width: 60px; height: 60px; border-radius: 12px; box-shadow: 0 0 18px rgba(0,240,255,0.25); margin-top: 6px" onerror="this.src='https://via.placeholder.com/60?text=No+Logo';this.onerror=null;" />
         </div>
         <div class="howl-bar" style="margin-top: 10px"><div class="fill" id="howlFill" style="width: 50%"></div></div>
         <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap">
@@ -163,7 +160,7 @@
   <script>
     (function() {
       const VERCEL_BASE = "https://pumpwolf.vercel.app";
-      const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=20"; // Kurangi limit untuk hindari timeout
+      const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=20";
       const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
       const FEATURED_TOKEN_ADDRESS = "";
       const POLL_INTERVAL = 60000;
@@ -193,7 +190,7 @@
         apiStatusEl.textContent = 'Fetching...';
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout 15 detik untuk hindari 504
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
           const res = await fetch(ENDPOINT, { headers: { "accept": "application/json" }, signal: controller.signal });
           clearTimeout(timeoutId);
           if (!res.ok) {
@@ -259,7 +256,7 @@
           <div style="width: min(720px, 94%); max-height: 86vh; overflow: auto; padding: 18px; border-radius: 12px; background: linear-gradient(135deg, rgba(2,6,10,0.96), rgba(6,8,16,0.99)); border: 1px solid rgba(0,240,255,0.06); box-shadow: 0 30px 80px rgba(0,0,0,0.7); color: #dff">
             <button class="closeBtn" style="float: right; background: transparent; border: 0; color: #9fe; font-size: 20px; cursor: pointer">✕</button>
             <div style="display: flex; gap: 12px; align-items: center;">
-              <img id="mLogo" src="" alt="Token Logo" style="width: 64px; height: 64px; border-radius: 8px; object-fit: cover; box-shadow: 0 0 20px rgba(0,240,255,0.08)"/>
+              <img id="mLogo" src="" alt="Token Logo" style="width: 64px; height: 64px; border-radius: 8px; object-fit: cover; box-shadow: 0 0 20px rgba(0,240,255,0.08)" onerror="this.src='https://via.placeholder.com/64?text=No+Logo';this.onerror=null;" />
               <div>
                 <h2 id="mName" style="margin: 0; color: var(--neon)"></h2>
                 <div id="mSymbol" class="tiny" style="margin-top: 6px"></div>
@@ -285,7 +282,7 @@
           if (!item) return;
 
           modal.style.display = 'flex';
-          modal.querySelector('#mLogo').src = item.logo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9IiMwMEYwRkYiLz4KPC9zdmc+' ; // Fallback logo jika kosong
+          modal.querySelector('#mLogo').src = item.logo || 'https://via.placeholder.com/64?text=No+Logo';
           modal.querySelector('#mName').textContent = item.name || 'Unnamed';
           modal.querySelector('#mSymbol').textContent = (item.symbol || '—') + ' • ' + (addr ? (addr.slice(0, 6) + '...') : '');
 
@@ -293,7 +290,7 @@
           const liquidity = item.liquidity ? ('$' + Number(item.liquidity).toLocaleString()) : '—';
           const fdv = item.fullyDilutedValuation ? ('$' + Number(item.fullyDilutedValuation).toLocaleString()) : '—';
           const created = item.createdAt ? new Date(item.createdAt).toLocaleString() : '—';
-          const holders = 'Loading...'; // Placeholder untuk holder
+          const holders = 'Loading...';
           modal.querySelector('#mDetails').innerHTML = `
             <div style="background: rgba(255,255,255,0.01); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.03)">
               <div class="tiny">Price (USD)</div><div style="color: var(--neon); font-weight: 700">${price}</div>
@@ -312,10 +309,9 @@
             </div>
           `;
 
-          // Mini chart setup dengan fallback data
           const ctx = modal.querySelector('#miniChart').getContext('2d');
           if (!ctx) {
-            console.error("Canvas context not found");
+            console.error("Canvas context not found for #miniChart");
             debugLog("Error: Canvas context for miniChart not found");
             return;
           }
@@ -326,7 +322,7 @@
           }
           let existingChart = Chart.getChart(ctx);
           if (existingChart) existingChart.destroy();
-          const basePrice = Number(item.priceUsd) || 0.0001; // Fallback jika priceUsd 0 atau undefined
+          const basePrice = Number(item.priceUsd) || 0.0001;
           new Chart(ctx, {
             type: 'line',
             data: {
@@ -344,10 +340,7 @@
               responsive: true,
               maintainAspectRatio: false,
               plugins: { legend: { display: false } },
-              scales: { 
-                y: { beginAtZero: true, ticks: { color: '#9bb' } }, 
-                x: { ticks: { color: '#9bb' } } 
-              }
+              scales: { y: { beginAtZero: true, ticks: { color: '#9bb' } }, x: { ticks: { color: '#9bb' } } }
             }
           });
           debugLog("Mini chart rendered for token:", item.symbol || 'Unknown');
@@ -405,7 +398,6 @@
 
       function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
 
-      // Fallback probe
       (async function fallbackProbe() {
         const isStatic = !location.hostname.endsWith('.vercel.app') && location.hostname !== 'pumpwolf.vercel.app';
         if (isStatic) {
