@@ -490,10 +490,22 @@ startPolling();
         count--;
         if (countdownEl) countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
         if (count <= 0) {
-          clearInterval(t);
-          window.location.href = REDIRECT_URL;
+  clearInterval(t);
+  console.log('[PW] Redirecting to Vercel full version...');
+  // gunakan window.open supaya GitHub Pages tidak blok
+  try {
+    window.open(REDIRECT_URL, '_blank', 'noopener');
+  } catch(e) {
+    console.error('Redirect failed, manual fallback', e);
+    // fallback: tampilkan link aktif
+    const openBtn = document.getElementById('openVercel');
+    if (openBtn) {
+      openBtn.style.outline = '2px solid var(--neon)';
+      openBtn.style.boxShadow = '0 0 12px rgba(0,240,255,0.4)';
+      openBtn.textContent = 'Klik di sini untuk lanjut ke versi penuh';
+    }
+  }
         }
-      }, 1000);
 
       stayBtn && stayBtn.addEventListener('click', () => {
         clearInterval(t);
