@@ -1,27 +1,21 @@
-// api/proxy.js  (replace everything inside this file)
-// Debug-friendly proxy for Vercel static projects.
-// Set MORALIS_KEY in Vercel Environment Variables (Project → Settings → Environment Variables).
-
+// /api/proxy.js  (place at repo root /api/proxy.js)
 module.exports = async function (req, res) {
-  // --- Basic CORS ---
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') {
     res.statusCode = 204;
     res.end();
     return;
   }
 
-  // --- Load env key ---
   const MORALIS_KEY = process.env.MORALIS_KEY;
-  console.log('[proxy] MORALIS_KEY present:', !!MORALIS_KEY);
-
   if (!MORALIS_KEY) {
-    console.error('[proxy] Missing MORALIS_KEY');
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ error: 'Missing MORALIS_KEY in Vercel Environment Variables' }));
+    res.end(JSON.stringify({ error: 'Missing MORALIS_KEY in server environment' }));
     return;
   }
 
@@ -29,54 +23,42 @@ module.exports = async function (req, res) {
     const rawUrl = req.url || '';
     const upstreamPath = rawUrl.replace(/^\/api\/proxy/, '') || '/';
     const upstreamUrl = 'https://solana-gateway.moralis.io' + upstreamPath;
-    console.log('[proxy] upstreamUrl =', upstreamUrl);
 
-    const headers = {
+    const upstreamHeaders = {
       'X-API-Key': MORALIS_KEY,
-      accept: 'application/json',
+      'accept': 'application/json'
     };
-    if (req.headers['content-type'])
-      headers['content-type'] = req.headers['content-type'];
+    if (req.headers['content-type']) upstreamHeaders['content-type'] = req.headers['content-type'];
 
-    const opts = { method: req.method, headers };
+    const opts = { method: req.method, headers: upstreamHeaders };
 
     if (req.method !== 'GET' && req.method !== 'HEAD') {
-      if (typeof req.body === 'string' || Buffer.isBuffer(req.body)) {
+      if (req.body && (typeof req.body === 'string' || Buffer.isBuffer(req.body))) {
         opts.body = req.body;
       } else if (req.body && Object.keys(req.body).length) {
         opts.body = JSON.stringify(req.body);
+      } else {
+        // attempt to read raw stream (fallback)
+        opts.body = await new Promise((resolve) => {
+          let data = '';
+          req.on && req.on('data', (c) => (data += c));
+          req.on && req.on('end', () => resolve(data || undefined));
+          setTimeout(() => resolve(undefined), 5);
+        });
       }
     }
 
-    // --- Upstream fetch ---
     const upstreamRes = await fetch(upstreamUrl, opts);
     const text = await upstreamRes.text();
-    console.log('[proxy] status', upstreamRes.status, 'type', upstreamRes.headers.get('content-type'));
 
-    // --- Debug mode (check with &debug=1) ---
-    const debug = rawUrl.includes('debug=1');
-    if (debug) {
-      const info = {
-        upstreamUrl,
-        status: upstreamRes.status,
-        contentType: upstreamRes.headers.get('content-type'),
-        snippet: text.slice(0, 500),
-      };
-      res.setHeader('Content-Type', 'application/json');
-      res.statusCode = 200;
-      res.end(JSON.stringify(info, null, 2));
-      return;
-    }
-
-    // --- Normal forward ---
     res.setHeader('Content-Type', upstreamRes.headers.get('content-type') || 'application/json');
     res.setHeader('Cache-Control', 'no-store');
     res.statusCode = upstreamRes.status;
     res.end(text);
   } catch (err) {
-    console.error('[proxy] error:', err && (err.stack || err.message || err));
-    res.statusCode = 500;
+    console.error('proxy error', err && (err.stack || err.message || err));
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ error: 'Proxy internal error', message: err.message }));
+    res.statusCode = 500;
+    res.end(JSON.stringify({ error: 'Proxy internal error' }));
   }
 };
