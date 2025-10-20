@@ -2,104 +2,47 @@
 <html lang="id">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title><!-- === META PREVIEW FOR SOCIAL SHARE === -->
-  <meta name="description" content="PumpWolf Dashboard — Cyber Meme Utility tracking clean Solana gems in real time. The Wolf Pack never sleeps 🐺✨" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PumpWolf Dashboard — Cyber Meme Utility</title>
+
+  <!-- SOCIAL META (preview banner) -->
+  <meta name="description" content="PumpWolf Dashboard — Cyber Meme Utility tracking clean Solana gems in real time." />
   <meta property="og:title" content="🐺 PumpWolf Dashboard — Live Token Feed" />
-  <meta property="og:description" content="Cyber Meme Utility for Solana Gem Hunters. Track clean tokens, live data, and community howls 🧠⚡" />
+  <meta property="og:description" content="Cyber Meme Utility for Solana Gem Hunters. Track clean tokens, live data, and community howls." />
   <meta property="og:image" content="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/pumpwolf_banner.jpg" />
   <meta property="og:url" content="https://3disutisna-afk.github.io/pumpwolf/" />
-  <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="🐺 PumpWolf Dashboard — Cyber Meme Utility" />
-  <meta name="twitter:description" content="Track early Solana gems with PumpWolf HQ — powered by Moralis API." />
+  <meta name="twitter:description" content="Track early Solana gems with PumpWolf HQ — powered by Moralis API (proxy)." />
   <meta name="twitter:image" content="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/pumpwolf_banner.jpg" />
-  <!-- === END META PREVIEW === --></title>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root{
-      --bg:#030406;
-      --card:#071018;
-      --neon:#00f0ff;
-      --accent:#8a2be2;
-      --muted:#9bb;
+      --bg:#030406; --card:#071018; --neon:#00f0ff; --accent:#8a2be2; --muted:#9bb;
     }
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{
-      font-family:Inter,system-ui,sans-serif;
-      background:radial-gradient(circle at 10% 10%,#02030a 0%,var(--bg) 60%);
-      color:#dff;
-      overflow-x:hidden;
-    }
-    header{
-      padding:18px 16px;display:flex;align-items:center;gap:12px;
-      border-bottom:1px solid rgba(0,255,255,0.05);
-    }
-    header .logo{
-      width:52px;height:52px;border-radius:10px;
-      background:radial-gradient(circle at 30% 30%,#002,#013);
-      display:flex;align-items:center;justify-content:center;
-      box-shadow:0 0 18px rgba(0,240,255,0.1);
-      font-weight:700;font-size:1rem;
-    }
-    header h1{margin:0;font-size:1.1rem;color:var(--neon);}
-    .muted{color:var(--muted);font-size:0.9rem;}
-    .layout{
-      display:flex;gap:20px;padding:16px;align-items:flex-start;
-    }
-    .col-left{width:280px;min-width:260px;}
-    .col-main{flex:1;}
-    .card{
-      background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(255,255,255,0.015));
-      border:1px solid rgba(0,240,255,0.06);
-      border-radius:12px;padding:14px;margin-bottom:14px;
-      box-shadow:0 6px 24px rgba(0,0,0,0.5);
-    }
-    .btn{
-      background:linear-gradient(90deg,var(--neon),var(--accent));
-      border:none;color:#001;padding:8px 12px;border-radius:10px;
-      font-weight:700;cursor:pointer;text-decoration:none;
-      box-shadow:0 6px 24px rgba(0,240,255,0.06);
-      transition:transform .2s ease;
-    }
-    .btn:hover{transform:scale(1.04);}
-    .small{padding:6px 10px;font-size:0.85rem;}
-    .tiny{font-size:0.8rem;color:var(--muted);}
-    .token-list{
-      display:flex;flex-direction:column;gap:10px;max-height:65vh;overflow:auto;padding-right:6px;
-    }
-    .token{
-      display:flex;justify-content:space-between;align-items:center;gap:10px;
-      padding:10px;border-radius:10px;
-      background:linear-gradient(90deg,rgba(0,0,0,0.16),rgba(0,0,0,0.06));
-      border:1px solid rgba(0,240,255,0.03);
-      transition:transform .2s ease, box-shadow .2s ease;
-    }
-    .token:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,240,255,0.06);}
-    footer{text-align:center;padding:14px 20px;color:var(--muted);font-size:0.85rem;}
-    /* === Featured Token === */
-    .howl-bar{
-      height:10px;border-radius:8px;background:rgba(255,255,255,0.05);
-      overflow:hidden;margin-top:6px;box-shadow:inset 0 0 6px rgba(0,240,255,0.1);
-    }
-    .howl-bar .fill{
-      height:100%;width:0%;background:linear-gradient(90deg,#00f0ff,#8a2be2);
-      animation:howlGrow 3s ease-in-out infinite alternate;
-    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,system-ui,sans-serif;background:radial-gradient(circle at 10% 10%,#02030a 0%,var(--bg) 60%);color:#dff}
+    header{padding:18px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(0,255,255,0.05)}
+    header .logo{width:52px;height:52px;border-radius:10px;background:radial-gradient(circle at 30% 30%,#002,#013);display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(0,240,255,0.1);font-weight:700}
+    header h1{margin:0;font-size:1.05rem;color:var(--neon)} .muted{color:var(--muted);font-size:0.9rem}
+    .layout{display:flex;gap:16px;padding:16px;align-items:flex-start}
+    .col-left{width:280px;min-width:240px} .col-main{flex:1}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(255,255,255,0.015));border:1px solid rgba(0,240,255,0.06);border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 6px 24px rgba(0,0,0,0.45)}
+    .btn{background:linear-gradient(90deg,var(--neon),var(--accent));border:none;color:#001;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+    .small{padding:6px 10px;font-size:0.85rem} .tiny{font-size:0.82rem;color:var(--muted)}
+    .token-list{display:flex;flex-direction:column;gap:10px;max-height:65vh;overflow:auto;padding-right:6px}
+    .token{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border-radius:10px;background:linear-gradient(90deg,rgba(0,0,0,0.16),rgba(0,0,0,0.06));border:1px solid rgba(0,240,255,0.03);transition:transform .18s ease,box-shadow .18s ease}
+    .token:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,240,255,0.06)}
+    footer{text-align:center;padding:14px 20px;color:var(--muted);font-size:0.85rem}
+    .howl-bar{height:10px;border-radius:8px;background:rgba(255,255,255,0.03);overflow:hidden;margin-top:8px;box-shadow:inset 0 0 6px rgba(0,240,255,0.08)}
+    .howl-bar .fill{height:100%;width:0%;background:linear-gradient(90deg,#00f0ff,#8a2be2);animation:howlGrow 3s ease-in-out infinite alternate}
     @keyframes howlGrow{0%{width:40%}100%{width:90%}}
-    /* === Responsive === */
-    @media(max-width:900px){
-      .layout{flex-direction:column;padding:10px;}
-      .col-left{width:100%;}
-      .col-main{width:100%;}
-      header{flex-direction:row;gap:10px;}
-    }
-    @media(max-width:500px){
-      header .logo{width:46px;height:46px;}
-      header h1{font-size:1rem;}
-      .btn{font-size:0.8rem;}
-      .card{padding:10px;}
-    }
+    @media(max-width:900px){.layout{flex-direction:column;padding:12px}.col-left{width:100%}.col-main{width:100%}}
+    @media(max-width:500px){header .logo{width:46px;height:46px} header h1{font-size:1rem} .card{padding:10px}}
+    /* modal basic style override */
+    .pw-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(6px) saturate(120%)}
+    .pw-modal.open{display:flex}
   </style>
 </head>
 <body>
@@ -116,12 +59,13 @@
   <aside class="col-left">
     <div class="card">
       <div class="muted">API Status</div>
-      <div id="api-status" style="color:var(--neon);margin-top:4px;">Moralis: ready</div>
-      <div class="muted" style="margin-top:10px;">Last update: <span id="last-update">—</span></div>
+      <div id="api-status" style="color:var(--neon);margin-top:6px">Proxy: ready</div>
+      <div class="muted" style="margin-top:8px">Last update: <span id="last-update">—</span></div>
     </div>
+
     <div class="card">
-      <div class="muted">Filters</div>
-      <div style="margin-top:8px;">
+      <div class="muted">Controls</div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn small" id="refreshBtn">Refresh</button>
         <button class="btn small" id="pauseBtn">Pause</button>
       </div>
@@ -129,111 +73,118 @@
   </aside>
 
   <main class="col-main">
-
-    <!-- === FEATURED TOKEN SECTION === -->
+    <!-- Featured Token -->
     <div class="card" id="featuredToken">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap">
         <div>
-          <div class="muted" style="font-size:0.9rem;">🔥 Featured Token</div>
-          <h2 style="color:var(--neon);margin:6px 0;">$WOLF — The Cyber Meme Wolf</h2>
+          <div class="muted" style="font-size:0.9rem">🔥 Featured Token</div>
+          <h2 style="color:var(--neon);margin:6px 0" id="featuredTitle">$WOLF — The Cyber Meme Wolf</h2>
           <div class="tiny" id="wolfData">Loading live data...</div>
         </div>
-        <img src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png"
-          alt="$WOLF" style="width:60px;height:60px;border-radius:12px;box-shadow:0 0 18px rgba(0,240,255,0.25);margin-top:6px;">
+        <img id="featuredLogo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="$WOLF" style="width:60px;height:60px;border-radius:12px;box-shadow:0 0 18px rgba(0,240,255,0.25);margin-top:6px">
       </div>
 
-      <div class="howl-bar"><div class="fill"></div></div>
+      <div class="howl-bar" style="margin-top:10px"><div class="fill" id="howlFill"></div></div>
 
-      <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
-        <a href="https://pump.fun/coin/YOUR_TOKEN_ADDRESS" target="_blank" class="btn small">💧 Buy on Pump.fun</a>
-        <a href="https://solscan.io/token/YOUR_TOKEN_ADDRESS?cluster=mainnet" target="_blank" class="btn small">🔎 Solscan</a>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <a id="btnBuy" class="btn small" href="#" target="_blank">💧 Buy on Pump.fun</a>
+        <a id="btnSolscan" class="btn small" href="#" target="_blank">🔎 Solscan</a>
       </div>
     </div>
-    <!-- === END FEATURED TOKEN === -->
 
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
-        <div><b style="color:var(--neon)">Live Tokens</b> <span class="muted">— auto-updated from Moralis</span></div>
-        <div class="muted" style="font-size:0.8rem;">Refresh: <span id="interval-label">60s</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+        <div><b style="color:var(--neon)">Live Tokens</b> <span class="muted">— auto-updated from Moralis (via proxy)</span></div>
+        <div class="muted" style="font-size:0.85rem">Refresh: <span id="interval-label">60s</span></div>
       </div>
-      <div id="tokenContainer" class="token-list"></div>
-    </div>
 
+      <div id="tokenContainer" class="token-list">
+        <!-- tokens will be injected here -->
+      </div>
+    </div>
   </main>
 </div>
 
-<footer>© 2025 PumpWolf — The Cyber Pack • v2.1 (Mobile Optimized)</footer>
+<footer>© 2025 PumpWolf — The Cyber Pack • v2.2</footer>
 
+<!-- ================= SCRIPT ================= -->
 <script>
-/* ===== Enhanced token rendering + modal (paste/replace script block) ===== */
+/*
+  index.html (proxy-ready)
+  - This page expects a serverless proxy at /api/proxy/... which adds the Moralis key server-side.
+  - Do NOT add Moralis API key here.
+  - After token launch: set FEATURED_TOKEN_ADDRESS to your token address.
+*/
 
-const MORALIS_API_KEY = "YOUR_MORALIS_API_KEY"; // key dikelola di Vercel
-const ENDPOINT = "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100";
-const MIN_LIQUIDITY = 5000;
+const ENDPOINT = "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100"; // proxy path
+const FEATURE_PRICE_URL = (addr) => `/api/proxy/token/mainnet/${addr}/price`; // proxy path for featured price
+const FEATURED_TOKEN_ADDRESS = "YOUR_TOKEN_ADDRESS"; // <-- replace after launch
 const POLL_INTERVAL = 60000;
+const MIN_LIQUIDITY = 5000;
 
 const apiStatusEl = document.getElementById('api-status');
 const lastUpdateEl = document.getElementById('last-update');
 const tokenContainer = document.getElementById('tokenContainer');
 
-window.tokenMap = {}; // global store: addr -> item
+// store tokens by address
+window.tokenMap = {};
 
-// --- enhanced fetchTokens (stores items and adds data-addr to cards) ---
+// fetch token list via proxy
 async function fetchTokens(){
   apiStatusEl.textContent = 'Fetching...';
   try{
-    const res = await fetch(ENDPOINT, { headers: { "X-API-Key": MORALIS_API_KEY, "accept": "application/json" }});
+    const res = await fetch(ENDPOINT, { headers: { "accept": "application/json" }});
+    if (!res.ok) {
+      apiStatusEl.textContent = `Proxy: error ${res.status}`;
+      tokenContainer.innerHTML = `<div class="tiny">Moralis proxy returned ${res.status}</div>`;
+      lastUpdateEl.textContent = new Date().toLocaleTimeString();
+      return;
+    }
     const data = await res.json();
     const items = Array.isArray(data.result) ? data.result : [];
     const filtered = items.filter(it => Number(it.liquidity || 0) >= MIN_LIQUIDITY);
 
-    // clear previous map & DOM
-    window.tokenMap = {};
     tokenContainer.innerHTML = '';
+    window.tokenMap = {};
 
-    filtered.forEach(it => {
-      // normalize address key (Moralis uses tokenAddress)
-      const addr = it.tokenAddress || it.address || it.token_address || ('addr_' + Math.random().toString(36).slice(2,9));
-      window.tokenMap[addr] = it;
+    if (!filtered.length) {
+      tokenContainer.innerHTML = `<div class="tiny">No tokens passed liquidity filter (>= ${MIN_LIQUIDITY}).</div>`;
+    } else {
+      filtered.forEach(it => {
+        const addr = it.tokenAddress || it.address || ('addr_' + Math.random().toString(36).slice(2,9));
+        window.tokenMap[addr] = it;
 
-      const div = document.createElement('div');
-      div.className = 'token';
-      // store address on element so delegated handler can find it
-      div.dataset.addr = addr;
+        const div = document.createElement('div');
+        div.className = 'token';
+        div.dataset.addr = addr;
 
-      // safe formatting
-      const liquidity = Number(it.liquidity || 0);
-      const fdv = Number(it.fullyDilutedValuation || it.fdv || 0);
-      const createdAt = it.createdAt ? new Date(it.createdAt).toLocaleTimeString() : '—';
+        const liquidity = Number(it.liquidity || 0);
+        const fdv = Number(it.fullyDilutedValuation || it.fdv || 0);
+        const createdAt = it.createdAt ? new Date(it.createdAt).toLocaleTimeString() : '—';
 
-      div.innerHTML = `
-        <div>
-          <div><b style="color:var(--neon)">${it.symbol || '?'}</b> — ${it.name || 'Unnamed'}</div>
-          <div class="tiny">💧 $${isFinite(liquidity) ? liquidity.toLocaleString() : '—'} • 🧮 FDV: $${isFinite(fdv) ? fdv.toLocaleString() : '—'}</div>
-        </div>
-        <div class="tiny">${createdAt}</div>
-      `;
-      tokenContainer.appendChild(div);
-    });
+        div.innerHTML = `
+          <div>
+            <div><b style="color:var(--neon)">${it.symbol || '?'}</b> — ${it.name || 'Unnamed'}</div>
+            <div class="tiny">💧 $${isFinite(liquidity) ? liquidity.toLocaleString() : '—'} • 🧮 FDV: $${isFinite(fdv) ? fdv.toLocaleString() : '—'}</div>
+          </div>
+          <div class="tiny">${createdAt}</div>
+        `;
+        tokenContainer.appendChild(div);
+      });
+    }
 
-    apiStatusEl.textContent = 'Moralis: OK';
+    apiStatusEl.textContent = 'Proxy: OK';
     lastUpdateEl.textContent = new Date().toLocaleTimeString();
-  } catch (e) {
-    console.error(e);
-    apiStatusEl.textContent = 'Error fetching';
+  } catch (err) {
+    console.error(err);
+    apiStatusEl.textContent = 'Proxy: error';
+    tokenContainer.innerHTML = `<div class="tiny">Network error — check proxy & console.</div>`;
+    lastUpdateEl.textContent = new Date().toLocaleTimeString();
   }
 }
 
-// periodic refresh
-setInterval(fetchTokens, POLL_INTERVAL);
-fetchTokens();
-
-/* ===== delegated click handler for token cards =====
-   Finds the clicked .token element, reads data-addr, looks up tokenMap,
-   opens modal with details and buttons to Pump.fun / Solscan.
-*/
-(function setupTokenClickModal(){
-  // create modal element (lightweight)
+// delegated click -> modal (create once)
+(function setupTokenModal() {
   let modal = document.createElement('div');
   modal.className = 'pw-modal';
   modal.style.position = 'fixed';
@@ -264,26 +215,22 @@ fetchTokens();
   `;
   document.body.appendChild(modal);
 
-  // close button
-  modal.querySelector('.closeBtn').onclick = () => modal.style.display = 'none';
-  // click outside to close
-  modal.addEventListener('click', (ev) => { if(ev.target === modal) modal.style.display = 'none'; });
+  modal.querySelector('.closeBtn').onclick = () => { modal.style.display = 'none'; };
+  modal.addEventListener('click', (ev) => { if (ev.target === modal) modal.style.display = 'none'; });
 
-  // delegated click on container
   tokenContainer.addEventListener('click', (ev) => {
     const tokenEl = ev.target.closest('.token');
-    if(!tokenEl) return;
+    if (!tokenEl) return;
     const addr = tokenEl.dataset.addr;
-    if(!addr) return;
+    if (!addr) return;
     const item = window.tokenMap[addr];
-    if(!item) return;
+    if (!item) return;
 
-    // fill modal
     modal.style.display = 'flex';
     modal.querySelector('#mLogo').src = item.logo || ('https://logo.moralis.io/solana-mainnet_' + addr + '_placeholder.png');
     modal.querySelector('#mName').textContent = item.name || 'Unnamed';
     modal.querySelector('#mSymbol').textContent = (item.symbol || '—') + ' • ' + (addr ? (addr.slice(0,6) + '...') : '');
-    // details grid
+
     const details = modal.querySelector('#mDetails');
     const price = item.priceUsd ? ('$' + Number(item.priceUsd).toLocaleString()) : '—';
     const liquidity = item.liquidity ? ('$' + Number(item.liquidity).toLocaleString()) : '—';
@@ -304,7 +251,6 @@ fetchTokens();
       </div>
     `;
 
-    // buttons
     const pumpfunUrl = addr ? `https://pump.fun/coin/${addr}` : '#';
     const solanaExplorer = addr ? `https://explorer.solana.com/address/${encodeURIComponent(addr)}?cluster=mainnet` : '#';
     const solscanToken = addr ? `https://solscan.io/token/${encodeURIComponent(addr)}?cluster=mainnet` : '#';
@@ -312,7 +258,6 @@ fetchTokens();
     modal.querySelector('#mExplorer').href = solanaExplorer;
     modal.querySelector('#mSolscan').href = solscanToken;
 
-    // small sparkline (if price history exists) else fallback sample
     const chartWrap = modal.querySelector('#mChartWrap');
     chartWrap.innerHTML = '';
     const canvas = document.createElement('canvas');
@@ -321,12 +266,78 @@ fetchTokens();
     chartWrap.appendChild(canvas);
     const ctx = canvas.getContext('2d');
     const sparkData = (Array.isArray(item.price_history) && item.price_history.length) ? item.price_history.map(x=>Number(x)).slice(-40) : Array.from({length:20}, (_,i)=> (Number(item.priceUsd||0) || Math.random()*0.00001) * (1 + (Math.sin(i/3)*0.002 + (Math.random()-0.5)*0.01)));
-    if(window._mChart){ try{ window._mChart.destroy(); }catch(e){} window._mChart = null; }
+    if (window._mChart) try{ window._mChart.destroy(); }catch(e){}
     window._mChart = new Chart(ctx, {
       type:'line',
-      data:{ labels:sparkData.map((_,i)=>i), datasets:[{ data:sparkData, borderColor:'rgba(0,240,255,0.95)', borderWidth:1.6, pointRadius:0, fill:true, backgroundColor:'rgba(0,240,255,0.04)'}] },
+      data:{ labels: sparkData.map((_,i)=>i), datasets:[{ data: sparkData, borderColor:'rgba(0,240,255,0.95)', borderWidth:1.6, pointRadius:0, fill:true, backgroundColor:'rgba(0,240,255,0.04)'}] },
       options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ display:false }, y:{ display:false } }, plugins:{ legend:{ display:false } } }
     });
   });
 })();
+
+// Featured token loader (uses proxy)
+async function loadFeaturedToken() {
+  const addr = FEATURED_TOKEN_ADDRESS || null;
+  const titleEl = document.getElementById('featuredTitle');
+  const wolfData = document.getElementById('wolfData');
+  const logoEl = document.getElementById('featuredLogo');
+  const buyBtn = document.getElementById('btnBuy');
+  const solBtn = document.getElementById('btnSolscan');
+
+  if (!addr || addr === "YOUR_TOKEN_ADDRESS") {
+    wolfData.textContent = 'Featured token not set. Set FEATURED_TOKEN_ADDRESS in index.html after launch.';
+    buyBtn.href = '#';
+    solBtn.href = '#';
+    return;
+  }
+
+  buyBtn.href = `https://pump.fun/coin/${addr}`;
+  solBtn.href = `https://solscan.io/token/${encodeURIComponent(addr)}?cluster=mainnet`;
+
+  try {
+    const res = await fetch(FEATURE_PRICE_URL(addr), { headers: { "accept":"application/json" }});
+    if (!res.ok) {
+      wolfData.textContent = `No live price (status ${res.status})`;
+      return;
+    }
+    const data = await res.json();
+    if (data && data.usdPrice) {
+      wolfData.innerHTML = `💰 Price: <b>$${Number(data.usdPrice).toFixed(6)}</b> • ⏱ ${new Date().toLocaleTimeString()}`;
+      // gentle howl strength visual based on liquidity / fdv
+      const liquidity = Number(data.liquidity || 0) || 0;
+      const fdv = Number(data.fullyDilutedValuation || 0) || 0;
+      const strength = Math.min(95, Math.round(Math.min(100, (liquidity / Math.max(1, fdv)) * 100 * 2)));
+      document.getElementById('howlFill').style.width = Math.max(6, strength) + '%';
+      logoEl.src = data.logo || logoEl.src;
+    } else {
+      wolfData.textContent = 'No price data';
+    }
+  } catch (err) {
+    console.error(err);
+    wolfData.textContent = 'Error loading featured data';
+  }
+}
+
+// controls
+const refreshBtn = document.getElementById('refreshBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+let paused = false;
+let pollHandle = null;
+function startPolling(){ stopPolling(); pollHandle = setInterval(fetchTokens, POLL_INTERVAL); }
+function stopPolling(){ if (pollHandle) clearInterval(pollHandle); pollHandle = null; }
+
+refreshBtn.addEventListener('click', fetchTokens);
+pauseBtn.addEventListener('click', () => {
+  paused = !paused;
+  pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+  if (!paused) startPolling(); else stopPolling();
+});
+
+// init
+fetchTokens();
+loadFeaturedToken();
+startPolling();
 </script>
+
+</body>
+</html>
