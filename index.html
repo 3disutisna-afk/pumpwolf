@@ -131,42 +131,51 @@
 <footer>© 2025 PumpWolf — The Cyber Pack • Dashboard demo</footer>
 
 <script>
-/* ===== Debuggable fetch & rendering (paste pengganti seluruh script lama) =====
-   - Paste this block replacing existing <script> logic (from ENDPOINT... sampai akhir)
-   - Temporarily sets MIN_LIQUIDITY = 0 so nothing tertutup oleh filter
-   - Shows debug output on page to lihat apa yang dikembalikan proxy
+/*
+  Smart proxy URL selector
+  - Jika di Vercel (domain berakhiran vercel.app atau hostname === 'pumpwolf.vercel.app'),
+    gunakan path RELATIF '/api/proxy/...' (agar memakai function serverless di same origin).
+  - Jika bukan Vercel (mis. GitHub Pages), gunakan ABSOLUTE URL ke Vercel deploy kita.
+  - Pastikan tidak menaruh API key di client.
 */
 
-const ENDPOINT = "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100";
-const FEATURE_PRICE_URL = (addr) => `/api/proxy/token/mainnet/${addr}/price`;
-const FEATURED_TOKEN_ADDRESS = "YOUR_TOKEN_ADDRESS"; // ganti nanti
-const POLL_INTERVAL = 60000;
-let MIN_LIQUIDITY = 0; // <-- debug: set 0 sementara
+(function(){
+  // --- CONFIG ---
+  const VERCEL_HOST = 'pumpwolf.vercel.app'; // ganti jika domain vercel-mu berbeda
+  const VERCEL_BASE = `https://${VERCEL_HOST}`; // full base URL to vercel site
+  const PROXY_PATH = '/api/proxy'; // path used on Vercel
 
-const apiStatusEl = document.getElementById('api-status');
-const lastUpdateEl = document.getElementById('last-update');
-const tokenContainer = document.getElementById('tokenContainer');
+  // runtime decide base
+  const onVercel = (location.hostname === VERCEL_HOST) || location.hostname.endsWith('.vercel.app');
+  // If the page is served ON vercel, use relative path so function resolves in same origin.
+  // Else (GitHub Pages) use absolute vercel URL so browser calls Vercel serverless.
+  const PROXY_BASE = onVercel ? '' : VERCEL_BASE;
 
-// create debug panel above tokenContainer
-(function ensureDebugPanel(){
-  if(document.getElementById('pwDebug')) return;
-  const dbg = document.createElement('div');
-  dbg.id = 'pwDebug';
-  dbg.style.cssText = 'background:rgba(0,0,0,0.4);border:1px solid rgba(0,240,255,0.04);padding:8px;border-radius:8px;margin-bottom:10px;color:#dff;font-size:0.9rem';
-  dbg.innerHTML = `<div><b>DEBUG PANEL</b> — fetch status & raw JSON</div><pre id="pwDebugPre" style="max-height:180px;overflow:auto;margin-top:6px;color:#cfe"></pre>`;
-  tokenContainer.parentElement.insertBefore(dbg, tokenContainer);
+  // Endpoints (use PROXY_BASE + PROXY_PATH)
+  const ENDPOINT = `${PROXY_BASE}${PROXY_PATH}/token/mainnet/exchange/pumpfun/new?limit=100`;
+  const FEATURE_PRICE_URL = (addr) => `${PROXY_BASE}${PROXY_PATH}/token/mainnet/${encodeURIComponent(addr)}/price`;
+  // featured token address (set AFTER peluncuran token)
+  const FEATURED_TOKEN_ADDRESS = "YOUR_TOKEN_ADDRESS"; // replace when ready
+
+  // other config
+  const POLL_INTERVAL = 60000;
+  const MIN_LIQUIDITY = 5000;
+
+  // expose for other code in page
+  window.PW_CONFIG = {
+    ENDPOINT,
+    FEATURE_PRICE_URL,
+    FEATURED_TOKEN_ADDRESS,
+    POLL_INTERVAL,
+    MIN_LIQUIDITY,
+    ON_VERCEL: onVercel,
+    VERCEL_BASE
+  };
+
+  // optional debug log to console so kita tahu apa yang dipakai
+  console.info('[PW] proxy base:', PROXY_BASE || '(relative on vercel)');
 })();
-
-function debugLog(msg, obj){
-  try {
-    const pre = document.getElementById('pwDebugPre');
-    pre.textContent = (new Date().toLocaleTimeString()) + " — " + msg + (obj ? ("\n" + JSON.stringify(obj, null, 2)) : "");
-  } catch(e){}
-  console.log("[PW debug]", msg, obj || "");
-}
-
-window.tokenMap = {}; // reset
-
+</script>
 async function fetchTokens(){
   apiStatusEl.textContent = 'Fetching...';
   debugLog("Starting fetch to " + ENDPOINT);
