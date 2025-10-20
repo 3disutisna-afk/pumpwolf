@@ -43,10 +43,57 @@
     /* modal basic style override */
     .pw-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(6px) saturate(120%)}
     .pw-modal.open{display:flex}
+ <!-- Fallback banner CSS -->
+  .pw-fallback {
+    display:none;
+    position:fixed;
+    inset:12px 12px auto 12px;
+    z-index:99999;
+    background: linear-gradient(90deg, rgba(6,8,16,0.98), rgba(3,5,12,0.98));
+    color:#dff;
+    border:1px solid rgba(0,240,255,0.08);
+    padding:12px 14px;
+    border-radius:12px;
+    box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+    max-width:calc(100% - 40px);
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+    font-family: Inter, system-ui, sans-serif;
+  }
+  .pw-fallback .left { display:flex; gap:10px; align-items:center; max-width:70%; }
+  .pw-fallback .left .dot { width:12px;height:12px;border-radius:50%;background: #ff6b6b; box-shadow:0 0 12px rgba(255,107,107,0.12); }
+  .pw-fallback .title { font-weight:700; color:var(--neon); font-size:0.98rem }
+  .pw-fallback .desc { font-size:0.9rem; color:var(--muted); margin-top:4px }
+  .pw-fallback .actions { display:flex; gap:8px; align-items:center }
+  .pw-fallback .btn { background:linear-gradient(90deg,var(--neon),var(--accent)); color:#001; padding:8px 10px; border-radius:10px; font-weight:700; text-decoration:none; border:none; cursor:pointer; }
+  .pw-fallback .btn.secondary { background:transparent; border:1px solid rgba(255,255,255,0.03); color:var(--muted); padding:8px 10px; }
+  .pw-fallback .count { color:var(--muted); font-size:0.9rem; margin-left:6px }
+  @media(max-width:720px){
+    .pw-fallback { flex-direction:column; align-items:flex-start; gap:8px; left:12px; right:12px; }
+    .pw-fallback .left { max-width:100%; }
+    .pw-fallback .actions { width:100%; justify-content:space-between; }
+  }
   </style>
 </head>
 <body>
+<!-- Fallback notice (place at top of <body>) -->
+<div id="pwFallback" class="pw-fallback" role="alert" aria-live="polite">
+  <div class="left">
+    <div class="dot" aria-hidden="true"></div>
+    <div>
+      <div class="title">Mode statis: fitur server tidak aktif di GitHub Pages</div>
+      <div class="desc">Proxy/API backend tidak tersedia di versi statis. Untuk experience penuh (live data & fungsi), buka versi lengkap.</div>
+    </div>
+  </div>
 
+  <div class="actions">
+    <a id="openVercel" class="btn" href="https://pumpwolf.vercel.app/" target="_blank" rel="noopener">Buka versi penuh</a>
+    <button id="stayBtn" class="btn secondary" type="button">Tetap di sini</button>
+    <div style="display:flex;align-items:center"><span class="count" id="redirectCountdown">↪ otomatis pindah dalam 8s</span></div>
+  </div>
+</div>
 <header>
   <div class="logo">PW</div>
   <div>
@@ -337,6 +384,81 @@ pauseBtn.addEventListener('click', () => {
 fetchTokens();
 loadFeaturedToken();
 startPolling();
+/*
+  Fallback behavior:
+  - Try to call Vercel proxy endpoint once.
+  - If success => hide banner and let page run normally.
+  - If failure => show banner, start countdown to redirect to Vercel (can cancel via "Tetap di sini").
+  - Safe: no API keys used here.
+*/
+
+(async function(){
+  const VERK = "https://pumpwolf.vercel.app/api/proxy/token/mainnet/exchange/pumpfun/new?limit=1";
+  const fallback = document.getElementById('pwFallback');
+  const openBtn = document.getElementById('openVercel');
+  const stayBtn = document.getElementById('stayBtn');
+  const countdownEl = document.getElementById('redirectCountdown');
+
+  // if running already on Vercel domain, do nothing
+  if (location.hostname.endsWith('vercel.app') || location.hostname === 'pumpwolf.vercel.app') {
+    // hide fallback immediately
+    if (fallback) fallback.style.display = 'none';
+    return;
+  }
+
+  // quick probe to Vercel proxy (timeout-controlled)
+  function probe(url, timeout = 3500) {
+    return new Promise((resolve) => {
+      let timedOut = false;
+      const timer = setTimeout(() => { timedOut = true; resolve(false); }, timeout);
+      fetch(url, { method:'GET', mode:'cors' }).then(r => {
+        if (timedOut) return;
+        clearTimeout(timer);
+        resolve(r && r.ok);
+      }).catch(() => {
+        if (!timedOut) { clearTimeout(timer); resolve(false); }
+      });
+    });
+  }
+
+  const ok = await probe(VERK, 3500);
+  if (ok) {
+    // Vercel proxy reachable — hide fallback and continue
+    if (fallback) fallback.style.display = 'none';
+    return;
+  }
+
+  // show fallback
+  if (fallback) fallback.style.display = 'flex';
+
+  // start redirect countdown
+  let count = 8; // seconds
+  let timerId = null;
+  countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+
+  function startCountdown(){
+    timerId = setInterval(() => {
+      count--;
+      countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+      if (count <= 0) {
+        clearInterval(timerId);
+        // Redirect to full Vercel site
+        window.location.href = "https://pumpwolf.vercel.app/";
+      }
+    }, 1000);
+  }
+  startCountdown();
+
+  // stay on page - cancel redirect
+  stayBtn.addEventListener('click', () => {
+    if (timerId) clearInterval(timerId);
+    countdownEl.textContent = 'Redirect dibatalkan — tetap di halaman ini';
+    stayBtn.disabled = true;
+    stayBtn.textContent = 'Menetap';
+  });
+
+  // open Vercel in new tab (already set via link). No further action needed.
+})();
 </script>
 
 </body>
