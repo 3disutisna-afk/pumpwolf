@@ -439,5 +439,24 @@
   })();
   </script>
   <!-- ================= end script ================= -->
+  <script>
+/* safe cleanup: remove stray text nodes that start like an HTML document or script tag */
+(function(){
+  try {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    const toRemove = [];
+    while(walker.nextNode()){
+      const v = walker.currentNode.nodeValue;
+      if (!v) continue;
+      const t = v.trim();
+      if (t.startsWith('<!DOCTYPE') || t.startsWith('<html') || t.startsWith('<script') || t.startsWith('<head') ) {
+        // don't remove debug panel content (it is intentional). remove only long chunks that look like markup
+        if (t.length > 20) toRemove.push(walker.currentNode);
+      }
+    }
+    toRemove.forEach(n => n.parentNode && n.parentNode.removeChild(n));
+  } catch(e){ console.warn('cleanup script error', e); }
+})();
+  </script>
 </body>
 </html>
