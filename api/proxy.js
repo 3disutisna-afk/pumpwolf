@@ -1,74 +1,81 @@
 // api/proxy.js
-// Serverless proxy untuk Moralis (Vercel, Node 18+).
-// Jangan letakkan MORALIS_KEY di sini. Set MORALIS_KEY di Vercel Environment Variables.
+// Proksi tanpa server untuk Moralis (berfungsi untuk proyek statis di Vercel)
+// Simpan berkas ini ke repo root di: /api/proxy.js
+// JANGAN hardcode kunci MORALIS Anda di sini. Atur MORALIS_KEY di Variabel Lingkungan Vercel.
 
-module.exports = async function (req, res) {
-  // CORS preflight
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+modul.ekspor = fungsi asinkron (permintaan, res) {
+  // Pra-penerbangan CORS dasar
+  res.setHeader('Akses-Kontrol-Izinkan-Asal', '*');
+  res.setHeader('Akses-Kontrol-Izinkan-Metode', 'DAPATKAN,POSTING,OPSI');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
+  jika (req.metode === 'PILIHAN') {
     res.statusCode = 204;
-    res.end();
-    return;
+    res.akhir();
+    kembali;
   }
 
-  const MORALIS_KEY = process.env.MORALIS_KEY;
-  if (!MORALIS_KEY) {
+  const MORALIS_KEY = proses.env.MORALIS_KEY;
+  jika (!MORALIS_KEY) {
     res.statusCode = 500;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ error: 'Missing MORALIS_KEY in server environment' }));
-    return;
+    res.setHeader('Jenis Konten', 'aplikasi/json');
+    res.end(JSON.stringify({ error: 'MORALIS_KEY hilang di lingkungan server' }));
+    kembali;
   }
 
-  try {
-    // req.url berisi path + query, mis: /api/proxy/token/mainnet/...?limit=2
+  mencoba {
+    // req.url mencakup seluruh jalur dan kueri, misalnya /api/proxy/token/mainnet/...?limit=2
     const rawUrl = req.url || '';
     const upstreamPath = rawUrl.replace(/^\/api\/proxy/, '') || '/';
     const upstreamUrl = 'https://solana-gateway.moralis.io' + upstreamPath;
 
-    // build headers
-    const upstreamHeaders = {
-      'X-API-Key': MORALIS_KEY,
-      'accept': 'application/json'
+    // membangun header untuk hulu
+    konstanta upstreamHeaders = {
+      'Kunci-API-X': KUNCI_MORALIS,
+      'terima': 'aplikasi/json'
     };
-    if (req.headers['content-type']) upstreamHeaders['content-type'] = req.headers['content-type'];
+    jika (req.headers['tipe-konten']) upstreamHeaders['tipe-konten'] = req.headers['tipe-konten'];
 
-    const opts = { method: req.method, headers: upstreamHeaders };
+    const opts = {
+      metode: req.metode,
+      header: upstreamHeaders
+    };
 
-    // forward body for non-GET/HEAD
-    if (req.method !== 'GET' && req.method !== 'HEAD') {
-      if (req.body && (typeof req.body === 'string' || Buffer.isBuffer(req.body))) {
+    // badan penerusan untuk permintaan non-GET/HEAD
+    jika (req.metode !== 'GET' dan req.metode !== 'HEAD') {
+      // Req Node mungkin memiliki body yang sudah diurai oleh Vercel; coba baca raw jika ada
+      jika (req.body dan (jenis req.body === 'string' || Buffer.isBuffer(req.body))) {
         opts.body = req.body;
-      } else if (req.body && Object.keys(req.body).length) {
+      } jika tidak (req.body dan Object.keys(req.body).length) {
         opts.body = JSON.stringify(req.body);
-      } else {
-        // fallback: collect raw stream (rare)
-        try {
-          opts.body = await new Promise((resolve) => {
-            let data = '';
+      } kalau tidak {
+        // fallback: coba kumpulkan aliran mentah (jarang)
+        mencoba {
+          opts.body = tunggu new Promise((resolve) => {
+            biarkan data = '';
             req.on && req.on('data', (c) => (data += c));
-            req.on && req.on('end', () => resolve(data || undefined));
-            setTimeout(() => resolve(undefined), 5);
+            req.on && req.on('akhir', () => selesaikan(data || tidak terdefinisi));
+            // jika acara tidak tersedia, selesaikan dengan cepat
+            setTimeout(() => selesaikan(tidak terdefinisi), 5);
           });
-        } catch (e) { /* ignore */ }
+        } tangkap (e) { /* abaikan */ }
       }
     }
 
     // gunakan global fetch (tersedia di Vercel Node 18+)
-    const upstreamRes = await fetch(upstreamUrl, opts);
-    const text = await upstreamRes.text();
+    const upstreamRes = tunggu fetch(upstreamUrl, opts);
+    const teks = tunggu upstreamRes.teks();
 
-    res.setHeader('Content-Type', upstreamRes.headers.get('content-type') || 'application/json');
-    res.setHeader('Cache-Control', 'no-store');
+    // menyebarkan tipe konten dan status
+    res.setHeader('Jenis-Konten', upstreamRes.headers.get('jenis-konten') || 'aplikasi/json');
+    // hindari caching (sesuaikan jika Anda menginginkan caching)
+    res.setHeader('Cache-Control', 'tidak-disimpan');
     res.statusCode = upstreamRes.status;
-    res.end(text);
-  } catch (err) {
-    console.error('proxy error', err && (err.stack || err.message || err));
-    res.setHeader('Content-Type', 'application/json');
+    res.end(teks);
+  } tangkap (salah) {
+    console.error('kesalahan proksi', err && (err.tumpukan || err.pesan || err));
+    res.setHeader('Jenis Konten', 'aplikasi/json');
     res.statusCode = 500;
-    // kirim pesan singkat (tanpa kunci) supaya client dapat logging
-    res.end(JSON.stringify({ error: 'Proxy internal error' }));
+    res.end(JSON.stringify({ error: 'Kesalahan internal proksi' }));
   }
 };
