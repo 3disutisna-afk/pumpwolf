@@ -20,10 +20,10 @@
     * { box-sizing: border-box; margin: 0; padding: 0 }
     body { font-family: Inter, system-ui, sans-serif; background: radial-gradient(circle at 10% 10%, #02030a 0%, var(--bg) 60%); color: #dff }
     header { padding: 18px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(0,255,255,0.05) }
-    header .logo { width: 52px; height: 52px; border-radius: 10px; object-fit: contain; box-shadow: 0 0 18px rgba(0,240,255,0.1) }
+    header .logo { width: 52px; height: 52px; border-radius: 10px; object-fit: contain; box-shadow: 0 0 18px rgba(0,240,255,0.1); loading: lazy; }
     header h1 { margin: 0; font-size: 1.05rem; color: var(--neon) } .muted { color: var(--muted); font-size: 0.9rem }
     .layout { display: flex; gap: 16px; padding: 16px; align-items: flex-start }
-    .col-left { width: 280px; min-width: 240px } .col-main { flex: 1 }
+    .col-left { width: 280px; min-width: 240px; margin-bottom: 16px } .col-main { flex: 1 }
     .card { background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.015)); border: 1px solid rgba(0,240,255,0.06); border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.45) }
     .btn { background: linear-gradient(90deg, var(--neon), var(--accent)); border: none; color: #001; padding: 8px 12px; border-radius: 10px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block }
     .small { padding: 6px 10px; font-size: 0.85rem } .tiny { font-size: 0.82rem; color: var(--muted) }
@@ -69,7 +69,7 @@
   </div>
 
   <header>
-    <img class="logo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="PW" onerror="this.src='https://via.placeholder.com/52?text=PW'" />
+    <img class="logo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="PW" onerror="this.src='https://via.placeholder.com/52?text=PW'" loading="lazy" />
     <div>
       <h1>PumpWolf Dashboard</h1>
       <div class="muted">Cyber Meme Utility — Wolf Pack Live 🐺</div>
@@ -101,7 +101,7 @@
             <h2 style="color:var(--neon);margin:6px 0" id="featuredTitle">$WOLF — The Cyber Meme Wolf</h2>
             <div class="tiny" id="wolfData">Loading live data...</div>
           </div>
-          <img id="featuredLogo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="$WOLF" style="width:60px;height:60px;border-radius:12px;box-shadow:0 0 18px rgba(0,240,255,0.25);margin-top:6px" onerror="this.src='https://via.placeholder.com/60?text=W'" />
+          <img id="featuredLogo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="$WOLF" style="width:60px;height:60px;border-radius:12px;box-shadow:0 0 18px rgba(0,240,255,0.25);margin-top:6px" onerror="this.src='https://via.placeholder.com/60?text=W'; this.onerror = null;" loading="lazy" />
         </div>
 
         <div class="howl-bar" style="margin-top:10px"><div class="fill" id="howlFill" style="width:50%"></div></div>
@@ -125,21 +125,22 @@
         <div class="card" id="debugContainer" style="margin-top:12px">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div class="muted">Debug Panel (Toggle)</div>
-            <button class="btn small" id="toggleDebug">Show/Hide</button>
+            <button class="btn small" id="toggleDebug">Hide</button>
           </div>
-          <div id="debugPanel" class="debug"></div>
+          <div id="debugPanel" class="debug visible"></div>
         </div>
       </div>
     </main>
   </div>
 
-  <footer>© 2025 PumpWolf — The Cyber Pack • v2.4</footer>
+  <footer>© 2025 PumpWolf — The Cyber Pack • v2.6</footer>
 
   <script>
     (function() {
       const VERCEL_BASE = "https://pumpwolf.vercel.app";
       const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=50";
       const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
+      const SOLANA_RPC = "https://api.mainnet-beta.solana.com"; // Free RPC for testing
       const FEATURED_TOKEN_ADDRESS = "";
       const POLL_INTERVAL = 60000;
       const MIN_LIQUIDITY = 10000; // $10,000
@@ -185,6 +186,54 @@
         }
       }
 
+      async function getTokenSafety(addr) {
+        try {
+          // RPC call to get mint info
+          const response = await fetch(SOLANA_RPC, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 1,
+              method: 'getAccountInfo',
+              params: [addr, { encoding: 'jsonParsed' }]
+            })
+          });
+          const result = await response.json();
+          if (!result.value) return { mintable: true, blacklisted: false, burned: false, holders: 0, topHolderPct: 100 };
+          const mintInfo = result.value.data.parsed.info;
+          const mintable = mintInfo.mintAuthority !== null;
+          const burned = mintInfo.mintAuthority === null; // Burned if mint authority null
+          const freezeable = mintInfo.freezeAuthority !== null;
+          // For holders and top holder %, use getTokenLargestAccounts
+          const holdersRes = await fetch(SOLANA_RPC, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 1,
+              method: 'getTokenLargestAccounts',
+              params: [addr]
+            })
+          });
+          const holdersData = await holdersRes.json();
+          const totalHolders = holdersData.result.count || 0;
+          const topHolderAmount = holdersData.result.value[0]?.uiAmount || 0;
+          const totalSupply = mintInfo.supply;
+          const topHolderPct = totalSupply ? (topHolderAmount / totalSupply * 100).toFixed(2) : 0;
+          return {
+            mintable,
+            blacklisted: false, // Simplified, can add rug check via transaction history if needed
+            burned,
+            holders: totalHolders,
+            topHolderPct: topHolderPct
+          };
+        } catch (err) {
+          debugLog("Safety check error:", err.message);
+          return { mintable: false, blacklisted: false, burned: false, holders: 0, topHolderPct: 100 };
+        }
+      }
+
       const dummyTokens = [
         { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "12971.933460626", fullyDilutedValuation: "6892", createdAt: "2025-10-21T06:35:08.000Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png", mintable: false, blacklisted: false, burned: true, holders: 75, topHolderPct: 20 },
         { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "11937.123185542", fullyDilutedValuation: "5837", createdAt: "2025-10-21T06:35:07.000Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png", mintable: false, blacklisted: false, burned: true, holders: 60, topHolderPct: 25 },
@@ -198,8 +247,8 @@
           const ageMin = (now - new Date(it.createdAt)) / (1000 * 60);
           const holders = Number(it.holders || 0);
           const topHolderPct = Number(it.topHolderPct || 100);
-          return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && ageMin <= MAX_AGE_MIN &&
-                 holders >= MIN_HOLDERS && topHolderPct <= MAX_TOP_HOLDER_PCT &&
+          return liq ≥ MIN_LIQUIDITY && fdv ≤ MAX_FDV && ageMin ≤ MAX_AGE_MIN &&
+                 holders ≥ MIN_HOLDERS && topHolderPct ≤ MAX_TOP_HOLDER_PCT &&
                  !it.mintable && !it.blacklisted && it.burned;
         }).slice(0, 10);
       }
@@ -217,10 +266,11 @@
             debugLog("Invalid or empty data from API:", data);
             throw new Error('Invalid data structure');
           }
-          const filtered = filterSafeTokens(data.result.map(t => ({
-            ...t, logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png",
-            mintable: false, blacklisted: false, burned: true, holders: 50, topHolderPct: 20
-          })));
+          const tokensWithDetails = await Promise.all(data.result.map(async (t) => {
+            const details = await getTokenSafety(t.tokenAddress);
+            return { ...t, logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png", ...details };
+          }));
+          const filtered = filterSafeTokens(tokensWithDetails);
           debugLog("Filtered tokens count:", filtered.length);
           if (filtered.length === 0) {
             debugLog("No tokens passed filter, using dummy data");
@@ -239,7 +289,9 @@
         tokenContainer.innerHTML = '';
         window.tokenMap = {};
         if (!tokens.length) {
-          tokenContainer.innerHTML = `<div class="tiny">No safe tokens found</div>`;
+          tokenContainer.innerHTML = `
+            <div class="tiny">No safe tokens found</div>
+          `;
         } else {
           tokens.forEach(it => {
             const addr = it.tokenAddress;
@@ -252,7 +304,7 @@
             const createdAt = new Date(it.createdAt).toLocaleTimeString();
             div.innerHTML = `
               <div style="display:flex;gap:8px;align-items:center">
-                <img src="${it.logo || 'https://via.placeholder.com/24?text=?'}" alt="${it.symbol}" style="width:24px;height:24px;border-radius:6px">
+                <img src="${it.logo || 'https://via.placeholder.com/24?text=?'}" alt="${it.symbol}" style="width:24px;height:24px;border-radius:6px" loading="lazy" />
                 <div>
                   <div><b style="color:var(--neon)">${escapeHtml(it.symbol || '?')}</b> — ${escapeHtml(it.name || 'Unnamed')}</div>
                   <div class="tiny">💧 $${liquidity.toLocaleString()} • 🧮 FDV: $${fdv.toLocaleString()}</div>
@@ -274,7 +326,7 @@
           <div style="width:min(720px,94%);max-height:86vh;overflow:auto;padding:18px;border-radius:12px;background:linear-gradient(135deg,rgba(2,6,10,0.96),rgba(6,8,16,0.99));border:1px solid rgba(0,240,255,0.06);box-shadow:0 30px 80px rgba(0,0,0,0.7);color:#dff">
             <button class="closeBtn" style="float:right;background:transparent;border:0;color:#9fe;font-size:20px;cursor:pointer">✕</button>
             <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
-              <img id="mLogo" src="" alt="Logo" style="width:64px;height:64px;border-radius:8px;object-fit:cover;box-shadow:0 0 20px rgba(0,240,255,0.08)" />
+              <img id="mLogo" src="" alt="Logo" style="width:64px;height:64px;border-radius:8px;object-fit:cover;box-shadow:0 0 20px rgba(0,240,255,0.08)" loading="lazy" />
               <div>
                 <h2 id="mName" style="margin:0;color:var(--neon)"></h2>
                 <div id="mSymbol" style="margin-top:6px;color:var(--muted)">⛓️ Solana</div>
@@ -290,32 +342,26 @@
         `;
         document.body.appendChild(modal);
 
-        tokenContainer.addEventListener('click', (ev) => {
+        tokenContainer.addEventListener('click', async (ev) => {
           const tokenEl = ev.target.closest('.token');
-          if (!tokenEl) {
-            debugLog('Click outside token element');
-            return;
-          }
+          if (!tokenEl) return;
           debugLog('Token clicked:', tokenEl.dataset.addr);
           const addr = tokenEl.dataset.addr;
           const item = window.tokenMap[addr];
-          if (!item) {
-            debugLog('No token data for address:', addr);
-            return;
-          }
+          if (!item) return;
 
           modal.classList.add('open');
           modal.querySelector('#mLogo').src = item.logo || 'https://via.placeholder.com/64?text=?';
           modal.querySelector('#mName').textContent = item.name || 'Unnamed';
           modal.querySelector('#mSymbol').textContent = (item.symbol || '?') + ' • ' + (addr ? (addr.slice(0, 6) + '...') : '');
 
-          const ageMin = item.createdAt ? Math.round((new Date() - new Date(item.createdAt)) / (1000 * 60)) + ' min' : '—';
           const liqFdv = item.liquidity && item.fullyDilutedValuation ? ((Number(item.liquidity) / Number(item.fullyDilutedValuation)) * 100).toFixed(2) + '%' : '—';
+          const ageMin = item.createdAt ? Math.round((new Date() - new Date(item.createdAt)) / (1000 * 60)) + ' min' : '—';
           const isMintable = item.mintable ? '✅' : '❌';
-          const isBlacklisted = item.blacklisted ? '✅' : '❌';
-          const isBurned = item.burned ? '✅' : '❌';
-          const topHolderPct = item.topHolderPct ? `${item.topHolderPct}%` : '—';
-          const holders = item.holders || '—';
+          const isBlacklisted = item.blacklisted ? '🚫' : '✅';
+          const isBurned = item.burned ? '🔥' : '❌';
+          const topHolderPct = item.topHolderPct ? `${item.topHolderPct}%` : 'N/A';
+          const holders = item.holders || 'N/A';
 
           modal.querySelector('#mDetails').innerHTML = `
             <div class="tiny">📊 FDV: $${item.fullyDilutedValuation || '—'}</div>
@@ -363,7 +409,6 @@
 
           modal.querySelector('.closeBtn').onclick = () => modal.classList.remove('open');
           modal.addEventListener('click', (ev) => { if (ev.target === modal) modal.classList.remove('open'); });
-        });
       }
 
       let paused = false;
