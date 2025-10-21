@@ -11,7 +11,7 @@
   <meta property="og:image" content="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/pumpwolf_banner.jpg" />
   <meta property="og:url" content="https://3disutisna-afk.github.io/pumpwolf/" />
   <meta name="twitter:card" content="summary_large_image" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <style>
     :root {
@@ -20,7 +20,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0 }
     body { font-family: Inter, system-ui, sans-serif; background: radial-gradient(circle at 10% 10%, #02030a 0%, var(--bg) 60%); color: #dff }
     header { padding: 18px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(0,255,255,0.05) }
-    header .logo { width: 52px; height: 52px; border-radius: 10px; background: radial-gradient(circle at 30% 30%, #002, #013); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 18px rgba(0,240,255,0.1); font-weight: 700 }
+    header .logo { width: 52px; height: 52px; border-radius: 10px; object-fit: contain; box-shadow: 0 0 18px rgba(0,240,255,0.1) }
     header h1 { margin: 0; font-size: 1.05rem; color: var(--neon) } .muted { color: var(--muted); font-size: 0.9rem }
     .layout { display: flex; gap: 16px; padding: 16px; align-items: flex-start }
     .col-left { width: 280px; min-width: 240px } .col-main { flex: 1 }
@@ -28,7 +28,7 @@
     .btn { background: linear-gradient(90deg, var(--neon), var(--accent)); border: none; color: #001; padding: 8px 12px; border-radius: 10px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block }
     .small { padding: 6px 10px; font-size: 0.85rem } .tiny { font-size: 0.82rem; color: var(--muted) }
     .token-list { display: flex; flex-direction: column; gap: 10px; max-height: 65vh; overflow: auto; padding-right: 6px }
-    .token { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; background: linear-gradient(90deg, rgba(0,0,0,0.16), rgba(0,0,0,0.06)); border: 1px solid rgba(0,240,255,0.03); transition: transform .18s ease, box-shadow .18s ease }
+    .token { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; background: linear-gradient(90deg, rgba(0,0,0,0.16), rgba(0,0,0,0.06)); border: 1px solid rgba(0,240,255,0.03); transition: transform .18s ease, box-shadow .18s ease; cursor: pointer }
     .token:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,240,255,0.06) }
     footer { text-align: center; padding: 14px 20px; color: var(--muted); font-size: 0.85rem }
     .howl-bar { height: 10px; border-radius: 8px; background: rgba(255,255,255,0.03); overflow: hidden; margin-top: 8px; box-shadow: inset 0 0 6px rgba(0,240,255,0.08) }
@@ -37,26 +37,7 @@
     @media (max-width: 500px) { header .logo { width: 46px; height: 46px } header h1 { font-size: 1rem } .card { padding: 10px } }
     .pw-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(6px) saturate(120%) }
     .pw-modal.open { display: flex }
-
-    /* Fallback banner style */
-    .pw-fallback {
-      display: none;
-      position: fixed;
-      inset: 12px 12px auto 12px;
-      z-index: 99999;
-      background: linear-gradient(90deg, rgba(6,8,16,0.98), rgba(3,5,12,0.98));
-      color: #dff;
-      border: 1px solid rgba(0,240,255,0.08);
-      padding: 12px 14px;
-      border-radius: 12px;
-      box-shadow: 0 18px 60px rgba(0,0,0,0.6);
-      max-width: calc(100% - 40px);
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      justify-content: space-between;
-      font-family: Inter, system-ui, sans-serif;
-    }
+    .pw-fallback { display: none; position: fixed; inset: 12px 12px auto 12px; z-index: 99999; background: linear-gradient(90deg, rgba(6,8,16,0.98), rgba(3,5,12,0.98)); color: #dff; border: 1px solid rgba(0,240,255,0.08); padding: 12px 14px; border-radius: 12px; box-shadow: 0 18px 60px rgba(0,0,0,0.6); max-width: calc(100% - 40px); display: flex; gap: 12px; align-items: center; justify-content: space-between; font-family: Inter, system-ui, sans-serif; }
     .pw-fallback .left { display: flex; gap: 10px; align-items: center; max-width: 70%; }
     .pw-fallback .left .dot { width: 12px; height: 12px; border-radius: 50%; background: #ff6b6b; box-shadow: 0 0 12px rgba(255,107,107,0.12); }
     .pw-fallback .title { font-weight: 700; color: var(--neon); font-size: 0.98rem }
@@ -65,28 +46,16 @@
     .pw-fallback .btn { background: linear-gradient(90deg, var(--neon), var(--accent)); color: #001; padding: 8px 10px; border-radius: 10px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; }
     .pw-fallback .btn.secondary { background: transparent; border: 1px solid rgba(255,255,255,0.03); color: var(--muted); padding: 8px 10px; }
     .pw-fallback .count { color: var(--muted); font-size: 0.9rem; margin-left: 6px }
-    @media (max-width: 720px) {
-      .pw-fallback { flex-direction: column; align-items: flex-start; gap: 8px; left: 12px; right: 12px; }
-      .pw-fallback .left { max-width: 100%; }
-      .pw-fallback .actions { width: 100%; justify-content: space-between; }
-    }
-
-    /* Debug panel hidden by default */
+    @media (max-width: 720px) { .pw-fallback { flex-direction: column; align-items: flex-start; gap: 8px; left: 12px; right: 12px; } .pw-fallback .left { max-width: 100%; } .pw-fallback .actions { width: 100%; justify-content: space-between; } }
     .debug { display: none; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size: 13px; color: #c8fff6; white-space: pre-wrap; overflow: auto; max-height: 220px; padding: 12px; background: rgba(0,0,0,0.22); border-radius: 8px; border: 1px solid rgba(0,240,255,0.03) }
     .debug.visible { display: block }
-
-    /* Mini chart style */
-    .mini-chart {
-      width: 100%;
-      height: 100px;
-      margin-top: 12px;
-    }
+    .mini-chart { width: 100%; height: 100px; margin-top: 12px; }
   </style>
 </head>
 <body>
-  <div id="pwFallback" class="pw-fallback" role="alert" aria-live="polite">
+  <div id="pwFallback" class="pw-fallback">
     <div class="left">
-      <div class="dot" aria-hidden="true"></div>
+      <div class="dot"></div>
       <div>
         <div class="title">Mode statis: fitur server tidak aktif di GitHub Pages</div>
         <div class="desc">Proxy/API backend tidak tersedia di versi statis. Untuk experience penuh (live data & fungsi), buka versi lengkap.</div>
@@ -94,13 +63,13 @@
     </div>
     <div class="actions">
       <a id="openVercel" class="btn" href="https://pumpwolf.vercel.app/" target="_blank" rel="noopener">Buka versi penuh</a>
-      <button id="stayBtn" class="btn secondary" type="button">Tetap di sini</button>
-      <div style="display: flex; align-items: center"><span class="count" id="redirectCountdown">↪ otomatis pindah dalam 8s</span></div>
+      <button id="stayBtn" class="btn secondary">Tetap di sini</button>
+      <div style="display:flex;align-items:center"><span class="count" id="redirectCountdown">↪ otomatis pindah dalam 8s</span></div>
     </div>
   </div>
 
   <header>
-    <div class="logo">PW</div>
+    <img class="logo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="PW" onerror="this.src='https://via.placeholder.com/52?text=PW'" />
     <div>
       <h1>PumpWolf Dashboard</h1>
       <div class="muted">Cyber Meme Utility — Wolf Pack Live 🐺</div>
@@ -111,13 +80,13 @@
     <aside class="col-left">
       <div class="card">
         <div class="muted">API Status</div>
-        <div id="api-status" style="color: var(--neon); margin-top: 6px">Proxy: ready</div>
-        <div class="muted" style="margin-top: 8px">Last update: <span id="last-update">—</span></div>
+        <div id="api-status" style="color:var(--neon);margin-top:6px">Proxy: ready</div>
+        <div class="muted" style="margin-top:8px">Last update: <span id="last-update">—</span></div>
       </div>
 
       <div class="card">
         <div class="muted">Controls</div>
-        <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap">
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn small" id="refreshBtn">Refresh</button>
           <button class="btn small" id="pauseBtn">Pause</button>
         </div>
@@ -125,32 +94,35 @@
 
       <div class="card">
         <div class="muted">Debug panel (fetch status & headers)</div>
-        <div id="debugPanel" class="debug">[debug output appears here]</div>
+        <div id="debugPanel" class="debug"></div>
       </div>
     </aside>
 
     <main class="col-main">
       <div class="card" id="featuredToken">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap">
           <div>
-            <div class="muted" style="font-size: 0.9rem">🔥 Featured Token</div>
-            <h2 style="color: var(--neon); margin: 6px 0" id="featuredTitle">$WOLF — The Cyber Meme Wolf</h2>
+            <div class="muted" style="font-size:0.9rem">🔥 Featured Token</div>
+            <h2 style="color:var(--neon);margin:6px 0" id="featuredTitle">$WOLF — The Cyber Meme Utility</h2>
             <div class="tiny" id="wolfData">Loading live data...</div>
           </div>
-          <img id="featuredLogo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="$WOLF" style="width: 60px; height: 60px; border-radius: 12px; box-shadow: 0 0 18px rgba(0,240,255,0.25); margin-top: 6px">
+          <img id="featuredLogo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="$WOLF" style="width:60px;height:60px;border-radius:12px;box-shadow:0 0 18px rgba(0,240,255,0.25);margin-top:6px" onerror="this.src='https://via.placeholder.com/60?text=W'" />
         </div>
-        <div class="howl-bar" style="margin-top: 10px"><div class="fill" id="howlFill" style="width: 50%"></div></div>
-        <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap">
+
+        <div class="howl-bar" style="margin-top:10px"><div class="fill" id="howlFill" style="width:50%"></div></div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           <a id="btnBuy" class="btn small" href="#" target="_blank">💧 Buy on Pump.fun</a>
           <a id="btnSolscan" class="btn small" href="#" target="_blank">🔎 Solscan</a>
         </div>
       </div>
 
       <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap">
-          <div><b style="color: var(--neon)">Live Tokens</b> <span class="muted">— auto-updated from Moralis (via proxy)</span></div>
-          <div class="muted" style="font-size: 0.85rem">Refresh: <span id="interval-label">60s</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+          <div><b style="color:var(--neon)">Live Tokens (Filtered High-Quality)</b> <span class="muted">— auto-updated from Moralis (via proxy)</span></div>
+          <div class="muted" style="font-size:0.85rem">Refresh: <span id="interval-label">60s</span></div>
         </div>
+
         <div id="tokenContainer" class="token-list">
           <div class="tiny">Loading...</div>
         </div>
@@ -158,16 +130,21 @@
     </main>
   </div>
 
-  <footer>© 2025 PumpWolf — The Cyber Pack • v2.2</footer>
+  <footer>© 2025 PumpWolf — The Cyber Pack • v2.8</footer>
 
   <script>
     (function() {
       const VERCEL_BASE = "https://pumpwolf.vercel.app";
-      const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100";
+      const MORALIS_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY"; // Ganti dengan API key Moralis kakak
+      const X_API_KEY = "AAAAAAAAAAAAAAAAAAAAAJwf0gEAAAAAwO7Jz47vr2XkKWrWJUps%2FvJOu3E%3DdUAaUAOgGOQBEKCrGN9gZp0B6dBmLH0E549Y7ODw2a4Td5EFxi"; // Ganti dengan Bearer Token dari X kakak (opsional)
+      const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=50";
       const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
       const FEATURED_TOKEN_ADDRESS = "";
       const POLL_INTERVAL = 60000;
-      const MIN_LIQUIDITY = 5000;
+      const MIN_LIQUIDITY = 300; // $300 untuk tes
+      const MAX_FDV = 1000000; // $1M untuk tes
+      const MIN_VOLUME_24H = 100; // $100 untuk tes
+      const MIN_AGE_MIN = 0.05; // 0.05 menit untuk tes
 
       const apiStatusEl = document.getElementById('api-status');
       const lastUpdateEl = document.getElementById('last-update');
@@ -181,204 +158,320 @@
       window.tokenMap = {};
 
       function debugLog(...args) {
-        try {
-          const t = new Date().toLocaleTimeString();
-          const s = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a, null, 2))).join(' ');
-          debugPanel.textContent = `[${t}] ` + s + "\n\n" + debugPanel.textContent;
-          debugPanel.classList.add('visible');
-        } catch (e) { console.log(...args); }
+        if (!debugPanel.classList.contains('visible')) debugPanel.classList.add('visible');
+        const t = new Date().toLocaleTimeString();
+        const s = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a, null, 2))).join(' ');
+        debugPanel.textContent += `[${t}] ${s}\n`;
+        debugPanel.scrollTop = debugPanel.scrollHeight;
       }
 
-      async function fetchTokens() {
-        apiStatusEl.textContent = 'Fetching...';
+      async function fetchJson(url, headers = {}) {
         try {
-          const res = await fetch(ENDPOINT, { headers: { "accept": "application/json" } });
-          if (!res.ok) {
-            apiStatusEl.textContent = `Proxy: error ${res.status}`;
-            tokenContainer.innerHTML = `<div class="tiny">Moralis proxy returned ${res.status}</div>`;
-            debugLog("Fetch failed:", { status: res.status });
-            lastUpdateEl.textContent = new Date().toLocaleTimeString();
-            return;
-          }
-
+          debugLog(`Fetching ${url}`);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout 15 detik
+          const res = await fetch(url, { signal: controller.signal, headers: { ...headers, "X-API-Key": MORALIS_API_KEY } });
+          clearTimeout(timeoutId);
+          if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
           const data = await res.json();
-          if (!data || !Array.isArray(data.result)) {
-            apiStatusEl.textContent = 'Proxy: malformed JSON';
-            tokenContainer.innerHTML = `<div class="tiny">Malformed JSON dari proxy</div>`;
-            debugLog("Invalid JSON:", data);
-            lastUpdateEl.textContent = new Date().toLocaleTimeString();
-            return;
-          }
-
-          const filtered = data.result.filter(it => Number(it.liquidity || 0) >= MIN_LIQUIDITY);
-          tokenContainer.innerHTML = '';
-          window.tokenMap = {};
-
-          if (!filtered.length) {
-            tokenContainer.innerHTML = `<div class="tiny">No tokens passed liquidity filter (>= ${MIN_LIQUIDITY})</div>`;
-          } else {
-            filtered.forEach(it => {
-              const addr = it.tokenAddress || it.address || ('addr_' + Math.random().toString(36).slice(2, 9));
-              window.tokenMap[addr] = it;
-              const div = document.createElement('div');
-              div.className = 'token';
-              div.dataset.addr = addr;
-              const liquidity = Number(it.liquidity || 0);
-              const fdv = Number(it.fullyDilutedValuation || it.fdv || 0);
-              const createdAt = it.createdAt ? new Date(it.createdAt).toLocaleTimeString() : '—';
-              div.innerHTML = `
-                <div>
-                  <div><b style="color: var(--neon)">${escapeHtml(it.symbol || '?')}</b> — ${escapeHtml(it.name || 'Unnamed')}</div>
-                  <div class="tiny">💧 $${isFinite(liquidity) ? Number(liquidity).toLocaleString() : '—'} • 🧮 FDV: $${isFinite(fdv) ? Number(fdv).toLocaleString() : '—'}</div>
-                </div>
-                <div class="tiny">${createdAt}</div>
-              `;
-              tokenContainer.appendChild(div);
-            });
-          }
-
-          apiStatusEl.textContent = 'Proxy: OK';
-          lastUpdateEl.textContent = new Date().toLocaleTimeString();
+          debugLog(`Fetched ${url}:`, data);
+          return data;
         } catch (err) {
-          console.error(err);
-          apiStatusEl.textContent = 'Proxy: error';
-          tokenContainer.innerHTML = `<div class="tiny">Network error</div>`;
           debugLog("Fetch error:", err.message);
-          lastUpdateEl.textContent = new Date().toLocaleTimeString();
+          return null;
         }
       }
 
-      (function setupModal() {
+      function formatTimestamp(ms) {
+        return new Date(ms).toISOString();
+      }
+
+      async function getPairsData(tokenAddress) {
+        const url = `https://solana-gateway.moralis.io/token/mainnet/${tokenAddress}/pairs`;
+        const data = await fetchJson(url);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Delay 0.5s
+        if (!data || !data.pairs || !data.pairs.length) {
+          debugLog(`No active pairs for ${tokenAddress}`);
+          return {};
+        }
+        const activePairs = data.pairs.filter(p => !p.inactivePair);
+        if (activePairs.length) {
+          const pair = activePairs.reduce((max, p) => (p.liquidityUsd > max.liquidityUsd ? p : max), activePairs[0]);
+          debugLog(`Pairs data for ${tokenAddress}:`, pair);
+          return {
+            priceUsd: parseFloat(pair.usdPrice || 0),
+            liquidity: parseFloat(pair.liquidityUsd || 0),
+            volume24h: parseFloat(pair.volume24hrUsd || 0),
+            name: pair.pair[0]?.tokenName || "Unknown",
+            symbol: pair.pair[0]?.tokenSymbol || "UNK"
+          };
+        }
+        debugLog(`No active pairs for ${tokenAddress}`);
+        return {};
+      }
+
+      async function getDexscreenerData(tokenAddress) {
+        const url = `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`;
+        const data = await fetchJson(url);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Delay 0.5s
+        if (!data || !data.pairs || !data.pairs.length) {
+          debugLog(`No pairs from DexScreener for ${tokenAddress}`);
+          return {};
+        }
+        const pair = data.pairs[0];
+        debugLog(`DexScreener data for ${tokenAddress}:`, pair);
+        return {
+          priceUsd: parseFloat(pair.priceUsd || 0),
+          liquidity: parseFloat(pair.liquidity?.usd || 0),
+          fullyDilutedValuation: parseFloat(pair.fdv || 0),
+          volume24h: parseFloat(pair.volume?.h24 || 0),
+          priceChange: parseFloat(pair.priceChange?.h24 || 0),
+          createdAt: pair.pairCreatedAt ? formatTimestamp(pair.pairCreatedAt) : Date.now(),
+          name: pair.baseToken?.name || "Unknown",
+          symbol: pair.baseToken?.symbol || "UNK"
+        };
+      }
+
+      async function getHoldersData(tokenAddress, ageMin) {
+        if (ageMin < 5) {
+          debugLog(`Token ${tokenAddress} too new (${ageMin} min), skipping holders`);
+          return { count: "N/A", trend_1h: 0 };
+        }
+        const url = `https://solana-gateway.moralis.io/token/mainnet/holders/${tokenAddress}`;
+        let data = await fetchJson(url);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Delay 0.5s
+        if (data && data.totalHolders !== undefined) {
+          debugLog(`Holders data for ${tokenAddress}:`, data);
+          return {
+            count: data.totalHolders.toString(),
+            trend_1h: parseInt(data.holderChange?.["1h"]?.change || 0)
+          };
+        }
+        const statsUrl = `https://solana-gateway.moralis.io/token/mainnet/${tokenAddress}/stats`;
+        data = await fetchJson(statsUrl);
+        if (data && data.holders !== undefined) {
+          debugLog(`Stats holders for ${tokenAddress}:`, data);
+          return { count: data.holders.toString(), trend_1h: 0 };
+        }
+        debugLog(`Failed to get holders for ${tokenAddress}`);
+        if (ageMin < 30) {
+          debugLog(`Using fallback holders=30 for ${tokenAddress} (age ${ageMin} min)`);
+          return { count: "30", trend_1h: 0 };
+        }
+        return { count: "N/A", trend_1h: 0 };
+      }
+
+      async function getXHype(tokenName) {
+        if (!X_API_KEY || X_API_KEY === "YOUR_X_API_KEY") {
+          debugLog("X_API_KEY not set, skipping X hype");
+          return 0;
+        }
+        const url = `https://api.x.com/2/tweets/counts/recent?query=${encodeURIComponent(tokenName)}`;
+        const headers = { "Authorization": `Bearer ${X_API_KEY}` };
+        const data = await fetchJson(url, headers);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Delay 0.5s
+        return data?.meta?.total_tweet_count || 0;
+      }
+
+      async function fetchTokenDetails(tokenAddress, ageMin) {
+        const [pairsData, dexscreenerData, holdersData] = await Promise.all([
+          getPairsData(tokenAddress),
+          getDexscreenerData(tokenAddress),
+          getHoldersData(tokenAddress, ageMin)
+        ]);
+        const xHype = await getXHype(pairsData.name || dexscreenerData.name || "Unknown");
+        return {
+          ...pairsData,
+          ...dexscreenerData,
+          ...holdersData,
+          xHype,
+          createdAt: dexscreenerData.createdAt || pairsData.createdAt || Date.now()
+        };
+      }
+
+      const dummyTokens = [
+        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "CyberWolf Meme", symbol: "WOLF1", priceUsd: "0.000005", liquidity: "400", fullyDilutedValuation: "1500", volume24h: "150", createdAt: "2025-10-21T19:00:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
+        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "MoonWolf", symbol: "MOONW", priceUsd: "0.000007", liquidity: "500", fullyDilutedValuation: "2000", volume24h: "200", createdAt: "2025-10-21T19:01:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
+        { tokenAddress: "SMACKR1234567890AbCdEfGhIjKlMnOpQrStUvWxYpump", name: "SMACKR Wolf", symbol: "SMACKW", priceUsd: "0.000010", liquidity: "600", fullyDilutedValuation: "2500", volume24h: "250", createdAt: "2025-10-21T19:02:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
+      ];
+
+      function filterSafeTokens(tokens) {
+        const now = new Date();
+        return tokens.filter(it => {
+          const liq = Number(it.liquidity || 0);
+          const fdv = Number(it.fullyDilutedValuation || 0);
+          const vol = Number(it.volume24h || 0);
+          const ageMin = (now - new Date(it.createdAt)) / (1000 * 60);
+          return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && vol >= MIN_VOLUME_24H && ageMin >= MIN_AGE_MIN;
+        }).slice(0, 10);
+      }
+
+      async function fetchTokens(retry = 3) {
+        if (retry === 0) {
+          debugLog("API failed after retries, using dummy data");
+          renderTokens(dummyTokens);
+          return;
+        }
+        apiStatusEl.textContent = 'Fetching... (retry ' + (4 - retry) + ')';
+        try {
+          const res = await fetch(ENDPOINT, { headers: { "accept": "application/json" }, signal: new AbortController().signal });
+          if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          const data = await res.json();
+          debugLog("Raw API data:", data);
+          if (!data.result || !Array.isArray(data.result)) throw new Error('Invalid or empty data');
+          const filtered = filterSafeTokens(data.result.map(t => ({ ...t, logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" })));
+          debugLog("Filtered tokens:", filtered);
+          if (filtered.length === 0) {
+            debugLog("No tokens passed filter, using dummy data");
+            renderTokens(dummyTokens);
+            return;
+          }
+          const detailedTokens = await Promise.all(filtered.map(async it => {
+            const details = await fetchTokenDetails(it.tokenAddress, (new Date() - new Date(it.createdAt)) / (1000 * 60));
+            return { ...it, ...details };
+          }));
+          renderTokens(detailedTokens);
+          apiStatusEl.textContent = 'Proxy: OK';
+        } catch (err) {
+          debugLog("Fetch failed:", err.message);
+          setTimeout(() => fetchTokens(retry - 1), 3000);
+        }
+      }
+
+      function renderTokens(tokens) {
+        tokenContainer.innerHTML = '';
+        window.tokenMap = {};
+        if (!tokens.length) {
+          tokenContainer.innerHTML = `<div class="tiny">No high-quality tokens found (check filters/API)</div>`;
+        } else {
+          tokens.forEach(it => {
+            const addr = it.tokenAddress;
+            window.tokenMap[addr] = it;
+            const div = document.createElement('div');
+            div.className = 'token';
+            div.dataset.addr = addr;
+            const liquidity = Number(it.liquidity || 0);
+            const fdv = Number(it.fullyDilutedValuation || 0);
+            const createdAt = new Date(it.createdAt).toLocaleTimeString();
+            div.innerHTML = `
+              <div style="display:flex;gap:8px;align-items:center">
+                <img src="${it.logo || 'https://via.placeholder.com/24?text=?'}" alt="${it.symbol}" style="width:24px;height:24px;border-radius:6px">
+                <div>
+                  <div><b style="color:var(--neon)">${escapeHtml(it.symbol || '?')}</b> — ${escapeHtml(it.name || 'Unnamed')}</div>
+                  <div class="tiny">💧 $${liquidity.toLocaleString()} • 🧮 FDV: $${fdv.toLocaleString()}</div>
+                </div>
+              </div>
+              <div class="tiny">${createdAt}</div>
+            `;
+            tokenContainer.appendChild(div);
+          });
+        }
+        lastUpdateEl.textContent = new Date().toLocaleTimeString();
+        debugLog(`Rendered ${tokens.length} high-quality tokens`);
+      }
+
+      function setupModal() {
         const modal = document.createElement('div');
         modal.className = 'pw-modal';
-        modal.style.display = 'none';
         modal.innerHTML = `
-          <div style="width: min(720px, 94%); max-height: 86vh; overflow: auto; padding: 18px; border-radius: 12px; background: linear-gradient(135deg, rgba(2,6,10,0.96), rgba(6,8,16,0.99)); border: 1px solid rgba(0,240,255,0.06); box-shadow: 0 30px 80px rgba(0,0,0,0.7); color: #dff">
-            <button class="closeBtn" style="float: right; background: transparent; border: 0; color: #9fe; font-size: 20px; cursor: pointer">✕</button>
-            <div style="display: flex; gap: 12px; align-items: center;">
-              <img id="mLogo" src="" style="width: 64px; height: 64px; border-radius: 8px; object-fit: cover; box-shadow: 0 0 20px rgba(0,240,255,0.08)"/>
+          <div style="width:min(720px,94%);max-height:86vh;overflow:auto;padding:18px;border-radius:12px;background:linear-gradient(135deg,rgba(2,6,10,0.96),rgba(6,8,16,0.99));border:1px solid rgba(0,240,255,0.06);box-shadow:0 30px 80px rgba(0,0,0,0.7);color:#dff">
+            <button class="closeBtn" style="float:right;background:transparent;border:0;color:#9fe;font-size:20px;cursor:pointer">✕</button>
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+              <img id="mLogo" src="" alt="Logo" style="width:64px;height:64px;border-radius:8px;object-fit:cover;box-shadow:0 0 20px rgba(0,240,255,0.08)" />
               <div>
-                <h2 id="mName" style="margin: 0; color: var(--neon)"></h2>
-                <div id="mSymbol" class="tiny" style="margin-top: 6px"></div>
+                <h2 id="mName" style="margin:0;color:var(--neon)"></h2>
+                <div id="mSymbol" style="margin-top:6px;color:var(--muted)">⛓️ Solana</div>
               </div>
             </div>
-            <div id="mDetails" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;"></div>
+            <div id="mDetails" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
             <canvas id="miniChart" class="mini-chart"></canvas>
-            <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end">
-              <a id="mPump" class="btn small" target="_blank" style="text-decoration: none">Open on Pump.fun</a>
-              <a id="mSolscan" class="btn small" target="_blank" style="text-decoration: none">Open on Solscan</a>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+              <a id="mPump" class="btn small" target="_blank">Open on Pump.fun</a>
+              <a id="mSolscan" class="btn small" target="_blank">Open on Solscan</a>
             </div>
           </div>
         `;
         document.body.appendChild(modal);
-        modal.querySelector('.closeBtn').onclick = () => modal.style.display = 'none';
-        modal.addEventListener('click', (ev) => { if (ev.target === modal) modal.style.display = 'none'; });
 
-        tokenContainer.addEventListener('click', (ev) => {
+        tokenContainer.addEventListener('click', async (ev) => {
           const tokenEl = ev.target.closest('.token');
-          if (!tokenEl) return;
+          if (!tokenEl) {
+            debugLog('Click outside token element');
+            return;
+          }
+          debugLog('Token clicked:', tokenEl.dataset.addr);
           const addr = tokenEl.dataset.addr;
           const item = window.tokenMap[addr];
-          if (!item) return;
+          if (!item) {
+            debugLog('No token data for address:', addr);
+            return;
+          }
 
-          modal.style.display = 'flex';
-          modal.querySelector('#mLogo').src = item.logo || ('https://logo.moralis.io/solana-mainnet_' + addr + '_placeholder.png');
+          modal.classList.add('open');
+          modal.querySelector('#mLogo').src = item.logo || 'https://via.placeholder.com/64?text=?';
           modal.querySelector('#mName').textContent = item.name || 'Unnamed';
-          modal.querySelector('#mSymbol').textContent = (item.symbol || '—') + ' • ' + (addr ? (addr.slice(0, 6) + '...') : '');
+          modal.querySelector('#mSymbol').textContent = (item.symbol || '?') + ' • ' + (addr ? (addr.slice(0, 6) + '...') : '');
 
-          const price = item.priceUsd ? ('$' + Number(item.priceUsd).toFixed(6)) : '—';
-          const liquidity = item.liquidity ? ('$' + Number(item.liquidity).toLocaleString()) : '—';
-          const fdv = item.fullyDilutedValuation ? ('$' + Number(item.fullyDilutedValuation).toLocaleString()) : '—';
-          const created = item.createdAt ? new Date(item.createdAt).toLocaleString() : '—';
-          const holders = 'Loading...'; // Placeholder untuk holder, bisa diganti dengan API
+          const ageMin = (new Date() - new Date(item.createdAt)) / (1000 * 60);
+          const details = await fetchTokenDetails(addr, ageMin);
+          const liqFdv = item.liquidity && item.fullyDilutedValuation ? ((Number(item.liquidity) / Number(item.fullyDilutedValuation)) * 100).toFixed(2) + '%' : '—';
+
           modal.querySelector('#mDetails').innerHTML = `
-            <div style="background: rgba(255,255,255,0.01); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.03)">
-              <div class="tiny">Price (USD)</div><div style="color: var(--neon); font-weight: 700">${price}</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.01); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.03)">
-              <div class="tiny">Liquidity</div><div style="color: var(--neon); font-weight: 700">${liquidity}</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.01); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.03)">
-              <div class="tiny">FDV</div><div style="color: var(--neon); font-weight: 700">${fdv}</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.01); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.03)">
-              <div class="tiny">Created</div><div style="color: var(--neon); font-weight: 700">${created}</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.01); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.03)">
-              <div class="tiny">Holders</div><div style="color: var(--neon); font-weight: 700">${holders}</div>
-            </div>
+            <div class="tiny">📊 FDV: $${(details.fullyDilutedValuation || item.fullyDilutedValuation || '—').toLocaleString()}</div>
+            <div class="tiny">💧 Liquidity: $${(details.liquidity || item.liquidity || '—').toLocaleString()}</div>
+            <div class="tiny">📈 Liq/FDV: ${liqFdv}</div>
+            <div class="tiny">💸 Price: $${(details.priceUsd || item.priceUsd || '—').toFixed(6)}</div>
+            <div class="tiny">📈 Price Change (24h): ${details.priceChange !== undefined ? `${details.priceChange.toFixed(2)}%` : 'N/A'}</div>
+            <div class="tiny">⏳ Age: ${Math.round(ageMin)} min</div>
+            <div class="tiny">👥 Holders: ${details.count || 'N/A'}</div>
+            <div class="tiny">📈 Holder Trend (1h): ${details.trend_1h !== undefined ? `${details.trend_1h} users` : 'N/A'}</div>
+            <div class="tiny">📊 Volume 24h: $${(details.volume24h || 'N/A').toLocaleString()}</div>
+            <div class="tiny">📣 X Hype: ${details.xHype || 'N/A'} mentions</div>
+            <div class="tiny">📍 Address: ${addr}</div>
           `;
 
-          // Mini chart setup
           const ctx = modal.querySelector('#miniChart').getContext('2d');
-          let existingChart = Chart.getChart(ctx); // Cek apakah chart sudah ada
-          if (existingChart) existingChart.destroy(); // Hapus chart lama jika ada
-          new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: ['1h', '2h', '3h', '4h', '5h'],
-              datasets: [{
-                label: 'Price (USD)',
-                data: [item.priceUsd || 0, (item.priceUsd || 0) * 1.1, (item.priceUsd || 0) * 1.2, (item.priceUsd || 0) * 1.15, (item.priceUsd || 0) * 1.3], // Dummy data
-                borderColor: 'rgba(0, 240, 255, 0.8)',
-                backgroundColor: 'rgba(0, 240, 255, 0.2)',
-                fill: true,
-                tension: 0.4
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: { legend: { display: false } },
-              scales: { y: { beginAtZero: true, ticks: { color: '#9bb' } }, x: { ticks: { color: '#9bb' } } }
-            }
-          });
-
-          modal.querySelector('#mPump').href = addr ? `https://pump.fun/coin/${addr}` : '#';
-          modal.querySelector('#mSolscan').href = addr ? `https://solscan.io/token/${encodeURIComponent(addr)}?cluster=mainnet` : '#';
-        });
-      })();
-
-      async function loadFeaturedToken() {
-        const addr = FEATURED_TOKEN_ADDRESS || null;
-        if (!addr) {
-          wolfData.textContent = 'Featured token not set.';
-          btnBuy.href = '#';
-          btnSolscan.href = '#';
-          return;
-        }
-
-        btnBuy.href = `https://pump.fun/coin/${addr}`;
-        btnSolscan.href = `https://solscan.io/token/${encodeURIComponent(addr)}?cluster=mainnet`;
-
-        try {
-          const res = await fetch(FEATURE_PRICE_URL(addr), { headers: { "accept": "application/json" } });
-          if (!res.ok) { wolfData.textContent = `No live price (status ${res.status})`; return; }
-          const data = await res.json();
-          if (data && data.usdPrice) {
-            wolfData.innerHTML = `💰 Price: <b>$${Number(data.usdPrice).toFixed(6)}</b> • ⏱ ${new Date().toLocaleTimeString()}`;
-            const liquidity = Number(data.liquidity || 0) || 0;
-            const fdv = Number(data.fullyDilutedValuation || 0) || 0;
-            const strength = Math.min(95, Math.round(Math.min(100, (liquidity / Math.max(1, fdv)) * 100 * 2)));
-            document.getElementById('howlFill').style.width = Math.max(6, strength) + '%';
-          } else {
-            wolfData.textContent = 'No price data';
+          if (ctx && typeof Chart !== 'undefined') {
+            let existingChart = Chart.getChart(ctx);
+            if (existingChart) existingChart.destroy();
+            const basePrice = Number(details.priceUsd || item.priceUsd) || 0.0001;
+            const priceChange = details.priceChange || 0;
+            new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: ['1h', '2h', '3h', '4h', '5h'],
+                datasets: [{
+                  label: 'Price (USD)',
+                  data: [basePrice, basePrice * (1 + priceChange / 100), basePrice * (1 + priceChange / 100 * 2), basePrice * (1 + priceChange / 100 * 3), basePrice * (1 + priceChange / 100 * 4)],
+                  borderColor: 'rgba(0, 240, 255, 0.8)',
+                  backgroundColor: 'rgba(0, 240, 255, 0.2)',
+                  fill: true,
+                  tension: 0.4
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { color: '#9bb' } }, x: { ticks: { color: '#9bb' } } }
+              }
+            });
           }
-        } catch (err) {
-          console.error(err);
-          wolfData.textContent = 'Error loading featured data';
-          debugLog("Featured token load error:", err.message);
-        }
+
+          modal.querySelector('#mPump').href = addr ? `https://pump.fun/${addr}` : '#';
+          modal.querySelector('#mSolscan').href = addr ? `https://solscan.io/token/${addr}` : '#';
+
+          modal.querySelector('.closeBtn').onclick = () => modal.classList.remove('open');
+          modal.addEventListener('click', (ev) => { if (ev.target === modal) modal.classList.remove('open'); });
+        });
       }
 
       let paused = false;
       let pollHandle = null;
-      function startPolling() { stopPolling(); pollHandle = setInterval(fetchTokens, POLL_INTERVAL); }
-      function stopPolling() { if (pollHandle) clearInterval(pollHandle); }
+      function startPolling() { stopPolling(); pollHandle = setInterval(() => { if (!paused) fetchTokens(); }, POLL_INTERVAL); }
+      function stopPolling() { if (pollHandle) clearInterval(pollHandle); pollHandle = null; }
 
-      refreshBtn.addEventListener('click', () => {
-        if (!paused) fetchTokens();
-      });
+      refreshBtn.addEventListener('click', () => { if (!paused) fetchTokens(); });
       pauseBtn.addEventListener('click', () => {
         paused = !paused;
         pauseBtn.textContent = paused ? 'Resume' : 'Pause';
@@ -387,42 +480,54 @@
 
       function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
 
-      // Fallback probe
-      (async function fallbackProbe() {
-        const isStatic = !location.hostname.endsWith('.vercel.app') && location.hostname !== 'pumpwolf.vercel.app';
-        if (isStatic) {
-          document.getElementById('pwFallback').style.display = 'flex';
-          const stayBtn = document.getElementById('stayBtn');
-          const countdownEl = document.getElementById('redirectCountdown');
-          let count = 8;
-          countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
-          const timerId = setInterval(() => {
-            count--;
-            countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
-            if (count <= 0) {
-              clearInterval(timerId);
-              window.location.href = VERCEL_BASE + '/';
+      async function fallbackProbe() {
+        const fallback = document.getElementById('pwFallback');
+        const isVercel = location.hostname.includes('vercel.app');
+        if (isVercel) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout 15 detik
+            const testRes = await fetch(ENDPOINT.replace('limit=50', 'limit=1'), { headers: { "accept": "application/json" }, signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (testRes.ok) {
+              fallback.style.display = 'none';
+              fetchTokens();
+              startPolling();
+              setupModal();
+              return;
             }
-          }, 1000);
-
-          stayBtn.addEventListener('click', () => {
-            clearInterval(timerId);
-            countdownEl.textContent = 'Redirect dibatalkan — tetap di halaman ini';
-            stayBtn.disabled = true;
-            stayBtn.textContent = 'Menetap';
-          });
-          refreshBtn.disabled = true;
-          pauseBtn.disabled = true;
-          apiStatusEl.textContent = 'Offline (Static Mode)';
-          tokenContainer.innerHTML = `<div class="tiny">Token list unavailable in static mode. Visit <a href="${VERCEL_BASE}/">live version</a>.</div>`;
-          wolfData.textContent = 'Data unavailable in static mode. Visit live version for details.';
-        } else {
-          document.getElementById('pwFallback').style.display = 'none';
-          fetchTokens();
-          loadFeaturedToken();
-          startPolling();
+          } catch (e) {
+            debugLog('API test failed:', e.message);
+          }
         }
-      })();
+        fallback.style.display = 'flex';
+        const stayBtn = document.getElementById('stayBtn');
+        const countdownEl = document.getElementById('redirectCountdown');
+        let count = 8;
+        countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+        const timerId = setInterval(() => {
+          count--;
+          if (count >= 0) {
+            countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+          }
+          if (count <= 0) {
+            clearInterval(timerId);
+            window.location.href = 'https://pumpwolf.vercel.app/';
+          }
+        }, 1000);
+        stayBtn.addEventListener('click', () => {
+          clearInterval(timerId);
+          countdownEl.textContent = 'Redirect dibatalkan';
+          stayBtn.disabled = true;
+          stayBtn.textContent = 'Menetap';
+        });
+        refreshBtn.disabled = true;
+        pauseBtn.disabled = true;
+        apiStatusEl.textContent = 'Offline (Static Mode)';
+        tokenContainer.innerHTML = `<div class="tiny">Wait for live version</div>`;
+      }
+
+      fallbackProbe();
     })();
   </script>
 </body>
