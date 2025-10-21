@@ -103,7 +103,7 @@
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap">
           <div>
             <div class="muted" style="font-size:0.9rem">🔥 Featured Token</div>
-            <h2 style="color:var(--neon);margin:6px 0" id="featuredTitle">$WOLF — The Cyber Meme Wolf</h2>
+            <h2 style="color:var(--neon);margin:6px 0" id="featuredTitle">$WOLF — The Cyber Meme Utility</h2>
             <div class="tiny" id="wolfData">Loading live data...</div>
           </div>
           <img id="featuredLogo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="$WOLF" style="width:60px;height:60px;border-radius:12px;box-shadow:0 0 18px rgba(0,240,255,0.25);margin-top:6px" onerror="this.src='https://via.placeholder.com/60?text=W'" />
@@ -119,7 +119,7 @@
 
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap">
-          <div><b style="color:var(--neon)">Live Tokens (Filtered Safe & Potensial)</b> <span class="muted">— auto-updated from Moralis (via proxy)</span></div>
+          <div><b style="color:var(--neon)">Live Tokens (Filtered High-Quality)</b> <span class="muted">— auto-updated from Moralis (via proxy)</span></div>
           <div class="muted" style="font-size:0.85rem">Refresh: <span id="interval-label">60s</span></div>
         </div>
 
@@ -130,7 +130,7 @@
     </main>
   </div>
 
-  <footer>© 2025 PumpWolf — The Cyber Pack • v2.2</footer>
+  <footer>© 2025 PumpWolf — The Cyber Pack • v2.3</footer>
 
   <script>
     (function() {
@@ -141,9 +141,10 @@
       const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
       const FEATURED_TOKEN_ADDRESS = "";
       const POLL_INTERVAL = 60000;
-      const MIN_LIQUIDITY = 10000;
-      const MAX_FDV = 10000;
-      const MAX_AGE_MIN = 60;
+      const MIN_LIQUIDITY = 20000; // Naikkan ke $20,000
+      const MAX_FDV = 50000; // Naikkan ke $50,000
+      const MIN_VOLUME_24H = 10000; // Tambah filter volume $10,000
+      const MIN_AGE_MIN = 3; // Umur minimal 3 menit
 
       const apiStatusEl = document.getElementById('api-status');
       const lastUpdateEl = document.getElementById('last-update');
@@ -175,10 +176,15 @@
         }
       }
 
+      function formatTimestamp(ms) {
+        return new Date(ms).toISOString();
+      }
+
       async function getPairsData(tokenAddress) {
         const url = `https://solana-gateway.moralis.io/token/mainnet/${tokenAddress}/pairs`;
         const headers = { "X-API-Key": MORALIS_API_KEY };
         const data = await fetchJson(url, headers);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Delay 0.5s
         if (!data || !data.pairs || !data.pairs.length) {
           debugLog(`No active pairs for ${tokenAddress}`);
           return {};
@@ -202,6 +208,7 @@
       async function getDexscreenerData(tokenAddress) {
         const url = `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`;
         const data = await fetchJson(url);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Delay 0.5s
         if (!data || !data.pairs || !data.pairs.length) {
           debugLog(`No pairs from DexScreener for ${tokenAddress}`);
           return {};
@@ -214,7 +221,7 @@
           fullyDilutedValuation: parseFloat(pair.fdv || 0),
           volume24h: parseFloat(pair.volume?.h24 || 0),
           priceChange: parseFloat(pair.priceChange?.h24 || 0),
-          createdAt: pair.pairCreatedAt || Date.now(),
+          createdAt: pair.pairCreatedAt ? formatTimestamp(pair.pairCreatedAt) : Date.now(),
           name: pair.baseToken?.name || "Unknown",
           symbol: pair.baseToken?.symbol || "UNK"
         };
@@ -228,6 +235,7 @@
         const url = `https://solana-gateway.moralis.io/token/mainnet/holders/${tokenAddress}`;
         const headers = { "X-API-Key": MORALIS_API_KEY };
         let data = await fetchJson(url, headers);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Delay 0.5s
         if (data && data.totalHolders !== undefined) {
           debugLog(`Holders data for ${tokenAddress}:`, data);
           return {
@@ -254,6 +262,7 @@
         const url = `https://api.x.com/2/tweets/counts/recent?query=${encodeURIComponent(tokenName)}`;
         const headers = { "Authorization": `Bearer ${X_API_KEY}` };
         const data = await fetchJson(url, headers);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Delay 0.5s
         return data?.meta?.total_tweet_count || 0;
       }
 
@@ -274,8 +283,8 @@
       }
 
       const dummyTokens = [
-        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "12971.933460626", fullyDilutedValuation: "6892", createdAt: "2025-10-21T06:35:08.000Z" },
-        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "11937.123185542", fullyDilutedValuation: "5837", createdAt: "2025-10-21T06:35:07.000Z" },
+        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "25000", fullyDilutedValuation: "25000", createdAt: "2025-10-21T12:00:00Z" },
+        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "30000", fullyDilutedValuation: "30000", createdAt: "2025-10-21T12:05:00Z" },
       ];
 
       function filterSafeTokens(tokens) {
@@ -283,8 +292,9 @@
         return tokens.filter(it => {
           const liq = Number(it.liquidity || 0);
           const fdv = Number(it.fullyDilutedValuation || 0);
+          const vol = Number(it.volume24h || 0);
           const ageMin = (now - new Date(it.createdAt)) / (1000 * 60);
-          return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && ageMin <= MAX_AGE_MIN;
+          return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && vol >= MIN_VOLUME_24H && ageMin >= MIN_AGE_MIN;
         }).slice(0, 10);
       }
 
@@ -317,7 +327,7 @@
         tokenContainer.innerHTML = '';
         window.tokenMap = {};
         if (!tokens.length) {
-          tokenContainer.innerHTML = `<div class="tiny">No safe tokens found</div>`;
+          tokenContainer.innerHTML = `<div class="tiny">No high-quality tokens found</div>`;
         } else {
           tokens.forEach(it => {
             const addr = it.tokenAddress;
@@ -339,7 +349,7 @@
           });
         }
         lastUpdateEl.textContent = new Date().toLocaleTimeString();
-        debugLog(`Rendered ${tokens.length} safe tokens`);
+        debugLog(`Rendered ${tokens.length} high-quality tokens`);
       }
 
       function setupModal() {
@@ -407,13 +417,14 @@
             let existingChart = Chart.getChart(ctx);
             if (existingChart) existingChart.destroy();
             const basePrice = Number(details.priceUsd || item.priceUsd) || 0.0001;
+            const priceChange = details.priceChange || 0;
             new Chart(ctx, {
               type: 'line',
               data: {
                 labels: ['1h', '2h', '3h', '4h', '5h'],
                 datasets: [{
                   label: 'Price (USD)',
-                  data: [basePrice, basePrice * (1 + (details.priceChange || 0) / 100 * 1), basePrice * (1 + (details.priceChange || 0) / 100 * 2), basePrice * (1 + (details.priceChange || 0) / 100 * 3), basePrice * (1 + (details.priceChange || 0) / 100 * 4)],
+                  data: [basePrice, basePrice * (1 + priceChange / 100), basePrice * (1 + priceChange / 100 * 2), basePrice * (1 + priceChange / 100 * 3), basePrice * (1 + priceChange / 100 * 4)],
                   borderColor: 'rgba(0, 240, 255, 0.8)',
                   backgroundColor: 'rgba(0, 240, 255, 0.2)',
                   fill: true,
