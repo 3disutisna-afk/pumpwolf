@@ -130,7 +130,7 @@
     </main>
   </div>
 
-  <footer>© 2025 PumpWolf — The Cyber Pack • v2.9</footer>
+  <footer>© 2025 PumpWolf — The Cyber Pack • v3.0</footer>
 
   <script>
     (function() {
@@ -141,9 +141,9 @@
       const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
       const FEATURED_TOKEN_ADDRESS = "";
       const POLL_INTERVAL = 60000;
-      const MIN_LIQUIDITY = 50; // $50 (longgar)
-      const MAX_FDV = 2000000; // $2M
-      const MIN_VOLUME_24H = 25; // $25 (longgar)
+      const MIN_LIQUIDITY = 10; // $10 (sangat longgar)
+      const MAX_FDV = 5000000; // $5M
+      const MIN_VOLUME_24H = 10; // $10 (sangat longgar)
       const MIN_AGE_MIN = 0.0167; // 1 detik (longgar)
 
       const apiStatusEl = document.getElementById('api-status');
@@ -290,9 +290,9 @@
       }
 
       const dummyTokens = [
-        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "CyberWolf Meme", symbol: "WOLF1", priceUsd: "0.000005", liquidity: "75", fullyDilutedValuation: "1000", volume24h: "40", createdAt: "2025-10-21T20:03:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
-        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "MoonWolf", symbol: "MOONW", priceUsd: "0.000007", liquidity: "100", fullyDilutedValuation: "1500", volume24h: "50", createdAt: "2025-10-21T20:04:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
-        { tokenAddress: "SMACKR1234567890AbCdEfGhIjKlMnOpQrStUvWxYpump", name: "SMACKR Wolf", symbol: "SMACKW", priceUsd: "0.000010", liquidity: "125", fullyDilutedValuation: "1800", volume24h: "60", createdAt: "2025-10-21T20:05:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
+        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "CyberWolf Meme", symbol: "WOLF1", priceUsd: "0.000005", liquidity: "15", fullyDilutedValuation: "1000", volume24h: "12", createdAt: "2025-10-21T20:28:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
+        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "MoonWolf", symbol: "MOONW", priceUsd: "0.000007", liquidity: "20", fullyDilutedValuation: "1500", volume24h: "15", createdAt: "2025-10-21T20:29:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
+        { tokenAddress: "SMACKR1234567890AbCdEfGhIjKlMnOpQrStUvWxYpump", name: "SMACKR Wolf", symbol: "SMACKW", priceUsd: "0.000010", liquidity: "25", fullyDilutedValuation: "1800", volume24h: "18", createdAt: "2025-10-21T20:30:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
       ];
 
       function filterSafeTokens(tokens) {
@@ -324,13 +324,13 @@
           if (filtered.length === 0) {
             debugLog("No tokens passed filter, using dummy data");
             renderTokens(dummyTokens);
-            return;
+          } else {
+            const detailedTokens = await Promise.all(filtered.map(async it => {
+              const details = await fetchTokenDetails(it.tokenAddress, (new Date() - new Date(it.createdAt)) / (1000 * 60));
+              return { ...it, ...details };
+            }));
+            renderTokens(detailedTokens);
           }
-          const detailedTokens = await Promise.all(filtered.map(async it => {
-            const details = await fetchTokenDetails(it.tokenAddress, (new Date() - new Date(it.createdAt)) / (1000 * 60));
-            return { ...it, ...details };
-          }));
-          renderTokens(detailedTokens);
           apiStatusEl.textContent = 'Proxy: OK';
         } catch (err) {
           debugLog("Fetch failed:", err.message);
