@@ -33,7 +33,7 @@ export default async function handler(req, res) {
       const mintable = mintInfo.mintAuthority !== null;
       const burned = mintInfo.mintAuthority === null;
 
-      await new Promise(resolve => setTimeout(resolve, 300)); // Tingkatkan delay ke 300ms
+      await new Promise(resolve => setTimeout(resolve, 500)); // Tingkatkan delay ke 500ms
 
       console.log(`Requesting holder info for addr: ${addr}`);
       const holdersResponse = await fetch(HELIUS_RPC, {
@@ -81,7 +81,7 @@ export default async function handler(req, res) {
       if (attempt === maxRetries) {
         res.status(500).json({ error: "Failed to fetch token safety data after retries", details: err.message });
       } else {
-        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1))); // Tunggu lebih lama per retry
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1))); // Tunggu 1s, 2s per retry
       }
     }
   }
