@@ -3,155 +3,425 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PumpWolf — Cyber Meme Utility</title>
-  <meta name="description" content="PumpWolf: Track high-potential Solana meme tokens in real-time. Join the Wolf Pack! 🐺" />
-  <meta property="og:title" content="🐺 PumpWolf — Live Solana Gems" />
-  <meta property="og:description" content="Discover safe, high-potential tokens on Solana with PumpWolf. Live data, no hype, just value." />
+  <title>PumpWolf Dashboard — Cyber Meme Utility</title>
+
+  <meta name="description" content="PumpWolf Dashboard — Cyber Meme Utility tracking clean Solana gems in real time." />
+  <meta property="og:title" content="🐺 PumpWolf Dashboard — Live Token Feed" />
+  <meta property="og:description" content="Cyber Meme Utility for Solana Gem Hunters. Track clean tokens, live data, and community howls." />
   <meta property="og:image" content="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/pumpwolf_banner.jpg" />
-  <meta property="og:url" content="https://pumpwolf.vercel.app/" />
+  <meta property="og:url" content="https://3disutisna-afk.github.io/pumpwolf/" />
   <meta name="twitter:card" content="summary_large_image" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
-    :root { --bg: #030406; --card: #071018; --neon: #00f0ff; --accent: #8a2be2; --muted: #9bb; }
+    :root {
+      --bg: #030406; --card: #071018; --neon: #00f0ff; --accent: #8a2be2; --muted: #9bb;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0 }
-    body { font-family: Inter, system-ui, sans-serif; background: radial-gradient(circle at 10% 10%, #02030a 0%, var(--bg) 60%); color: #dff; padding: 16px; }
-    header { padding: 18px 0; text-align: center; border-bottom: 1px solid rgba(0,255,255,0.05) }
-    header .logo { width: 64px; height: 64px; border-radius: 10px; object-fit: contain; box-shadow: 0 0 18px rgba(0,240,255,0.1) }
-    header h1 { margin: 8px 0 0; font-size: 1.2rem; color: var(--neon) } .muted { color: var(--muted); font-size: 0.9rem }
+    body { font-family: Inter, system-ui, sans-serif; background: radial-gradient(circle at 10% 10%, #02030a 0%, var(--bg) 60%); color: #dff }
+    header { padding: 18px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(0,255,255,0.05) }
+    header .logo { width: 52px; height: 52px; border-radius: 10px; background: radial-gradient(circle at 30% 30%, #002, #013); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 18px rgba(0,240,255,0.1); font-weight: 700 }
+    header h1 { margin: 0; font-size: 1.05rem; color: var(--neon) } .muted { color: var(--muted); font-size: 0.9rem }
+    .layout { display: flex; gap: 16px; padding: 16px; align-items: flex-start }
+    .col-left { width: 280px; min-width: 240px } .col-main { flex: 1 }
     .card { background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.015)); border: 1px solid rgba(0,240,255,0.06); border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.45) }
-    .token-list { display: flex; flex-direction: column; gap: 10px; max-height: 70vh; overflow: auto; padding-right: 6px }
-    .token { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; background: linear-gradient(90deg, rgba(0,0,0,0.16), rgba(0,0,0,0.06)); border: 1px solid rgba(0,240,255,0.03); transition: transform .18s ease, box-shadow .18s ease; cursor: pointer }
+    .btn { background: linear-gradient(90deg, var(--neon), var(--accent)); border: none; color: #001; padding: 8px 12px; border-radius: 10px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block }
+    .small { padding: 6px 10px; font-size: 0.85rem } .tiny { font-size: 0.82rem; color: var(--muted) }
+    .token-list { display: flex; flex-direction: column; gap: 10px; max-height: 65vh; overflow: auto; padding-right: 6px }
+    .token { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; background: linear-gradient(90deg, rgba(0,0,0,0.16), rgba(0,0,0,0.06)); border: 1px solid rgba(0,240,255,0.03); transition: transform .18s ease, box-shadow .18s ease }
     .token:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,240,255,0.06) }
-    .tiny { font-size: 0.82rem; color: var(--muted) }
-    .btn { background: linear-gradient(90deg, var(--neon), var(--accent)); border: none; color: #001; padding: 8px 12px; border-radius: 10px; font-weight: 700; cursor: pointer; text-decoration: none }
-    .debug { display: none; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size: 13px; color: #c8fff6; white-space: pre-wrap; overflow: auto; max-height: 200px; padding: 12px; background: rgba(0,0,0,0.22); border-radius: 8px; border: 1px solid rgba(0,240,255,0.03); margin-top: 10px }
+    footer { text-align: center; padding: 14px 20px; color: var(--muted); font-size: 0.85rem }
+    .howl-bar { height: 10px; border-radius: 8px; background: rgba(255,255,255,0.03); overflow: hidden; margin-top: 8px; box-shadow: inset 0 0 6px rgba(0,240,255,0.08) }
+    @keyframes howlGrow { 0% { width: 40% } 100% { width: 90% } }
+    @media (max-width: 900px) { .layout { flex-direction: column; padding: 12px } .col-left { width: 100% } .col-main { width: 100% } }
+    @media (max-width: 500px) { header .logo { width: 46px; height: 46px } header h1 { font-size: 1rem } .card { padding: 10px } }
+    .pw-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(6px) saturate(120%) }
+    .pw-modal.open { display: flex }
+
+    /* Fallback banner style */
+    .pw-fallback {
+      display: none;
+      position: fixed;
+      inset: 12px 12px auto 12px;
+      z-index: 99999;
+      background: linear-gradient(90deg, rgba(6,8,16,0.98), rgba(3,5,12,0.98));
+      color: #dff;
+      border: 1px solid rgba(0,240,255,0.08);
+      padding: 12px 14px;
+      border-radius: 12px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+      max-width: calc(100% - 40px);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      font-family: Inter, system-ui, sans-serif;
+    }
+    .pw-fallback .left { display: flex; gap: 10px; align-items: center; max-width: 70%; }
+    .pw-fallback .left .dot { width: 12px; height: 12px; border-radius: 50%; background: #ff6b6b; box-shadow: 0 0 12px rgba(255,107,107,0.12); }
+    .pw-fallback .title { font-weight: 700; color: var(--neon); font-size: 0.98rem }
+    .pw-fallback .desc { font-size: 0.9rem; color: var(--muted); margin-top: 4px }
+    .pw-fallback .actions { display: flex; gap: 8px; align-items: center }
+    .pw-fallback .btn { background: linear-gradient(90deg, var(--neon), var(--accent)); color: #001; padding: 8px 10px; border-radius: 10px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; }
+    .pw-fallback .btn.secondary { background: transparent; border: 1px solid rgba(255,255,255,0.03); color: var(--muted); padding: 8px 10px; }
+    .pw-fallback .count { color: var(--muted); font-size: 0.9rem; margin-left: 6px }
+    @media (max-width: 720px) {
+      .pw-fallback { flex-direction: column; align-items: flex-start; gap: 8px; left: 12px; right: 12px; }
+      .pw-fallback .left { max-width: 100%; }
+      .pw-fallback .actions { width: 100%; justify-content: space-between; }
+    }
+
+    /* Debug panel hidden by default */
+    .debug { display: none; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size: 13px; color: #c8fff6; white-space: pre-wrap; overflow: auto; max-height: 220px; padding: 12px; background: rgba(0,0,0,0.22); border-radius: 8px; border: 1px solid rgba(0,240,255,0.03) }
     .debug.visible { display: block }
-    @media (max-width: 600px) { .card { padding: 10px } header .logo { width: 48px; height: 48px } header h1 { font-size: 1rem } }
+
+    /* Mini chart style */
+    .mini-chart {
+      width: 100%;
+      height: 100px;
+      margin-top: 12px;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <img class="logo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="PumpWolf" onerror="this.src='https://via.placeholder.com/64?text=PW'" />
-    <h1>PumpWolf</h1>
-    <div class="muted">Cyber Meme Utility — Live Solana Gems 🐺</div>
-  </header>
-
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div><b style="color:var(--neon)">High-Potential Tokens</b> <span class="muted">— Auto-updated (local fallback if offline)</span></div>
-      <button class="btn" id="refreshBtn">Refresh</button>
+  <div id="pwFallback" class="pw-fallback" role="alert" aria-live="polite">
+    <div class="left">
+      <div class="dot" aria-hidden="true"></div>
+      <div>
+        <div class="title">Mode statis: fitur server tidak aktif di GitHub Pages</div>
+        <div class="desc">Proxy/API backend tidak tersedia di versi statis. Untuk experience penuh (live data & fungsi), buka versi lengkap.</div>
+      </div>
     </div>
-    <div id="tokenContainer" class="token-list">
-      <div class="tiny">Loading tokens...</div>
+    <div class="actions">
+      <a id="openVercel" class="btn" href="https://pumpwolf.vercel.app/" target="_blank" rel="noopener">Buka versi penuh</a>
+      <button id="stayBtn" class="btn secondary" type="button">Tetap di sini</button>
+      <div style="display: flex; align-items: center"><span class="count" id="redirectCountdown">↪ otomatis pindah dalam 8s</span></div>
     </div>
-    <div id="debugPanel" class="debug"></div>
   </div>
 
+  <header>
+    <div class="logo">PW</div>
+    <div>
+      <h1>PumpWolf Dashboard</h1>
+      <div class="muted">Cyber Meme Utility — Wolf Pack Live 🐺</div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="col-left">
+      <div class="card">
+        <div class="muted">API Status</div>
+        <div id="api-status" style="color: var(--neon); margin-top: 6px">Proxy: ready</div>
+        <div class="muted" style="margin-top: 8px">Last update: <span id="last-update">—</span></div>
+      </div>
+
+      <div class="card">
+        <div class="muted">Controls</div>
+        <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap">
+          <button class="btn small" id="refreshBtn">Refresh</button>
+          <button class="btn small" id="pauseBtn">Pause</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="muted">Debug panel (fetch status & headers)</div>
+        <div id="debugPanel" class="debug">[debug output appears here]</div>
+      </div>
+    </aside>
+
+    <main class="col-main">
+      <div class="card" id="featuredToken">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap">
+          <div>
+            <div class="muted" style="font-size: 0.9rem">🔥 Featured Token</div>
+            <h2 style="color: var(--neon); margin: 6px 0" id="featuredTitle">$WOLF — The Cyber Meme Wolf</h2>
+            <div class="tiny" id="wolfData">Loading live data...</div>
+          </div>
+          <img id="featuredLogo" src="https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" alt="$WOLF" style="width: 60px; height: 60px; border-radius: 12px; box-shadow: 0 0 18px rgba(0,240,255,0.25); margin-top: 6px">
+        </div>
+        <div class="howl-bar" style="margin-top: 10px"><div class="fill" id="howlFill" style="width: 50%"></div></div>
+        <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap">
+          <a id="btnBuy" class="btn small" href="#" target="_blank">💧 Buy on Pump.fun</a>
+          <a id="btnSolscan" class="btn small" href="#" target="_blank">🔎 Solscan</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap">
+          <div><b style="color: var(--neon)">Live Tokens</b> <span class="muted">— auto-updated from Moralis (via proxy)</span></div>
+          <div class="muted" style="font-size: 0.85rem">Refresh: <span id="interval-label">60s</span></div>
+        </div>
+        <div id="tokenContainer" class="token-list">
+          <div class="tiny">Loading...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer>© 2025 PumpWolf — The Cyber Pack • v2.2</footer>
+
   <script>
-    const MORALIS_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY"; // Ganti dengan API key Moralis kakak
-    const VERCEL_BASE = "https://pumpwolf.vercel.app";
-    const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=50";
-    const MIN_LIQUIDITY = 300; // $300
-    const MAX_FDV = 1000000; // $1M
-    const MIN_VOLUME_24H = 100; // $100
-    const MIN_AGE_MIN = 0.05; // 0.05 menit
+    (function() {
+      const VERCEL_BASE = "https://pumpwolf.vercel.app";
+      const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100";
+      const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
+      const FEATURED_TOKEN_ADDRESS = "";
+      const POLL_INTERVAL = 60000;
+      const MIN_LIQUIDITY = 5000;
 
-    const tokenContainer = document.getElementById('tokenContainer');
-    const debugPanel = document.getElementById('debugPanel');
-    const refreshBtn = document.getElementById('refreshBtn');
+      const apiStatusEl = document.getElementById('api-status');
+      const lastUpdateEl = document.getElementById('last-update');
+      const tokenContainer = document.getElementById('tokenContainer');
+      const debugPanel = document.getElementById('debugPanel');
+      const refreshBtn = document.getElementById('refreshBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const wolfData = document.getElementById('wolfData');
+      const btnBuy = document.getElementById('btnBuy');
+      const btnSolscan = document.getElementById('btnSolscan');
+      window.tokenMap = {};
 
-    function debugLog(...args) {
-      if (!debugPanel.classList.contains('visible')) debugPanel.classList.add('visible');
-      const t = new Date().toLocaleTimeString();
-      const s = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a, null, 2))).join(' ');
-      debugPanel.textContent += `[${t}] ${s}\n`;
-      debugPanel.scrollTop = debugPanel.scrollHeight;
-    }
-
-    async function fetchJson(url) {
-      try {
-        debugLog(`Fetching ${url}`);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 detik timeout
-        const res = await fetch(url, { signal: controller.signal, headers: { "X-API-Key": MORALIS_API_KEY, "accept": "application/json" } });
-        clearTimeout(timeoutId);
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        const data = await res.json();
-        debugLog(`Fetched data:`, data);
-        return data;
-      } catch (err) {
-        debugLog("Fetch error:", err.message);
-        return null;
+      function debugLog(...args) {
+        try {
+          const t = new Date().toLocaleTimeString();
+          const s = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a, null, 2))).join(' ');
+          debugPanel.textContent = `[${t}] ` + s + "\n\n" + debugPanel.textContent;
+          debugPanel.classList.add('visible');
+        } catch (e) { console.log(...args); }
       }
-    }
 
-    function filterSafeTokens(tokens) {
-      const now = new Date();
-      return tokens.filter(it => {
-        const liq = Number(it.liquidity || 0);
-        const fdv = Number(it.fullyDilutedValuation || 0);
-        const vol = Number(it.volume24h || 0);
-        const ageMin = (now - new Date(it.createdAt || now)) / (1000 * 60);
-        return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && vol >= MIN_VOLUME_24H && ageMin >= MIN_AGE_MIN;
-      }).slice(0, 10);
-    }
+      async function fetchTokens() {
+        apiStatusEl.textContent = 'Fetching...';
+        try {
+          const res = await fetch(ENDPOINT, { headers: { "accept": "application/json" } });
+          if (!res.ok) {
+            apiStatusEl.textContent = `Proxy: error ${res.status}`;
+            tokenContainer.innerHTML = `<div class="tiny">Moralis proxy returned ${res.status}</div>`;
+            debugLog("Fetch failed:", { status: res.status });
+            lastUpdateEl.textContent = new Date().toLocaleTimeString();
+            return;
+          }
 
-    const dummyTokens = [
-      { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "CyberWolf Meme", symbol: "WOLF1", priceUsd: "0.000005", liquidity: "400", fullyDilutedValuation: "1500", volume24h: "150", createdAt: "2025-10-21T15:55:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
-      { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "MoonWolf", symbol: "MOONW", priceUsd: "0.000007", liquidity: "500", fullyDilutedValuation: "2000", volume24h: "200", createdAt: "2025-10-21T15:56:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
-      { tokenAddress: "SMACKR1234567890AbCdEfGhIjKlMnOpQrStUvWxYpump", name: "SMACKR Wolf", symbol: "SMACKW", priceUsd: "0.000010", liquidity: "600", fullyDilutedValuation: "2500", volume24h: "250", createdAt: "2025-10-21T15:57:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
-      { tokenAddress: "TEST1234567890AbCdEfGhIjKlMnOpQrStUvWxYpump", name: "AlphaWolf", symbol: "ALPHAW", priceUsd: "0.000008", liquidity: "350", fullyDilutedValuation: "1800", volume24h: "180", createdAt: "2025-10-21T15:58:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
-    ];
+          const data = await res.json();
+          if (!data || !Array.isArray(data.result)) {
+            apiStatusEl.textContent = 'Proxy: malformed JSON';
+            tokenContainer.innerHTML = `<div class="tiny">Malformed JSON dari proxy</div>`;
+            debugLog("Invalid JSON:", data);
+            lastUpdateEl.textContent = new Date().toLocaleTimeString();
+            return;
+          }
 
-    async function fetchTokens(retry = 3) {
-      if (retry === 0) {
-        debugLog("API failed after retries, using dummy data");
-        renderTokens(dummyTokens);
-        return;
-      }
-      try {
-        const data = await fetchJson(ENDPOINT);
-        if (!data || !data.result || !Array.isArray(data.result)) throw new Error('Invalid API data');
-        const filtered = filterSafeTokens(data.result.map(t => ({ ...t, logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" })));
-        if (filtered.length === 0) {
-          debugLog("No tokens passed filter, using dummy data");
-          renderTokens(dummyTokens);
-        } else {
-          renderTokens(filtered);
+          const filtered = data.result.filter(it => Number(it.liquidity || 0) >= MIN_LIQUIDITY);
+          tokenContainer.innerHTML = '';
+          window.tokenMap = {};
+
+          if (!filtered.length) {
+            tokenContainer.innerHTML = `<div class="tiny">No tokens passed liquidity filter (>= ${MIN_LIQUIDITY})</div>`;
+          } else {
+            filtered.forEach(it => {
+              const addr = it.tokenAddress || it.address || ('addr_' + Math.random().toString(36).slice(2, 9));
+              window.tokenMap[addr] = it;
+              const div = document.createElement('div');
+              div.className = 'token';
+              div.dataset.addr = addr;
+              const liquidity = Number(it.liquidity || 0);
+              const fdv = Number(it.fullyDilutedValuation || it.fdv || 0);
+              const createdAt = it.createdAt ? new Date(it.createdAt).toLocaleTimeString() : '—';
+              div.innerHTML = `
+                <div>
+                  <div><b style="color: var(--neon)">${escapeHtml(it.symbol || '?')}</b> — ${escapeHtml(it.name || 'Unnamed')}</div>
+                  <div class="tiny">💧 $${isFinite(liquidity) ? Number(liquidity).toLocaleString() : '—'} • 🧮 FDV: $${isFinite(fdv) ? Number(fdv).toLocaleString() : '—'}</div>
+                </div>
+                <div class="tiny">${createdAt}</div>
+              `;
+              tokenContainer.appendChild(div);
+            });
+          }
+
+          apiStatusEl.textContent = 'Proxy: OK';
+          lastUpdateEl.textContent = new Date().toLocaleTimeString();
+        } catch (err) {
+          console.error(err);
+          apiStatusEl.textContent = 'Proxy: error';
+          tokenContainer.innerHTML = `<div class="tiny">Network error</div>`;
+          debugLog("Fetch error:", err.message);
+          lastUpdateEl.textContent = new Date().toLocaleTimeString();
         }
-      } catch (err) {
-        debugLog("Fetch failed, retrying:", err.message);
-        setTimeout(() => fetchTokens(retry - 1), 4000); // Retry every 4 detik
       }
-    }
 
-    function renderTokens(tokens) {
-      tokenContainer.innerHTML = '';
-      if (!tokens.length) {
-        tokenContainer.innerHTML = `<div class="tiny">No tokens available (check API or refresh)</div>`;
-      } else {
-        tokens.forEach(it => {
-          const div = document.createElement('div');
-          div.className = 'token';
-          div.innerHTML = `
-            <div style="display:flex;gap:8px;align-items:center">
-              <img src="${it.logo || 'https://via.placeholder.com/24?text=?'}" alt="${it.symbol}" style="width:24px;height:24px;border-radius:6px">
+      (function setupModal() {
+        const modal = document.createElement('div');
+        modal.className = 'pw-modal';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+          <div style="width: min(720px, 94%); max-height: 86vh; overflow: auto; padding: 18px; border-radius: 12px; background: linear-gradient(135deg, rgba(2,6,10,0.96), rgba(6,8,16,0.99)); border: 1px solid rgba(0,240,255,0.06); box-shadow: 0 30px 80px rgba(0,0,0,0.7); color: #dff">
+            <button class="closeBtn" style="float: right; background: transparent; border: 0; color: #9fe; font-size: 20px; cursor: pointer">✕</button>
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <img id="mLogo" src="" style="width: 64px; height: 64px; border-radius: 8px; object-fit: cover; box-shadow: 0 0 20px rgba(0,240,255,0.08)"/>
               <div>
-                <div><b style="color:var(--neon)">${it.symbol || '?'}</b> — ${it.name || 'Unnamed'}</div>
-                <div class="tiny">💧 $${(it.liquidity || 0).toLocaleString()} • 🧮 FDV: $${(it.fullyDilutedValuation || 0).toLocaleString()}</div>
+                <h2 id="mName" style="margin: 0; color: var(--neon)"></h2>
+                <div id="mSymbol" class="tiny" style="margin-top: 6px"></div>
               </div>
             </div>
-            <div class="tiny">${new Date(it.createdAt).toLocaleTimeString()}</div>
-          `;
-          tokenContainer.appendChild(div);
-        });
-      }
-      debugLog(`Rendered ${tokens.length} tokens`);
-    }
+            <div id="mDetails" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;"></div>
+            <canvas id="miniChart" class="mini-chart"></canvas>
+            <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end">
+              <a id="mPump" class="btn small" target="_blank" style="text-decoration: none">Open on Pump.fun</a>
+              <a id="mSolscan" class="btn small" target="_blank" style="text-decoration: none">Open on Solscan</a>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('.closeBtn').onclick = () => modal.style.display = 'none';
+        modal.addEventListener('click', (ev) => { if (ev.target === modal) modal.style.display = 'none'; });
 
-    refreshBtn.addEventListener('click', () => fetchTokens());
-    fetchTokens(); // Initial fetch
-    setInterval(() => fetchTokens(), 60000); // Auto-refresh every 60 detik
+        tokenContainer.addEventListener('click', (ev) => {
+          const tokenEl = ev.target.closest('.token');
+          if (!tokenEl) return;
+          const addr = tokenEl.dataset.addr;
+          const item = window.tokenMap[addr];
+          if (!item) return;
+
+          modal.style.display = 'flex';
+          modal.querySelector('#mLogo').src = item.logo || ('https://logo.moralis.io/solana-mainnet_' + addr + '_placeholder.png');
+          modal.querySelector('#mName').textContent = item.name || 'Unnamed';
+          modal.querySelector('#mSymbol').textContent = (item.symbol || '—') + ' • ' + (addr ? (addr.slice(0, 6) + '...') : '');
+
+          const price = item.priceUsd ? ('$' + Number(item.priceUsd).toFixed(6)) : '—';
+          const liquidity = item.liquidity ? ('$' + Number(item.liquidity).toLocaleString()) : '—';
+          const fdv = item.fullyDilutedValuation ? ('$' + Number(item.fullyDilutedValuation).toLocaleString()) : '—';
+          const created = item.createdAt ? new Date(item.createdAt).toLocaleString() : '—';
+          const holders = 'Loading...'; // Placeholder, akan diganti jika ada API holder
+          modal.querySelector('#mDetails').innerHTML = `
+            <div style="background: rgba(255,255,255,0.01); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.03)">
+              <div class="tiny">Price (USD)</div><div style="color: var(--neon); font-weight: 700">${price}</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.01); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.03)">
+              <div class="tiny">Liquidity</div><div style="color: var(--neon); font-weight: 700">${liquidity}</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.01); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.03)">
+              <div class="tiny">FDV</div><div style="color: var(--neon); font-weight: 700">${fdv}</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.01); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.03)">
+              <div class="tiny">Created</div><div style="color: var(--neon); font-weight: 700">${created}</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.01); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.03)">
+              <div class="tiny">Holders</div><div style="color: var(--neon); font-weight: 700">${holders}</div>
+            </div>
+          `;
+
+          // Mini chart setup
+          const ctx = modal.querySelector('#miniChart').getContext('2d');
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: ['1h', '2h', '3h', '4h', '5h'],
+              datasets: [{
+                label: 'Price (USD)',
+                data: [item.priceUsd || 0, (item.priceUsd || 0) * 1.1, (item.priceUsd || 0) * 1.2, (item.priceUsd || 0) * 1.15, (item.priceUsd || 0) * 1.3], // Dummy data
+                borderColor: 'rgba(0, 240, 255, 0.8)',
+                backgroundColor: 'rgba(0, 240, 255, 0.2)',
+                fill: true,
+                tension: 0.4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: true, ticks: { color: '#9bb' } }, x: { ticks: { color: '#9bb' } } }
+            }
+          });
+
+          modal.querySelector('#mPump').href = addr ? `https://pump.fun/coin/${addr}` : '#';
+          modal.querySelector('#mSolscan').href = addr ? `https://solscan.io/token/${encodeURIComponent(addr)}?cluster=mainnet` : '#';
+        });
+      })();
+
+      async function loadFeaturedToken() {
+        const addr = FEATURED_TOKEN_ADDRESS || null;
+        if (!addr) {
+          wolfData.textContent = 'Featured token not set.';
+          btnBuy.href = '#';
+          btnSolscan.href = '#';
+          return;
+        }
+
+        btnBuy.href = `https://pump.fun/coin/${addr}`;
+        btnSolscan.href = `https://solscan.io/token/${encodeURIComponent(addr)}?cluster=mainnet`;
+
+        try {
+          const res = await fetch(FEATURE_PRICE_URL(addr), { headers: { "accept": "application/json" } });
+          if (!res.ok) { wolfData.textContent = `No live price (status ${res.status})`; return; }
+          const data = await res.json();
+          if (data && data.usdPrice) {
+            wolfData.innerHTML = `💰 Price: <b>$${Number(data.usdPrice).toFixed(6)}</b> • ⏱ ${new Date().toLocaleTimeString()}`;
+            const liquidity = Number(data.liquidity || 0) || 0;
+            const fdv = Number(data.fullyDilutedValuation || 0) || 0;
+            const strength = Math.min(95, Math.round(Math.min(100, (liquidity / Math.max(1, fdv)) * 100 * 2)));
+            document.getElementById('howlFill').style.width = Math.max(6, strength) + '%';
+          } else {
+            wolfData.textContent = 'No price data';
+          }
+        } catch (err) {
+          console.error(err);
+          wolfData.textContent = 'Error loading featured data';
+          debugLog("Featured token load error:", err.message);
+        }
+      }
+
+      let paused = false;
+      let pollHandle = null;
+      function startPolling() { stopPolling(); pollHandle = setInterval(fetchTokens, POLL_INTERVAL); }
+      function stopPolling() { if (pollHandle) clearInterval(pollHandle); }
+
+      refreshBtn.addEventListener('click', () => {
+        if (!paused) fetchTokens();
+      });
+      pauseBtn.addEventListener('click', () => {
+        paused = !paused;
+        pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+        if (!paused) startPolling(); else stopPolling();
+      });
+
+      function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
+
+      // Fallback probe
+      (async function fallbackProbe() {
+        const isStatic = !location.hostname.endsWith('.vercel.app') && location.hostname !== 'pumpwolf.vercel.app';
+        if (isStatic) {
+          document.getElementById('pwFallback').style.display = 'flex';
+          const stayBtn = document.getElementById('stayBtn');
+          const countdownEl = document.getElementById('redirectCountdown');
+          let count = 8;
+          countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+          const timerId = setInterval(() => {
+            count--;
+            countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+            if (count <= 0) {
+              clearInterval(timerId);
+              window.location.href = VERCEL_BASE + '/';
+            }
+          }, 1000);
+
+          stayBtn.addEventListener('click', () => {
+            clearInterval(timerId);
+            countdownEl.textContent = 'Redirect dibatalkan — tetap di halaman ini';
+            stayBtn.disabled = true;
+            stayBtn.textContent = 'Menetap';
+          });
+          refreshBtn.disabled = true;
+          pauseBtn.disabled = true;
+          apiStatusEl.textContent = 'Offline (Static Mode)';
+          tokenContainer.innerHTML = `<div class="tiny">Token list unavailable in static mode. Visit <a href="${VERCEL_BASE}/">live version</a>.</div>`;
+          wolfData.textContent = 'Data unavailable in static mode. Visit live version for details.';
+        } else {
+          document.getElementById('pwFallback').style.display = 'none';
+          fetchTokens();
+          loadFeaturedToken();
+          startPolling();
+        }
+      })();
+    })();
   </script>
 </body>
 </html>
