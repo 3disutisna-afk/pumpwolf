@@ -18,14 +18,18 @@ export default async function handler(req, res) {
         params: [addr, { encoding: 'jsonParsed', commitment: 'finalized' }]
       })
     });
+    if (!mintResponse.ok) throw new Error(`HTTP ${mintResponse.status}: ${await mintResponse.text()}`);
     const mintData = await mintResponse.json();
     console.log(`Mint response for ${addr}:`, mintData);
-    if (!mintData.result || !mintData.result.value) {
+    if (!mintData.result || !mintData.result.value || !mintData.result.value.data?.parsed?.info) {
       throw new Error("Invalid mint data: " + JSON.stringify(mintData));
     }
     const mintInfo = mintData.result.value.data.parsed.info;
     const mintable = mintInfo.mintAuthority !== null;
     const burned = mintInfo.mintAuthority === null;
+
+    // Tambah delay untuk menghindari rate limit
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     console.log(`Requesting holder info for addr: ${addr}`);
     const holdersResponse = await fetch(HELIUS_RPC, {
@@ -38,6 +42,7 @@ export default async function handler(req, res) {
         params: [addr, { commitment: 'finalized' }]
       })
     });
+    if (!holdersResponse.ok) throw new Error(`HTTP ${holdersResponse.status}: ${await holdersResponse.text()}`);
     const holdersData = await holdersResponse.json();
     console.log(`Holder response for ${addr}:`, holdersData);
     let totalHolders = 0;
