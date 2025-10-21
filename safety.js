@@ -3,11 +3,11 @@ export default async function handler(req, res) {
   const { addr } = req.query;
   if (!addr) return res.status(400).json({ error: "Token address is required" });
 
-  const HELIUS_API_KEY = "4b4d10de-beb1-4794-8142-b299fffc8235"; // Ganti dengan API key Helius yang benar
+  const HELIUS_API_KEY = "4b4d10de-beb1-4794-8142-b299fffc8235"; // API key yang sudah dites
   const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
 
   try {
-    // Fetch mint info
+    console.log(`Requesting mint info for addr: ${addr}`);
     const mintResponse = await fetch(HELIUS_RPC, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -15,19 +15,19 @@ export default async function handler(req, res) {
         jsonrpc: '2.0',
         id: 1,
         method: 'getAccountInfo',
-        params: [addr, { encoding: 'jsonParsed' }]
+        params: [addr, { encoding: 'jsonParsed', commitment: 'finalized' }]
       })
     });
     const mintData = await mintResponse.json();
+    console.log(`Mint response for ${addr}:`, mintData);
     if (!mintData.result || !mintData.result.value) {
-      console.error("Invalid mint data for addr:", addr, mintData);
-      throw new Error("Invalid mint data");
+      throw new Error("Invalid mint data: " + JSON.stringify(mintData));
     }
     const mintInfo = mintData.result.value.data.parsed.info;
     const mintable = mintInfo.mintAuthority !== null;
     const burned = mintInfo.mintAuthority === null;
 
-    // Fetch holder info
+    console.log(`Requesting holder info for addr: ${addr}`);
     const holdersResponse = await fetch(HELIUS_RPC, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -35,10 +35,11 @@ export default async function handler(req, res) {
         jsonrpc: '2.0',
         id: 1,
         method: 'getTokenLargestAccounts',
-        params: [addr]
+        params: [addr, { commitment: 'finalized' }]
       })
     });
     const holdersData = await holdersResponse.json();
+    console.log(`Holder response for ${addr}:`, holdersData);
     let totalHolders = 0;
     let topHolderAmount = 0;
     let topHolderPct = 0;
@@ -48,10 +49,10 @@ export default async function handler(req, res) {
       topHolderAmount = topHolder?.uiAmount || 0;
       topHolderPct = mintInfo.supply ? (topHolderAmount / mintInfo.supply * 100).toFixed(2) : 0;
     } else {
-      console.warn("No holder data for addr:", addr, holdersData);
+      console.warn(`No holder data for ${addr}:`, holdersData);
     }
 
-    const blacklisted = false; // Placeholder, bisa ditambah logika rug check
+    const blacklisted = false; // Placeholder
 
     res.status(200).json({
       data: {
@@ -63,7 +64,7 @@ export default async function handler(req, res) {
       }
     });
   } catch (err) {
-    console.error("Error fetching token safety for addr:", addr, err.message);
-    res.status(500).json({ error: "Failed to fetch token safety data" });
+    console.error(`Error for addr ${addr}:`, err.message, err.stack);
+    res.status(500).json({ error: "Failed to fetch token safety data", details: err.message });
   }
 }
