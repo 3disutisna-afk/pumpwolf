@@ -290,7 +290,7 @@
           const liquidity = item.liquidity ? ('$' + Number(item.liquidity).toLocaleString()) : '—';
           const fdv = item.fullyDilutedValuation ? ('$' + Number(item.fullyDilutedValuation).toLocaleString()) : '—';
           const created = item.createdAt ? new Date(item.createdAt).toLocaleString() : '—';
-          const holders = 'Loading...'; // Placeholder, akan diganti jika ada API holder
+          const holders = 'Loading...'; // Placeholder untuk holder, bisa diganti dengan API
           modal.querySelector('#mDetails').innerHTML = `
             <div style="background: rgba(255,255,255,0.01); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.03)">
               <div class="tiny">Price (USD)</div><div style="color: var(--neon); font-weight: 700">${price}</div>
@@ -311,6 +311,8 @@
 
           // Mini chart setup
           const ctx = modal.querySelector('#miniChart').getContext('2d');
+          let existingChart = Chart.getChart(ctx); // Cek apakah chart sudah ada
+          if (existingChart) existingChart.destroy(); // Hapus chart lama jika ada
           new Chart(ctx, {
             type: 'line',
             data: {
