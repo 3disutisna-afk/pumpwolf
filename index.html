@@ -130,21 +130,21 @@
     </main>
   </div>
 
-  <footer>© 2025 PumpWolf — The Cyber Pack • v2.5</footer>
+  <footer>© 2025 PumpWolf — The Cyber Pack • v2.6</footer>
 
   <script>
     (function() {
       const VERCEL_BASE = "https://pumpwolf.vercel.app";
-      const MORALIS_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY"; // Ganti dengan API key Moralis kakak
-      const X_API_KEY = "AAAAAAAAAAAAAAAAAAAAAJwf0gEAAAAAwO7Jz47vr2XkKWrWJUps%2FvJOu3E%3DdUAaUAOgGOQBEKCrGN9gZp0B6dBmLH0E549Y7ODw2a4Td5EFxi"; // Ganti dengan Bearer Token dari X kakak (opsional)
+      const MORALIS_API_KEY = "YOUR_MORALIS_API_KEY"; // Ganti dengan API key Moralis kakak
+      const X_API_KEY = "YOUR_X_API_KEY"; // Ganti dengan Bearer Token dari X kakak (opsional)
       const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=50";
       const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
       const FEATURED_TOKEN_ADDRESS = "";
       const POLL_INTERVAL = 60000;
-      const MIN_LIQUIDITY = 5000; // $5,000 untuk tes
-      const MAX_FDV = 100000; // $100,000 untuk tes
-      const MIN_VOLUME_24H = 1000; // $1,000 untuk tes
-      const MIN_AGE_MIN = 1; // 1 menit untuk tes
+      const MIN_LIQUIDITY = 1000; // $1,000 untuk tes
+      const MAX_FDV = 200000; // $200,000 untuk tes
+      const MIN_VOLUME_24H = 500; // $500 untuk tes
+      const MIN_AGE_MIN = 0.5; // 0.5 menit untuk tes
 
       const apiStatusEl = document.getElementById('api-status');
       const lastUpdateEl = document.getElementById('last-update');
@@ -169,7 +169,7 @@
         try {
           debugLog(`Fetching ${url}`);
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // Timeout 10 detik
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout 15 detik
           const res = await fetch(url, { signal: controller.signal, headers: { ...headers, "X-API-Key": MORALIS_API_KEY } });
           clearTimeout(timeoutId);
           if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -290,9 +290,9 @@
       }
 
       const dummyTokens = [
-        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "5000", fullyDilutedValuation: "10000", volume24h: "1500", createdAt: "2025-10-21T14:00:00Z" },
-        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "6000", fullyDilutedValuation: "12000", volume24h: "2000", createdAt: "2025-10-21T14:05:00Z" },
-        { tokenAddress: "SMACKR1234567890AbCdEfGhIjKlMnOpQrStUvWxYpump", name: "SMACKR", symbol: "SMACKR", priceUsd: "0.000010000", liquidity: "40000", fullyDilutedValuation: "25000", volume24h: "38000", createdAt: "2025-10-21T14:10:00Z" },
+        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "1500", fullyDilutedValuation: "5000", volume24h: "600", createdAt: "2025-10-21T15:00:00Z" },
+        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "2000", fullyDilutedValuation: "6000", volume24h: "700", createdAt: "2025-10-21T15:05:00Z" },
+        { tokenAddress: "SMACKR1234567890AbCdEfGhIjKlMnOpQrStUvWxYpump", name: "SMACKR", symbol: "SMACKR", priceUsd: "0.000010000", liquidity: "4000", fullyDilutedValuation: "10000", volume24h: "1500", createdAt: "2025-10-21T15:10:00Z" },
       ];
 
       function filterSafeTokens(tokens) {
@@ -483,7 +483,7 @@
         if (isVercel) {
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // Timeout 10 detik
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout 15 detik
             const testRes = await fetch(ENDPOINT.replace('limit=50', 'limit=1'), { headers: { "accept": "application/json" }, signal: controller.signal });
             clearTimeout(timeoutId);
             if (testRes.ok) {
