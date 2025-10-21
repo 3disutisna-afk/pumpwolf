@@ -130,21 +130,21 @@
     </main>
   </div>
 
-  <footer>© 2025 PumpWolf — The Cyber Pack • v2.4</footer>
+  <footer>© 2025 PumpWolf — The Cyber Pack • v2.5</footer>
 
   <script>
     (function() {
       const VERCEL_BASE = "https://pumpwolf.vercel.app";
-      const MORALIS_API_KEY = process.env.MORALIS_API_KEY || "YOUR_MORALIS_API_KEY"; // Baca dari env atau fallback
-      const X_API_KEY = process.env.X_API_KEY || "YOUR_X_API_KEY"; // Baca dari env atau fallback
+      const MORALIS_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY"; // Ganti dengan API key Moralis kakak
+      const X_API_KEY = "AAAAAAAAAAAAAAAAAAAAAJwf0gEAAAAAwO7Jz47vr2XkKWrWJUps%2FvJOu3E%3DdUAaUAOgGOQBEKCrGN9gZp0B6dBmLH0E549Y7ODw2a4Td5EFxi"; // Ganti dengan Bearer Token dari X kakak (opsional)
       const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=50";
       const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
       const FEATURED_TOKEN_ADDRESS = "";
       const POLL_INTERVAL = 60000;
-      const MIN_LIQUIDITY = 10000; // Turunkan ke $10,000 untuk tes
-      const MAX_FDV = 100000; // Turunkan ke $100,000 untuk tes
-      const MIN_VOLUME_24H = 5000; // Turunkan ke $5,000 untuk tes
-      const MIN_AGE_MIN = 1; // Turunkan ke 1 menit untuk tes
+      const MIN_LIQUIDITY = 5000; // $5,000 untuk tes
+      const MAX_FDV = 100000; // $100,000 untuk tes
+      const MIN_VOLUME_24H = 1000; // $1,000 untuk tes
+      const MIN_AGE_MIN = 1; // 1 menit untuk tes
 
       const apiStatusEl = document.getElementById('api-status');
       const lastUpdateEl = document.getElementById('last-update');
@@ -168,7 +168,10 @@
       async function fetchJson(url, headers = {}) {
         try {
           debugLog(`Fetching ${url}`);
-          const res = await fetch(url, { headers: { ...headers, "X-API-Key": MORALIS_API_KEY } });
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // Timeout 10 detik
+          const res = await fetch(url, { signal: controller.signal, headers: { ...headers, "X-API-Key": MORALIS_API_KEY } });
+          clearTimeout(timeoutId);
           if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
           const data = await res.json();
           debugLog(`Fetched ${url}:`, data);
@@ -287,8 +290,9 @@
       }
 
       const dummyTokens = [
-        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "15000", fullyDilutedValuation: "20000", volume24h: "6000", createdAt: "2025-10-21T14:00:00Z" },
-        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "20000", fullyDilutedValuation: "25000", volume24h: "7000", createdAt: "2025-10-21T14:05:00Z" },
+        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "5000", fullyDilutedValuation: "10000", volume24h: "1500", createdAt: "2025-10-21T14:00:00Z" },
+        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "6000", fullyDilutedValuation: "12000", volume24h: "2000", createdAt: "2025-10-21T14:05:00Z" },
+        { tokenAddress: "SMACKR1234567890AbCdEfGhIjKlMnOpQrStUvWxYpump", name: "SMACKR", symbol: "SMACKR", priceUsd: "0.000010000", liquidity: "40000", fullyDilutedValuation: "25000", volume24h: "38000", createdAt: "2025-10-21T14:10:00Z" },
       ];
 
       function filterSafeTokens(tokens) {
@@ -310,7 +314,7 @@
         }
         apiStatusEl.textContent = 'Fetching... (retry ' + (4 - retry) + ')';
         try {
-          const res = await fetch(ENDPOINT, { headers: { "accept": "application/json" } });
+          const res = await fetch(ENDPOINT, { headers: { "accept": "application/json" }, signal: new AbortController().signal });
           if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
           const data = await res.json();
           debugLog("Raw API data:", data);
@@ -478,7 +482,10 @@
         const isVercel = location.hostname.includes('vercel.app');
         if (isVercel) {
           try {
-            const testRes = await fetch(ENDPOINT.replace('limit=50', 'limit=1'), { headers: { "accept": "application/json" } });
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // Timeout 10 detik
+            const testRes = await fetch(ENDPOINT.replace('limit=50', 'limit=1'), { headers: { "accept": "application/json" }, signal: controller.signal });
+            clearTimeout(timeoutId);
             if (testRes.ok) {
               fallback.style.display = 'none';
               fetchTokens();
@@ -487,7 +494,7 @@
               return;
             }
           } catch (e) {
-            debugLog('API test failed, fallback active:', e.message);
+            debugLog('API test failed:', e.message);
           }
         }
         fallback.style.display = 'flex';
@@ -497,7 +504,9 @@
         countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
         const timerId = setInterval(() => {
           count--;
-          countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+          if (count >= 0) {
+            countdownEl.textContent = `↪ otomatis pindah dalam ${count}s`;
+          }
           if (count <= 0) {
             clearInterval(timerId);
             window.location.href = 'https://pumpwolf.vercel.app/';
