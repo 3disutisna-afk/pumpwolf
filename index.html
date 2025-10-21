@@ -130,21 +130,21 @@
     </main>
   </div>
 
-  <footer>© 2025 PumpWolf — The Cyber Pack • v3.0</footer>
+  <footer>© 2025 PumpWolf — The Cyber Pack • v3.1</footer>
 
   <script>
     (function() {
       const VERCEL_BASE = "https://pumpwolf.vercel.app";
-      const MORALIS_API_KEY = ""; // Ganti dengan API key Moralis kakak
-      const X_API_KEY = ""; // Ganti dengan Bearer Token dari X kakak (opsional)
+      const MORALIS_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjgxMjhmNWExLTU1YzItNGJlNC1iMzEzLWFhZWNjZGM3OWE4NyIsIm9yZ0lkIjoiNDQ2NzQyIiwidXNlcklkIjoiNDU5NjM4IiwidHlwZUlkIjoiOGY1NzEwNmMtYzE4Zi00MTJjLTkyMmEtNDU0MjRiMzNkMjRkIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDcwOTQyOTgsImV4cCI6NDkwMjg1NDI5OH0.5dxzef0LSKivT6rTyc91w8VOFjGYka52Pj34gDGO8Dc"; // Ganti di kode lokal, pastikan di Vercel juga
+      const X_API_KEY = "AAAAAAAAAAAAAAAAAAAAAJwf0gEAAAAAwO7Jz47vr2XkKWrWJUps%2FvJOu3E%3DdUAaUAOgGOQBEKCrGN9gZp0B6dBmLH0E549Y7ODw2a4Td5EFxi"; // Opsional
       const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=50";
       const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
       const FEATURED_TOKEN_ADDRESS = "";
       const POLL_INTERVAL = 60000;
-      const MIN_LIQUIDITY = 10; // $10 (sangat longgar)
-      const MAX_FDV = 5000000; // $5M
-      const MIN_VOLUME_24H = 10; // $10 (sangat longgar)
-      const MIN_AGE_MIN = 0.0167; // 1 detik (longgar)
+      const MIN_LIQUIDITY = 1; // $1 (sangat longgar)
+      const MAX_FDV = 10000000; // $10M
+      const MIN_VOLUME_24H = 1; // $1 (sangat longgar)
+      const MIN_AGE_MIN = 0; // Nonaktifkan filter umur
 
       const apiStatusEl = document.getElementById('api-status');
       const lastUpdateEl = document.getElementById('last-update');
@@ -174,7 +174,7 @@
           clearTimeout(timeoutId);
           if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
           const data = await res.json();
-          debugLog(`Fetched ${url}:`, data);
+          debugLog(`Fetched data structure:`, { status: res.status, headers: Object.fromEntries(res.headers), data });
           return data;
         } catch (err) {
           debugLog("Fetch error:", err.message);
@@ -290,9 +290,9 @@
       }
 
       const dummyTokens = [
-        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "CyberWolf Meme", symbol: "WOLF1", priceUsd: "0.000005", liquidity: "15", fullyDilutedValuation: "1000", volume24h: "12", createdAt: "2025-10-21T20:28:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
-        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "MoonWolf", symbol: "MOONW", priceUsd: "0.000007", liquidity: "20", fullyDilutedValuation: "1500", volume24h: "15", createdAt: "2025-10-21T20:29:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
-        { tokenAddress: "SMACKR1234567890AbCdEfGhIjKlMnOpQrStUvWxYpump", name: "SMACKR Wolf", symbol: "SMACKW", priceUsd: "0.000010", liquidity: "25", fullyDilutedValuation: "1800", volume24h: "18", createdAt: "2025-10-21T20:30:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
+        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "CyberWolf Meme", symbol: "WOLF1", priceUsd: "0.000005", liquidity: "2", fullyDilutedValuation: "1000", volume24h: "2", createdAt: "2025-10-21T20:45:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
+        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "MoonWolf", symbol: "MOONW", priceUsd: "0.000007", liquidity: "3", fullyDilutedValuation: "1500", volume24h: "3", createdAt: "2025-10-21T20:46:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
+        { tokenAddress: "SMACKR1234567890AbCdEfGhIjKlMnOpQrStUvWxYpump", name: "SMACKR Wolf", symbol: "SMACKW", priceUsd: "0.000010", liquidity: "5", fullyDilutedValuation: "1800", volume24h: "5", createdAt: "2025-10-21T20:47:00Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
       ];
 
       function filterSafeTokens(tokens) {
@@ -302,7 +302,7 @@
           const fdv = Number(it.fullyDilutedValuation || 0);
           const vol = Number(it.volume24h || 0);
           const ageMin = (now - new Date(it.createdAt)) / (1000 * 60);
-          return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && vol >= MIN_VOLUME_24H && ageMin >= MIN_AGE_MIN;
+          return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && vol >= MIN_VOLUME_24H;
         }).slice(0, 10);
       }
 
@@ -317,10 +317,13 @@
           const res = await fetch(ENDPOINT, { headers: { "accept": "application/json" }, signal: new AbortController().signal });
           if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
           const data = await res.json();
-          debugLog("Raw API data:", data);
-          if (!data.result || !Array.isArray(data.result)) throw new Error('Invalid or empty data');
+          debugLog("Raw API response:", { status: res.status, data });
+          if (!data.result || !Array.isArray(data.result)) {
+            debugLog("Invalid data structure, expected 'result' array");
+            throw new Error('Invalid data structure');
+          }
           const filtered = filterSafeTokens(data.result.map(t => ({ ...t, logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" })));
-          debugLog("Filtered tokens:", filtered);
+          debugLog("Filtered tokens count:", filtered.length, "Data sample:", filtered.slice(0, 2));
           if (filtered.length === 0) {
             debugLog("No tokens passed filter, using dummy data");
             renderTokens(dummyTokens);
