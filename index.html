@@ -91,11 +91,6 @@
           <button class="btn small" id="pauseBtn">Pause</button>
         </div>
       </div>
-
-      <div class="card">
-        <div class="muted">Debug panel (fetch status & headers)</div>
-        <div id="debugPanel" class="debug"></div>
-      </div>
     </aside>
 
     <main class="col-main">
@@ -126,11 +121,19 @@
         <div id="tokenContainer" class="token-list">
           <div class="tiny">Loading...</div>
         </div>
+
+        <div class="card" id="debugContainer" style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="muted">Debug Panel (Toggle)</div>
+            <button class="btn small" id="toggleDebug">Show/Hide</button>
+          </div>
+          <div id="debugPanel" class="debug"></div>
+        </div>
       </div>
     </main>
   </div>
 
-  <footer>© 2025 PumpWolf — The Cyber Pack • v2.3</footer>
+  <footer>© 2025 PumpWolf — The Cyber Pack • v2.4</footer>
 
   <script>
     (function() {
@@ -142,20 +145,23 @@
       const MIN_LIQUIDITY = 10000; // $10,000
       const MAX_FDV = 10000; // $10,000
       const MAX_AGE_MIN = 60; // 60 menit
+      const MIN_HOLDERS = 50; // Minimal 50 holder
+      const MAX_TOP_HOLDER_PCT = 30; // Top holder < 30%
 
       const apiStatusEl = document.getElementById('api-status');
       const lastUpdateEl = document.getElementById('last-update');
       const tokenContainer = document.getElementById('tokenContainer');
       const debugPanel = document.getElementById('debugPanel');
+      const debugContainer = document.getElementById('debugContainer');
       const refreshBtn = document.getElementById('refreshBtn');
       const pauseBtn = document.getElementById('pauseBtn');
       const wolfData = document.getElementById('wolfData');
       const btnBuy = document.getElementById('btnBuy');
       const btnSolscan = document.getElementById('btnSolscan');
+      const toggleDebug = document.getElementById('toggleDebug');
       window.tokenMap = {};
 
       function debugLog(...args) {
-        if (!debugPanel.classList.contains('visible')) debugPanel.classList.add('visible');
         const t = new Date().toLocaleTimeString();
         const s = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a, null, 2))).join(' ');
         debugPanel.textContent += `[${t}] ${s}\n`;
@@ -166,7 +172,7 @@
         try {
           debugLog(`Fetching ${url}`);
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout 15 detik
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
           const res = await fetch(url, { signal: controller.signal, headers: { "accept": "application/json" } });
           clearTimeout(timeoutId);
           if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -180,8 +186,8 @@
       }
 
       const dummyTokens = [
-        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "12971.933460626", fullyDilutedValuation: "6892", createdAt: "2025-10-21T06:35:08.000Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
-        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "11937.123185542", fullyDilutedValuation: "5837", createdAt: "2025-10-21T06:35:07.000Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
+        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "12971.933460626", fullyDilutedValuation: "6892", createdAt: "2025-10-21T06:35:08.000Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png", mintable: false, blacklisted: false, burned: true, holders: 75, topHolderPct: 20 },
+        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "11937.123185542", fullyDilutedValuation: "5837", createdAt: "2025-10-21T06:35:07.000Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png", mintable: false, blacklisted: false, burned: true, holders: 60, topHolderPct: 25 },
       ];
 
       function filterSafeTokens(tokens) {
@@ -190,7 +196,11 @@
           const liq = Number(it.liquidity || 0);
           const fdv = Number(it.fullyDilutedValuation || 0);
           const ageMin = (now - new Date(it.createdAt)) / (1000 * 60);
-          return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && ageMin <= MAX_AGE_MIN;
+          const holders = Number(it.holders || 0);
+          const topHolderPct = Number(it.topHolderPct || 100);
+          return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && ageMin <= MAX_AGE_MIN &&
+                 holders >= MIN_HOLDERS && topHolderPct <= MAX_TOP_HOLDER_PCT &&
+                 !it.mintable && !it.blacklisted && it.burned;
         }).slice(0, 10);
       }
 
@@ -207,7 +217,10 @@
             debugLog("Invalid or empty data from API:", data);
             throw new Error('Invalid data structure');
           }
-          const filtered = filterSafeTokens(data.result.map(t => ({ ...t, logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" })));
+          const filtered = filterSafeTokens(data.result.map(t => ({
+            ...t, logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png",
+            mintable: false, blacklisted: false, burned: true, holders: 50, topHolderPct: 20
+          })));
           debugLog("Filtered tokens count:", filtered.length);
           if (filtered.length === 0) {
             debugLog("No tokens passed filter, using dummy data");
@@ -277,7 +290,7 @@
         `;
         document.body.appendChild(modal);
 
-        tokenContainer.addEventListener('click', async (ev) => {
+        tokenContainer.addEventListener('click', (ev) => {
           const tokenEl = ev.target.closest('.token');
           if (!tokenEl) {
             debugLog('Click outside token element');
@@ -298,17 +311,23 @@
 
           const ageMin = item.createdAt ? Math.round((new Date() - new Date(item.createdAt)) / (1000 * 60)) + ' min' : '—';
           const liqFdv = item.liquidity && item.fullyDilutedValuation ? ((Number(item.liquidity) / Number(item.fullyDilutedValuation)) * 100).toFixed(2) + '%' : '—';
+          const isMintable = item.mintable ? '✅' : '❌';
+          const isBlacklisted = item.blacklisted ? '✅' : '❌';
+          const isBurned = item.burned ? '✅' : '❌';
+          const topHolderPct = item.topHolderPct ? `${item.topHolderPct}%` : '—';
+          const holders = item.holders || '—';
 
           modal.querySelector('#mDetails').innerHTML = `
             <div class="tiny">📊 FDV: $${item.fullyDilutedValuation || '—'}</div>
             <div class="tiny">💧 Liquidity: $${item.liquidity || '—'}</div>
             <div class="tiny">📈 Liq/FDV: ${liqFdv}</div>
             <div class="tiny">💸 Price: $${item.priceUsd ? Number(item.priceUsd).toFixed(6) : '—'}</div>
-            <div class="tiny">📈 Price Change (24h): N/A</div>
             <div class="tiny">⏳ Age: ${ageMin}</div>
-            <div class="tiny">👥 Holders: N/A</div>
-            <div class="tiny">📊 Volume 24h: N/A</div>
-            <div class="tiny">📣 X Hype: N/A mentions</div>
+            <div class="tiny">👥 Holders: ${holders}</div>
+            <div class="tiny">🔒 Mintable: ${isMintable}</div>
+            <div class="tiny">🚫 Blacklisted: ${isBlacklisted}</div>
+            <div class="tiny">🔥 Burned: ${isBurned}</div>
+            <div class="tiny">👑 Top Holder: ${topHolderPct}</div>
             <div class="tiny">📍 Address: ${addr}</div>
           `;
 
@@ -357,6 +376,11 @@
         paused = !paused;
         pauseBtn.textContent = paused ? 'Resume' : 'Pause';
         if (!paused) startPolling(); else stopPolling();
+      });
+
+      toggleDebug.addEventListener('click', () => {
+        debugPanel.classList.toggle('visible');
+        toggleDebug.textContent = debugPanel.classList.contains('visible') ? 'Hide' : 'Show';
       });
 
       function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
