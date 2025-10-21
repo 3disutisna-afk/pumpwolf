@@ -130,21 +130,21 @@
     </main>
   </div>
 
-  <footer>© 2025 PumpWolf — The Cyber Pack • v2.3</footer>
+  <footer>© 2025 PumpWolf — The Cyber Pack • v2.4</footer>
 
   <script>
     (function() {
       const VERCEL_BASE = "https://pumpwolf.vercel.app";
-      const MORALIS_API_KEY = "YOUR_MORALIS_API_KEY"; // Ganti dengan API key Moralis kakak
-      const X_API_KEY = "YOUR_X_API_KEY"; // Ganti dengan API key X kakak (opsional)
+      const MORALIS_API_KEY = process.env.MORALIS_API_KEY || "YOUR_MORALIS_API_KEY"; // Baca dari env atau fallback
+      const X_API_KEY = process.env.X_API_KEY || "YOUR_X_API_KEY"; // Baca dari env atau fallback
       const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=50";
       const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
       const FEATURED_TOKEN_ADDRESS = "";
       const POLL_INTERVAL = 60000;
-      const MIN_LIQUIDITY = 20000; // Naikkan ke $20,000
-      const MAX_FDV = 50000; // Naikkan ke $50,000
-      const MIN_VOLUME_24H = 10000; // Tambah filter volume $10,000
-      const MIN_AGE_MIN = 3; // Umur minimal 3 menit
+      const MIN_LIQUIDITY = 10000; // Turunkan ke $10,000 untuk tes
+      const MAX_FDV = 100000; // Turunkan ke $100,000 untuk tes
+      const MIN_VOLUME_24H = 5000; // Turunkan ke $5,000 untuk tes
+      const MIN_AGE_MIN = 1; // Turunkan ke 1 menit untuk tes
 
       const apiStatusEl = document.getElementById('api-status');
       const lastUpdateEl = document.getElementById('last-update');
@@ -167,9 +167,12 @@
 
       async function fetchJson(url, headers = {}) {
         try {
-          const res = await fetch(url, { headers });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return await res.json();
+          debugLog(`Fetching ${url}`);
+          const res = await fetch(url, { headers: { ...headers, "X-API-Key": MORALIS_API_KEY } });
+          if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          const data = await res.json();
+          debugLog(`Fetched ${url}:`, data);
+          return data;
         } catch (err) {
           debugLog("Fetch error:", err.message);
           return null;
@@ -182,8 +185,7 @@
 
       async function getPairsData(tokenAddress) {
         const url = `https://solana-gateway.moralis.io/token/mainnet/${tokenAddress}/pairs`;
-        const headers = { "X-API-Key": MORALIS_API_KEY };
-        const data = await fetchJson(url, headers);
+        const data = await fetchJson(url);
         await new Promise(resolve => setTimeout(resolve, 500)); // Delay 0.5s
         if (!data || !data.pairs || !data.pairs.length) {
           debugLog(`No active pairs for ${tokenAddress}`);
@@ -233,8 +235,7 @@
           return { count: "N/A", trend_1h: 0 };
         }
         const url = `https://solana-gateway.moralis.io/token/mainnet/holders/${tokenAddress}`;
-        const headers = { "X-API-Key": MORALIS_API_KEY };
-        let data = await fetchJson(url, headers);
+        let data = await fetchJson(url);
         await new Promise(resolve => setTimeout(resolve, 500)); // Delay 0.5s
         if (data && data.totalHolders !== undefined) {
           debugLog(`Holders data for ${tokenAddress}:`, data);
@@ -244,7 +245,7 @@
           };
         }
         const statsUrl = `https://solana-gateway.moralis.io/token/mainnet/${tokenAddress}/stats`;
-        data = await fetchJson(statsUrl, headers);
+        data = await fetchJson(statsUrl);
         if (data && data.holders !== undefined) {
           debugLog(`Stats holders for ${tokenAddress}:`, data);
           return { count: data.holders.toString(), trend_1h: 0 };
@@ -258,7 +259,10 @@
       }
 
       async function getXHype(tokenName) {
-        if (!X_API_KEY || X_API_KEY === "YOUR_X_API_KEY") return 0;
+        if (!X_API_KEY || X_API_KEY === "YOUR_X_API_KEY") {
+          debugLog("X_API_KEY not set, skipping X hype");
+          return 0;
+        }
         const url = `https://api.x.com/2/tweets/counts/recent?query=${encodeURIComponent(tokenName)}`;
         const headers = { "Authorization": `Bearer ${X_API_KEY}` };
         const data = await fetchJson(url, headers);
@@ -283,8 +287,8 @@
       }
 
       const dummyTokens = [
-        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "25000", fullyDilutedValuation: "25000", createdAt: "2025-10-21T12:00:00Z" },
-        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "30000", fullyDilutedValuation: "30000", createdAt: "2025-10-21T12:05:00Z" },
+        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "15000", fullyDilutedValuation: "20000", volume24h: "6000", createdAt: "2025-10-21T14:00:00Z" },
+        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "20000", fullyDilutedValuation: "25000", volume24h: "7000", createdAt: "2025-10-21T14:05:00Z" },
       ];
 
       function filterSafeTokens(tokens) {
@@ -300,17 +304,24 @@
 
       async function fetchTokens(retry = 3) {
         if (retry === 0) {
-          debugLog("API failed, using dummy data");
+          debugLog("API failed after retries, using dummy data");
           renderTokens(dummyTokens);
           return;
         }
         apiStatusEl.textContent = 'Fetching... (retry ' + (4 - retry) + ')';
         try {
           const res = await fetch(ENDPOINT, { headers: { "accept": "application/json" } });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
           const data = await res.json();
-          if (!data.result) throw new Error('Invalid data');
+          debugLog("Raw API data:", data);
+          if (!data.result || !Array.isArray(data.result)) throw new Error('Invalid or empty data');
           const filtered = filterSafeTokens(data.result);
+          debugLog("Filtered tokens:", filtered);
+          if (filtered.length === 0) {
+            debugLog("No tokens passed filter, using dummy data");
+            renderTokens(dummyTokens);
+            return;
+          }
           const detailedTokens = await Promise.all(filtered.map(async it => {
             const details = await fetchTokenDetails(it.tokenAddress, (new Date() - new Date(it.createdAt)) / (1000 * 60));
             return { ...it, ...details };
@@ -327,7 +338,7 @@
         tokenContainer.innerHTML = '';
         window.tokenMap = {};
         if (!tokens.length) {
-          tokenContainer.innerHTML = `<div class="tiny">No high-quality tokens found</div>`;
+          tokenContainer.innerHTML = `<div class="tiny">No high-quality tokens found (check filters/API)</div>`;
         } else {
           tokens.forEach(it => {
             const addr = it.tokenAddress;
@@ -476,7 +487,7 @@
               return;
             }
           } catch (e) {
-            debugLog('API test failed, fallback active');
+            debugLog('API test failed, fallback active:', e.message);
           }
         }
         fallback.style.display = 'flex';
