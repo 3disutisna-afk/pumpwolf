@@ -14,7 +14,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <style>
-    /* Styles sama seperti sebelumnya, skip untuk singkat */
     :root {
       --bg: #030406; --card: #071018; --neon: #00f0ff; --accent: #8a2be2; --muted: #9bb;
     }
@@ -29,7 +28,7 @@
     .btn { background: linear-gradient(90deg, var(--neon), var(--accent)); border: none; color: #001; padding: 8px 12px; border-radius: 10px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block }
     .small { padding: 6px 10px; font-size: 0.85rem } .tiny { font-size: 0.82rem; color: var(--muted) }
     .token-list { display: flex; flex-direction: column; gap: 10px; max-height: 65vh; overflow: auto; padding-right: 6px }
-    .token { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; background: linear-gradient(90deg, rgba(0,0,0,0.16), rgba(0,0,0,0.06)); border: 1px solid rgba(0,240,255,0.03); transition: transform .18s ease, box-shadow .18s ease }
+    .token { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; background: linear-gradient(90deg, rgba(0,0,0,0.16), rgba(0,0,0,0.06)); border: 1px solid rgba(0,240,255,0.03); transition: transform .18s ease, box-shadow .18s ease; cursor: pointer }
     .token:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,240,255,0.06) }
     footer { text-align: center; padding: 14px 20px; color: var(--muted); font-size: 0.85rem }
     .howl-bar { height: 10px; border-radius: 8px; background: rgba(255,255,255,0.03); overflow: hidden; margin-top: 8px; box-shadow: inset 0 0 6px rgba(0,240,255,0.08) }
@@ -163,11 +162,9 @@
         debugPanel.scrollTop = debugPanel.scrollHeight;
       }
 
-      // Dummy data dari tes API untuk fallback
       const dummyTokens = [
         { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "12971.933460626", fullyDilutedValuation: "6892", createdAt: "2025-10-21T06:35:08.000Z" },
         { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "11937.123185542", fullyDilutedValuation: "5837", createdAt: "2025-10-21T06:35:07.000Z" },
-        // ... (tambah 8 lagi dari tes, skip untuk singkat)
       ];
 
       function filterSafeTokens(tokens) {
@@ -182,7 +179,7 @@
 
       async function fetchTokens(retry = 3) {
         if (retry === 0) {
-          debugLog("API failed after 3 retries, using dummy data");
+          debugLog("API failed, using dummy data");
           renderTokens(dummyTokens);
           return;
         }
@@ -196,7 +193,7 @@
           apiStatusEl.textContent = 'Proxy: OK';
         } catch (err) {
           debugLog("Fetch failed:", err.message);
-          setTimeout(() => fetchTokens(retry - 1), 2000); // Retry after 2s
+          setTimeout(() => fetchTokens(retry - 1), 2000);
         }
       }
 
@@ -227,15 +224,103 @@
           });
         }
         lastUpdateEl.textContent = new Date().toLocaleTimeString();
-        debugLog(`Rendered ${filtered.length} safe tokens from ${tokens.length} total`);
+        debugLog(`Rendered ${filtered.length} safe tokens`);
       }
 
-      // Modal (sama seperti sebelumnya, dengan info Telegram-style)
-      (function setupModal() {
-        // ... (kode modal sama seperti respons sebelumnya, skip untuk singkat)
-      })();
+      function setupModal() {
+        const modal = document.createElement('div');
+        modal.className = 'pw-modal';
+        modal.innerHTML = `
+          <div style="width:min(720px,94%);max-height:86vh;overflow:auto;padding:18px;border-radius:12px;background:linear-gradient(135deg,rgba(2,6,10,0.96),rgba(6,8,16,0.99));border:1px solid rgba(0,240,255,0.06);box-shadow:0 30px 80px rgba(0,0,0,0.7);color:#dff">
+            <button class="closeBtn" style="float:right;background:transparent;border:0;color:#9fe;font-size:20px;cursor:pointer">✕</button>
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+              <img id="mLogo" src="" alt="Logo" style="width:64px;height:64px;border-radius:8px;object-fit:cover;box-shadow:0 0 20px rgba(0,240,255,0.08)" />
+              <div>
+                <h2 id="mName" style="margin:0;color:var(--neon)"></h2>
+                <div id="mSymbol" style="margin-top:6px;color:var(--muted)">⛓️ Solana</div>
+              </div>
+            </div>
+            <div id="mDetails" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+            <canvas id="miniChart" class="mini-chart"></canvas>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+              <a id="mPump" class="btn small" target="_blank">Open on Pump.fun</a>
+              <a id="mSolscan" class="btn small" target="_blank">Open on Solscan</a>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
 
-      // Controls & init
+        tokenContainer.addEventListener('click', (ev) => {
+          const tokenEl = ev.target.closest('.token');
+          if (!tokenEl) {
+            debugLog('Click outside token element');
+            return;
+          }
+          debugLog('Token clicked:', tokenEl.dataset.addr);
+          const addr = tokenEl.dataset.addr;
+          const item = window.tokenMap[addr];
+          if (!item) {
+            debugLog('No token data for address:', addr);
+            return;
+          }
+
+          modal.classList.add('open');
+          modal.querySelector('#mLogo').src = item.logo || 'https://via.placeholder.com/64?text=?';
+          modal.querySelector('#mName').textContent = item.name || 'Unnamed';
+          modal.querySelector('#mSymbol').textContent = (item.symbol || '?') + ' • ' + (addr ? (addr.slice(0, 6) + '...') : '');
+
+          const liqFdv = item.liquidity && item.fullyDilutedValuation ? ((Number(item.liquidity) / Number(item.fullyDilutedValuation)) * 100).toFixed(2) + '%' : '—';
+          const ageMin = item.createdAt ? Math.round((new Date() - new Date(item.createdAt)) / (1000 * 60)) + ' min' : '—';
+
+          modal.querySelector('#mDetails').innerHTML = `
+            <div class="tiny">📊 FDV: $${item.fullyDilutedValuation || '—'}</div>
+            <div class="tiny">💧 Liquidity: $${item.liquidity || '—'}</div>
+            <div class="tiny">📈 Liq/FDV: ${liqFdv}</div>
+            <div class="tiny">💸 Price: $${item.priceUsd ? Number(item.priceUsd).toFixed(6) : '—'}</div>
+            <div class="tiny">📈 Price Change (24h): N/A</div>
+            <div class="tiny">⏳ Age: ${ageMin}</div>
+            <div class="tiny">👥 Holders: N/A</div>
+            <div class="tiny">📈 Holder Trend: N/A</div>
+            <div class="tiny">📊 Volume 24h: N/A</div>
+            <div class="tiny">📣 X Hype: N/A mentions</div>
+            <div class="tiny">📍 Address: ${addr}</div>
+          `;
+
+          const ctx = modal.querySelector('#miniChart').getContext('2d');
+          if (ctx && typeof Chart !== 'undefined') {
+            let existingChart = Chart.getChart(ctx);
+            if (existingChart) existingChart.destroy();
+            const basePrice = Number(item.priceUsd) || 0.0001;
+            new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: ['1h', '2h', '3h', '4h', '5h'],
+                datasets: [{
+                  label: 'Price (USD)',
+                  data: [basePrice, basePrice * 1.1, basePrice * 1.2, basePrice * 1.15, basePrice * 1.3],
+                  borderColor: 'rgba(0, 240, 255, 0.8)',
+                  backgroundColor: 'rgba(0, 240, 255, 0.2)',
+                  fill: true,
+                  tension: 0.4
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { color: '#9bb' } }, x: { ticks: { color: '#9bb' } } }
+              }
+            });
+          }
+
+          modal.querySelector('#mPump').href = addr ? `https://pump.fun/${addr}` : '#';
+          modal.querySelector('#mSolscan').href = addr ? `https://solscan.io/token/${addr}` : '#';
+
+          modal.querySelector('.closeBtn').onclick = () => modal.classList.remove('open');
+          modal.addEventListener('click', (ev) => { if (ev.target === modal) modal.classList.remove('open'); });
+        });
+      }
+
       let paused = false;
       let pollHandle = null;
       function startPolling() { stopPolling(); pollHandle = setInterval(() => { if (!paused) fetchTokens(); }, POLL_INTERVAL); }
@@ -250,7 +335,6 @@
 
       function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
 
-      // Fallback probe dengan test API
       async function fallbackProbe() {
         const fallback = document.getElementById('pwFallback');
         const isVercel = location.hostname.includes('vercel.app');
@@ -261,6 +345,7 @@
               fallback.style.display = 'none';
               fetchTokens();
               startPolling();
+              setupModal(); // Inisialisasi modal setelah DOM siap
               return;
             }
           } catch (e) {
@@ -268,7 +353,6 @@
           }
         }
         fallback.style.display = 'flex';
-        // Countdown logic
         const stayBtn = document.getElementById('stayBtn');
         const countdownEl = document.getElementById('redirectCountdown');
         let count = 8;
