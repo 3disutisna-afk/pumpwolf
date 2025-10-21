@@ -20,10 +20,10 @@
     * { box-sizing: border-box; margin: 0; padding: 0 }
     body { font-family: Inter, system-ui, sans-serif; background: radial-gradient(circle at 10% 10%, #02030a 0%, var(--bg) 60%); color: #dff }
     header { padding: 18px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(0,255,255,0.05) }
-    header .logo { width: 52px; height: 52px; border-radius: 10px; object-fit: contain; box-shadow: 0 0 18px rgba(0,240,255,0.1); loading: lazy; }
+    header .logo { width: 52px; height: 52px; border-radius: 10px; object-fit: contain; box-shadow: 0 0 18px rgba(0,240,255,0.1) }
     header h1 { margin: 0; font-size: 1.05rem; color: var(--neon) } .muted { color: var(--muted); font-size: 0.9rem }
     .layout { display: flex; gap: 16px; padding: 16px; align-items: flex-start }
-    .col-left { width: 280px; min-width: 240px; margin-bottom: 16px } .col-main { flex: 1 }
+    .col-left { width: 280px; min-width: 240px } .col-main { flex: 1 }
     .card { background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.015)); border: 1px solid rgba(0,240,255,0.06); border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.45) }
     .btn { background: linear-gradient(90deg, var(--neon), var(--accent)); border: none; color: #001; padding: 8px 12px; border-radius: 10px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block }
     .small { padding: 6px 10px; font-size: 0.85rem } .tiny { font-size: 0.82rem; color: var(--muted) }
@@ -133,14 +133,14 @@
     </main>
   </div>
 
-  <footer>© 2025 PumpWolf — The Cyber Pack • v2.6</footer>
+  <footer>© 2025 PumpWolf — The Cyber Pack • v2.7</footer>
 
   <script>
     (function() {
       const VERCEL_BASE = "https://pumpwolf.vercel.app";
       const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=50";
+      const TOKEN_SAFETY_ENDPOINT = (addr) => `${VERCEL_BASE}/api/proxy/solana/safety?addr=${addr}`; // Endpoint baru di Vercel
       const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
-      const SOLANA_RPC = "https://api.mainnet-beta.solana.com"; // Free RPC for testing
       const FEATURED_TOKEN_ADDRESS = "";
       const POLL_INTERVAL = 60000;
       const MIN_LIQUIDITY = 10000; // $10,000
@@ -186,57 +186,15 @@
         }
       }
 
-      async function getTokenSafety(addr) {
-        try {
-          // RPC call to get mint info
-          const response = await fetch(SOLANA_RPC, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              jsonrpc: '2.0',
-              id: 1,
-              method: 'getAccountInfo',
-              params: [addr, { encoding: 'jsonParsed' }]
-            })
-          });
-          const result = await response.json();
-          if (!result.value) return { mintable: true, blacklisted: false, burned: false, holders: 0, topHolderPct: 100 };
-          const mintInfo = result.value.data.parsed.info;
-          const mintable = mintInfo.mintAuthority !== null;
-          const burned = mintInfo.mintAuthority === null; // Burned if mint authority null
-          const freezeable = mintInfo.freezeAuthority !== null;
-          // For holders and top holder %, use getTokenLargestAccounts
-          const holdersRes = await fetch(SOLANA_RPC, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              jsonrpc: '2.0',
-              id: 1,
-              method: 'getTokenLargestAccounts',
-              params: [addr]
-            })
-          });
-          const holdersData = await holdersRes.json();
-          const totalHolders = holdersData.result.count || 0;
-          const topHolderAmount = holdersData.result.value[0]?.uiAmount || 0;
-          const totalSupply = mintInfo.supply;
-          const topHolderPct = totalSupply ? (topHolderAmount / totalSupply * 100).toFixed(2) : 0;
-          return {
-            mintable,
-            blacklisted: false, // Simplified, can add rug check via transaction history if needed
-            burned,
-            holders: totalHolders,
-            topHolderPct: topHolderPct
-          };
-        } catch (err) {
-          debugLog("Safety check error:", err.message);
-          return { mintable: false, blacklisted: false, burned: false, holders: 0, topHolderPct: 100 };
-        }
+      async function fetchTokenSafety(addr) {
+        const res = await fetchJson(TOKEN_SAFETY_ENDPOINT(addr));
+        if (!res || !res.data) return { mintable: false, blacklisted: false, burned: false, holders: 0, topHolderPct: 100 };
+        return res.data; // { mintable, blacklisted, burned, holders, topHolderPct }
       }
 
       const dummyTokens = [
-        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "12971.933460626", fullyDilutedValuation: "6892", createdAt: "2025-10-21T06:35:08.000Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png", mintable: false, blacklisted: false, burned: true, holders: 75, topHolderPct: 20 },
-        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "11937.123185542", fullyDilutedValuation: "5837", createdAt: "2025-10-21T06:35:07.000Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png", mintable: false, blacklisted: false, burned: true, holders: 60, topHolderPct: 25 },
+        { tokenAddress: "8u6hFr2SPrX5GxDdG4wH8kEZfaHSPoULHh3AEFvspump", name: "1 meme, 1 hour, 1 million", symbol: "1", priceUsd: "0.000006892", liquidity: "12971.933460626", fullyDilutedValuation: "6892", createdAt: "2025-10-21T06:35:08.000Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
+        { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "11937.123185542", fullyDilutedValuation: "5837", createdAt: "2025-10-21T06:35:07.000Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
       ];
 
       function filterSafeTokens(tokens) {
@@ -247,8 +205,8 @@
           const ageMin = (now - new Date(it.createdAt)) / (1000 * 60);
           const holders = Number(it.holders || 0);
           const topHolderPct = Number(it.topHolderPct || 100);
-          return liq ≥ MIN_LIQUIDITY && fdv ≤ MAX_FDV && ageMin ≤ MAX_AGE_MIN &&
-                 holders ≥ MIN_HOLDERS && topHolderPct ≤ MAX_TOP_HOLDER_PCT &&
+          return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && ageMin <= MAX_AGE_MIN &&
+                 holders >= MIN_HOLDERS && topHolderPct <= MAX_TOP_HOLDER_PCT &&
                  !it.mintable && !it.blacklisted && it.burned;
         }).slice(0, 10);
       }
@@ -267,7 +225,7 @@
             throw new Error('Invalid data structure');
           }
           const tokensWithDetails = await Promise.all(data.result.map(async (t) => {
-            const details = await getTokenSafety(t.tokenAddress);
+            const details = await fetchTokenSafety(t.tokenAddress);
             return { ...t, logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png", ...details };
           }));
           const filtered = filterSafeTokens(tokensWithDetails);
@@ -289,9 +247,7 @@
         tokenContainer.innerHTML = '';
         window.tokenMap = {};
         if (!tokens.length) {
-          tokenContainer.innerHTML = `
-            <div class="tiny">No safe tokens found</div>
-          `;
+          tokenContainer.innerHTML = `<div class="tiny">No safe tokens found</div>`;
         } else {
           tokens.forEach(it => {
             const addr = it.tokenAddress;
@@ -409,6 +365,7 @@
 
           modal.querySelector('.closeBtn').onclick = () => modal.classList.remove('open');
           modal.addEventListener('click', (ev) => { if (ev.target === modal) modal.classList.remove('open'); });
+        });
       }
 
       let paused = false;
