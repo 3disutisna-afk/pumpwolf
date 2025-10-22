@@ -4,8 +4,8 @@ module.exports = async function handler(req, res) {
   if (!addr) return res.status(400).json({ error: "Token address is required" });
 
   try {
-    console.log(`Fetching data for ${addr}`);
-    const response = await fetch(`https://pumpwolf.vercel.app/api/proxy/token/${addr}?chain=solana`, {
+    console.log(`Fetching metadata for ${addr}`);
+    const response = await fetch(`https://pumpwolf.vercel.app/api/proxy/token/${addr}/metadata?chain=solana`, {
       method: 'GET',
       headers: { 'accept': 'application/json' }
     });
@@ -17,15 +17,15 @@ module.exports = async function handler(req, res) {
     }
 
     const data = await response.json();
-    console.log(`Fetched data for ${addr}:`, data);
+    console.log(`Fetched metadata for ${addr}:`, data);
 
-    if (!data || !data.result || !data.result.length || !data.result[0]) {
-      throw new Error("Invalid token data");
+    if (!data || !data.result || !data.result.length || !data.result[0]?.metadata) {
+      throw new Error("Invalid token metadata");
     }
 
     const tokenData = data.result[0];
-    const mintable = tokenData.mint_authority !== null;
-    const burned = tokenData.mint_authority === null;
+    const mintable = tokenData.metadata?.mintAuthority !== null;
+    const burned = tokenData.metadata?.mintAuthority === null;
 
     res.status(200).json({
       data: { mintable, blacklisted: false, burned, holders: 0, topHolderPct: 0 }
