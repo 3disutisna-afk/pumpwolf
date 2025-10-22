@@ -1,6 +1,6 @@
 // api/proxy/solana/safety.js
 let requestCount = 0;
-const maxRequestsPerMinute = 5; // Turunkan ke 5 untuk mengurangi beban
+const maxRequestsPerMinute = 3; // Turunkan lebih jauh ke 3
 const requestWindow = 60000; // 1 menit
 
 module.exports = async function handler(req, res) {
@@ -21,14 +21,13 @@ module.exports = async function handler(req, res) {
   }
   requestCount++;
 
-  const maxRetries = 1; // Kurangi retry untuk percepatan
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`Attempt ${attempt + 1}/${maxRetries + 1} - Requesting mint info for addr: ${addr}`);
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // Timeout 5 detik
+  try {
+    console.log(`Requesting data for addr: ${addr}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000); // Timeout 4 detik
 
-      const mintResponse = await fetch(HELIUS_RPC, {
+    const [mintResponse, holdersResponse] = await Promise.all([
+      fetch(HELIUS_RPC, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -38,25 +37,8 @@ module.exports = async function handler(req, res) {
           params: [addr, { encoding: 'jsonParsed', commitment: 'finalized' }]
         }),
         signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      if (!mintResponse.ok) {
-        const errorText = await mintResponse.text();
-        throw new Error(`HTTP ${mintResponse.status}: ${errorText}`);
-      }
-      const mintData = await mintResponse.json();
-      console.log(`Mint response for ${addr}:`, mintData);
-      if (!mintData.result || !mintData.result.value || !mintData.result.value.data?.parsed?.info) {
-        throw new Error("Invalid mint data: " + JSON.stringify(mintData));
-      }
-      const mintInfo = mintData.result.value.data.parsed.info;
-      const mintable = mintInfo.mintAuthority !== null;
-      const burned = mintInfo.mintAuthority === null;
-
-      await new Promise(resolve => setTimeout(resolve, 800)); // Tingkatkan delay ke 800ms
-
-      console.log(`Requesting holder info for addr: ${addr}`);
-      const holdersResponse = await fetch(HELIUS_RPC, {
+      }),
+      fetch(HELIUS_RPC, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -66,40 +48,50 @@ module.exports = async function handler(req, res) {
           params: [addr, { commitment: 'finalized' }]
         }),
         signal: controller.signal
-      });
-      if (!holdersResponse.ok) {
-        const errorText = await holdersResponse.text();
-        throw new Error(`HTTP ${holdersResponse.status}: ${errorText}`);
-      }
-      const holdersData = await holdersResponse.json();
-      console.log(`Holder response for ${addr}:`, holdersData);
-      let totalHolders = 0;
-      let topHolderAmount = 0;
-      let topHolderPct = 0;
-      if (holdersData.result && holdersData.result.value && Array.isArray(holdersData.result.value) && holdersData.result.value.length > 0) {
-        totalHolders = holdersData.result.value.length;
-        const topHolder = holdersData.result.value[0];
-        topHolderAmount = topHolder?.uiAmount || 0;
-        topHolderPct = mintInfo.supply ? (topHolderAmount / mintInfo.supply * 100).toFixed(2) : 0;
-      } else {
-        console.warn(`No holder data for ${addr}:`, holdersData);
-      }
+      })
+    ]);
+    clearTimeout(timeoutId);
 
-      const blacklisted = false;
-
-      res.status(200).json({
-        data: { mintable, blacklisted, burned, holders: totalHolders, topHolderPct }
-      });
-      return;
-    } catch (err) {
-      console.error(`Attempt ${attempt + 1}/${maxRetries + 1} - Error for addr ${addr}:`, err.message, err.stack);
-      if (attempt === maxRetries) {
-        res.status(200).json({
-          data: { mintable: false, blacklisted: false, burned: false, holders: 0, topHolderPct: 100 }
-        });
-      } else {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
+    if (!mintResponse.ok || !holdersResponse.ok) {
+      const [mintError, holdersError] = await Promise.all([
+        mintResponse.text().catch(() => 'Unknown error'),
+        holdersResponse.text().catch(() => 'Unknown error')
+      ]);
+      throw new Error(`Mint: ${mintResponse.status} ${mintError}, Holders: ${holdersResponse.status} ${holdersError}`);
     }
+
+    const [mintData, holdersData] = await Promise.all([
+      mintResponse.json(),
+      holdersResponse.json()
+    ]);
+    console.log(`Responses for ${addr}:`, { mintData, holdersData });
+
+    if (!mintData.result || !mintData.result.value || !mintData.result.value.data?.parsed?.info) {
+      throw new Error("Invalid mint data");
+    }
+    const mintInfo = mintData.result.value.data.parsed.info;
+    const mintable = mintInfo.mintAuthority !== null;
+    const burned = mintInfo.mintAuthority === null;
+
+    let totalHolders = 0;
+    let topHolderAmount = 0;
+    let topHolderPct = 0;
+    if (holdersData.result && holdersData.result.value && Array.isArray(holdersData.result.value) && holdersData.result.value.length > 0) {
+      totalHolders = holdersData.result.value.length;
+      const topHolder = holdersData.result.value[0];
+      topHolderAmount = topHolder?.uiAmount || 0;
+      topHolderPct = mintInfo.supply ? (topHolderAmount / mintInfo.supply * 100).toFixed(2) : 0;
+    }
+
+    const blacklisted = false;
+
+    res.status(200).json({
+      data: { mintable, blacklisted, burned, holders: totalHolders, topHolderPct }
+    });
+  } catch (err) {
+    console.error(`Error for addr ${addr}:`, err.message, err.stack);
+    res.status(200).json({
+      data: { mintable: false, blacklisted: false, burned: false, holders: 0, topHolderPct: 100 }
+    });
   }
 };
