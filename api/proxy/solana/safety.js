@@ -10,7 +10,7 @@ module.exports = async function handler(req, res) {
       {
         headers: {
           "accept": "application/json",
-          "Authorization": "Bearer YOUR_API_KEY_HERE" // Ganti dengan API key jika ada, atau hapus jika tidak diperlukan
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY" // Ganti dengan API key jika ada, atau hapus jika tidak diperlukan
         },
         signal: AbortSignal.timeout(5000)
       }
