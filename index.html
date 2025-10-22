@@ -9,22 +9,27 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root { --bg: #030406; --neon: #00f0ff; --muted: #9bb; }
-    body { font-family: Inter, sans-serif; background: var(--bg); color: #dff; }
-    header { padding: 12px; display: flex; gap: 8px; }
-    .logo { width: 40px; height: 40px; border-radius: 8px; }
-    .card { padding: 12px; background: #071018; border-radius: 8px; margin: 8px 0; }
+    body { font-family: Inter, sans-serif; background: linear-gradient(135deg, #02030a, var(--bg)); color: #dff; margin: 0; }
+    header { padding: 12px; display: flex; align-items: center; gap: 12px; background: rgba(7, 16, 24, 0.9); }
+    .logo { width: 50px; height: 50px; border-radius: 8px; object-fit: contain; }
+    .banner { width: 100%; height: 100px; background: url('https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/pumpwolf_banner.jpg') no-repeat center; background-size: cover; margin-bottom: 12px; }
+    .card { padding: 12px; background: #071018; border-radius: 8px; margin: 8px 0; cursor: pointer; transition: transform 0.2s; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 240, 255, 0.1); }
     .token-list { max-height: 65vh; overflow: auto; }
-    .token { padding: 8px; background: rgba(0,0,0,0.1); border-radius: 6px; margin: 4px 0; cursor: pointer; }
     .tiny { font-size: 0.8rem; color: var(--muted); }
     .btn { background: var(--neon); padding: 6px 10px; border: none; border-radius: 6px; color: #001; }
     .debug { display: none; font-family: monospace; font-size: 12px; color: #c8fff6; max-height: 200px; overflow: auto; }
     .debug.visible { display: block; }
-    @media (max-width: 600px) { .card { margin: 4px 0; } }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); align-items: center; justify-content: center; z-index: 1000; }
+    .modal.open { display: flex; }
+    .modal-content { background: #071018; padding: 20px; border-radius: 8px; max-width: 90%; max-height: 90vh; overflow: auto; color: #dff; }
+    @media (max-width: 600px) { .card { margin: 4px 0; } .modal-content { padding: 10px; } }
   </style>
 </head>
 <body>
+  <div class="banner"></div>
   <header>
-    <img class="logo" src="https://github.com/3disutisna-afk/pumpwolf/blob/cb89fe43472269da6c159c19130cad01288c7a89/wolf_logo.png" alt="PW" onerror="this.src='https://via.placeholder.com/40?text=PW';" />
+    <img class="logo" src="https://github.com/3disutisna-afk/pumpwolf/blob/cb89fe43472269da6c159c19130cad01288c7a89/wolf_logo.png" alt="PW" onerror="this.src='https://via.placeholder.com/50?text=PW';" />
     <h1>PumpWolf</h1>
   </header>
   <div class="card">
@@ -38,6 +43,13 @@
       <div id="debugPanel" class="debug"></div>
     </div>
   </div>
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <h2 id="modal-title"></h2>
+      <div id="modal-details"></div>
+      <button id="close-modal" class="btn" style="margin-top: 10px;">Close</button>
+    </div>
+  </div>
   <script>
     const MORALIS_BASE = "https://solana-gateway.moralis.io";
     const TOKEN_LIST_ENDPOINT = `${MORALIS_BASE}/token/mainnet/exchange/pumpfun/new?limit=10`;
@@ -46,6 +58,10 @@
     const tokenContainer = document.getElementById('tokenContainer');
     const debugPanel = document.getElementById('debugPanel');
     const toggleDebug = document.getElementById('toggleDebug');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDetails = document.getElementById('modal-details');
+    const closeModal = document.getElementById('close-modal');
 
     function debugLog(...args) {
       const t = new Date().toLocaleTimeString();
@@ -90,7 +106,7 @@
 
     function renderTokens(tokens) {
       tokenContainer.innerHTML = tokens.map(t => `
-        <div class="token" data-addr="${t.tokenAddress}">
+        <div class="card token" data-addr="${t.tokenAddress}">
           <div><b style="color: var(--neon)">${t.symbol}</b> — ${t.name}</div>
           <div class="tiny">💧 $${t.liquidity.toLocaleString()} • 🧮 $${t.fullyDilutedValuation.toLocaleString()}</div>
         </div>
@@ -98,6 +114,30 @@
       lastUpdateEl.textContent = new Date().toLocaleTimeString();
       debugLog(`Rendered ${tokens.length} tokens`);
     }
+
+    function showModal(token) {
+      modalTitle.textContent = `${token.symbol} — ${token.name}`;
+      modalDetails.innerHTML = `
+        <div class="tiny">Address: ${token.tokenAddress.slice(0, 6)}...</div>
+        <div class="tiny">Liquidity: $${token.liquidity.toLocaleString()}</div>
+        <div class="tiny">FDV: $${token.fullyDilutedValuation.toLocaleString()}</div>
+        <div class="tiny">Created: ${new Date(token.createdAt).toLocaleString()}</div>
+      `;
+      modal.classList.add('open');
+    }
+
+    tokenContainer.addEventListener('click', (e) => {
+      const tokenEl = e.target.closest('.token');
+      if (tokenEl) {
+        const addr = tokenEl.dataset.addr;
+        const token = window.tokenMap[addr] || {};
+        debugLog(`Clicked token: ${addr}`);
+        showModal(token);
+      }
+    });
+
+    closeModal.addEventListener('click', () => modal.classList.remove('open'));
+    modal.addEventListener('click', (e) => e.target === modal && modal.classList.remove('open'));
 
     toggleDebug.addEventListener('click', () => debugPanel.classList.toggle('visible'));
     setInterval(fetchTokens, 60000);
