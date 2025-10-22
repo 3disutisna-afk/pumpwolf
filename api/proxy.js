@@ -1,12 +1,13 @@
-{
-  "version": 2,
-  "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" },
-    { "src": "index.html", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/api/proxy(?:/.*)?$", "dest": "/api/proxy.js" },
-    { "src": "/api/(.*)", "dest": "/api/$1.js" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ]
-}
+// api/proxy/proxy.js
+module.exports = function handler(req, res) {
+  const { pathname } = new URL(req.url, `http://${req.headers.host}`);
+  const pathSegments = pathname.split('/').filter(Boolean);
+  if (pathSegments[0] === 'proxy' && pathSegments.length > 1) {
+    const targetPath = pathSegments.slice(1).join('/');
+    const targetUrl = `/api/${targetPath}`;
+    res.writeHead(302, { Location: targetUrl });
+    res.end();
+  } else {
+    res.status(404).json({ error: "Not found" });
+  }
+};
