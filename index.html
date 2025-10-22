@@ -14,7 +14,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <style>
-    :root { --bg: #030406; --card: #071018; --neon: #00f0ff; --accent: #8a2be2; --muted: #9bb; }
+    :root {
+      --bg: #030406; --card: #071018; --neon: #00f0ff; --accent: #8a2be2; --muted: #9bb;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0 }
     body { font-family: Inter, system-ui, sans-serif; background: radial-gradient(circle at 10% 10%, #02030a 0%, var(--bg) 60%); color: #dff }
     header { padding: 18px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(0,255,255,0.05) }
@@ -48,7 +50,6 @@
     .debug { display: none; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size: 13px; color: #c8fff6; white-space: pre-wrap; overflow: auto; max-height: 220px; padding: 12px; background: rgba(0,0,0,0.22); border-radius: 8px; border: 1px solid rgba(0,240,255,0.03) }
     .debug.visible { display: block }
     .mini-chart { width: 100%; height: 100px; margin-top: 12px; }
-    .disabled { pointer-events: none; opacity: 0.5; }
   </style>
 </head>
 <body>
@@ -196,12 +197,21 @@
         { tokenAddress: "FhiPLfoZJkDmu7whn6Yoovdh3SR7iaAXbgyU2aSApump", name: "CEO OF HALLOWEEN", symbol: "HALCEO", priceUsd: "0.000005837", liquidity: "11937.123185542", fullyDilutedValuation: "5837", createdAt: "2025-10-21T06:35:07.000Z", logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png" },
       ];
 
-      function filterSafeTokens(tokens) {
+      function filterSafeTokens(tokens, exchangeData) {
         const now = new Date();
-        return tokens.filter(it => {
+        return tokens.map((it, index) => {
+          const exchangeToken = exchangeData.result.find(t => t.tokenAddress === it.tokenAddress);
+          return {
+            ...it,
+            liquidity: exchangeToken ? parseFloat(exchangeToken.liquidity) || it.liquidity : it.liquidity,
+            priceUsd: exchangeToken ? parseFloat(exchangeToken.priceUsd) || it.priceUsd : it.priceUsd,
+            holders: it.holders || 1, // Default minimal 1
+            topHolderPct: it.topHolderPct || 0
+          };
+        }).filter(it => {
           const liq = Number(it.liquidity || 0);
           const fdv = Number(it.fullyDilutedValuation || 0);
-          const ageMin = (now - new Date(it.createdAt || now)) / (1000 * 60);
+          const ageMin = (now - new Date(it.createdAt)) / (1000 * 60);
           const holders = Number(it.holders || 0);
           const topHolderPct = Number(it.topHolderPct || 0);
           return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && ageMin <= MAX_AGE_MIN &&
@@ -228,7 +238,7 @@
             tokensWithDetails.push({ ...t, logo: t.logo || "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png", ...details });
             await new Promise(resolve => setTimeout(resolve, 200)); // Delay 200ms per request
           }
-          const filtered = filterSafeTokens(tokensWithDetails);
+          const filtered = filterSafeTokens(tokensWithDetails, exchangeData);
           debugLog("Filtered tokens count:", filtered.length);
           if (filtered.length === 0) {
             debugLog("No tokens passed filter, using dummy data");
@@ -257,7 +267,7 @@
             div.dataset.addr = addr;
             const liquidity = Number(it.liquidity || 0);
             const fdv = Number(it.fullyDilutedValuation || 0);
-            const createdAt = new Date(it.createdAt || Date.now()).toLocaleTimeString();
+            const createdAt = new Date(it.createdAt).toLocaleTimeString();
             div.innerHTML = `
               <div style="display:flex;gap:8px;align-items:center">
                 <img src="${it.logo || 'https://via.placeholder.com/24?text=?'}" alt="${it.symbol}" style="width:24px;height:24px;border-radius:6px" loading="lazy" />
@@ -303,7 +313,7 @@
           if (!tokenEl) return;
           debugLog('Token clicked:', tokenEl.dataset.addr);
           const addr = tokenEl.dataset.addr;
-          const item = window.tokenMap[addr] || {};
+          const item = window.tokenMap[addr];
           if (!item) return;
 
           modal.classList.add('open');
@@ -312,7 +322,7 @@
           modal.querySelector('#mSymbol').textContent = (item.symbol || '?') + ' • ' + (addr ? (addr.slice(0, 6) + '...') : '');
 
           const liqFdv = item.liquidity && item.fullyDilutedValuation ? ((Number(item.liquidity) / Number(item.fullyDilutedValuation)) * 100).toFixed(2) + '%' : '—';
-          const ageMin = item.createdAt ? Math.round((new Date() - new Date(item.createdAt)) / (1000 * 60)) + ' min' : '—';
+          const ageMin = item.createdAt ? Math.round((new Date() - new Date(it.createdAt)) / (1000 * 60)) + ' min' : '—';
           const isMintable = item.mintable ? '✅' : '❌';
           const isBlacklisted = item.blacklisted ? '🚫' : '✅';
           const isBurned = item.burned ? '🔥' : '❌';
@@ -362,11 +372,10 @@
 
           modal.querySelector('#mPump').href = addr ? `https://pump.fun/${addr}` : '#';
           modal.querySelector('#mSolscan').href = addr ? `https://solscan.io/token/${addr}` : '#';
-          modal.querySelector('#mPump').classList.toggle('disabled', !addr);
-          modal.querySelector('#mSolscan').classList.toggle('disabled', !addr);
 
           modal.querySelector('.closeBtn').onclick = () => modal.classList.remove('open');
           modal.addEventListener('click', (ev) => { if (ev.target === modal) modal.classList.remove('open'); });
+        });
       }
 
       let paused = false;
@@ -393,19 +402,18 @@
         const isVercel = location.hostname.includes('vercel.app');
         if (isVercel) {
           try {
-            const testRes = await fetchJson(ENDPOINT.replace('limit=50', 'limit=1'));
-            if (testRes && testRes.result && testRes.result.length > 0) {
-              fallback.style.display = 'none'; // Nonaktifkan fallback jika data ada
+            const testRes = await fetch(ENDPOINT.replace('limit=50', 'limit=1'), { headers: { "accept": "application/json" } });
+            if (testRes.ok) {
+              fallback.style.display = 'none';
               fetchTokens();
               startPolling();
               setupModal();
               return;
             }
           } catch (e) {
-            debugLog('API test failed, proceeding with fetch:', e.message);
+            debugLog('API test failed, fallback active:', e.message);
           }
         }
-        // Jika bukan Vercel atau tes gagal, tetap tampilkan fallback
         fallback.style.display = 'flex';
         const stayBtn = document.getElementById('stayBtn');
         const countdownEl = document.getElementById('redirectCountdown');
