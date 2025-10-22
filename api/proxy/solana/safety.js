@@ -17,10 +17,7 @@ module.exports = async function handler(req, res) {
     const exchangeData = await exchangeResponse.json();
     console.log(`[SAFETY] Exchange data:`, JSON.stringify(exchangeData, null, 2));
 
-    const tokenData = exchangeData.result?.find(t => 
-      t.tokenAddress?.toLowerCase() === addr.toLowerCase() || 
-      t.tokenAddress === addr
-    );
+    const tokenData = exchangeData.result?.find(t => t.tokenAddress?.toLowerCase() === addr.toLowerCase());
     console.log(`[SAFETY] Found token:`, tokenData ? JSON.stringify(tokenData, null, 2) : "Not found");
 
     const responseData = tokenData ? {
