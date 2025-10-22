@@ -1,6 +1,6 @@
 // api/proxy/solana/safety.js
 let requestCount = 0;
-const maxRequestsPerMinute = 10;
+const maxRequestsPerMinute = 5; // Turunkan ke 5 untuk mengurangi beban
 const requestWindow = 60000; // 1 menit
 
 module.exports = async function handler(req, res) {
@@ -21,10 +21,13 @@ module.exports = async function handler(req, res) {
   }
   requestCount++;
 
-  const maxRetries = 2;
+  const maxRetries = 1; // Kurangi retry untuk percepatan
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       console.log(`Attempt ${attempt + 1}/${maxRetries + 1} - Requesting mint info for addr: ${addr}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // Timeout 5 detik
+
       const mintResponse = await fetch(HELIUS_RPC, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -33,8 +36,10 @@ module.exports = async function handler(req, res) {
           id: 1,
           method: 'getAccountInfo',
           params: [addr, { encoding: 'jsonParsed', commitment: 'finalized' }]
-        })
+        }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       if (!mintResponse.ok) {
         const errorText = await mintResponse.text();
         throw new Error(`HTTP ${mintResponse.status}: ${errorText}`);
@@ -48,7 +53,7 @@ module.exports = async function handler(req, res) {
       const mintable = mintInfo.mintAuthority !== null;
       const burned = mintInfo.mintAuthority === null;
 
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise(resolve => setTimeout(resolve, 800)); // Tingkatkan delay ke 800ms
 
       console.log(`Requesting holder info for addr: ${addr}`);
       const holdersResponse = await fetch(HELIUS_RPC, {
@@ -59,7 +64,8 @@ module.exports = async function handler(req, res) {
           id: 1,
           method: 'getTokenLargestAccounts',
           params: [addr, { commitment: 'finalized' }]
-        })
+        }),
+        signal: controller.signal
       });
       if (!holdersResponse.ok) {
         const errorText = await holdersResponse.text();
@@ -92,7 +98,7 @@ module.exports = async function handler(req, res) {
           data: { mintable: false, blacklisted: false, burned: false, holders: 0, topHolderPct: 100 }
         });
       } else {
-        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
   }
