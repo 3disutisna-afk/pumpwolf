@@ -6,7 +6,7 @@ module.exports = async function handler(req, res) {
   try {
     console.log(`Fetching safety data for ${addr}`);
     const exchangeResponse = await fetch(
-      `https://pumpwolf.vercel.app/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100`,
+      `https://pumpwolf.vercel.app/api/proxy/token/mainnet/exchange/pumpfun/new?limit=50`,
       { headers: { "accept": "application/json" }, signal: AbortSignal.timeout(10000) }
     );
     if (!exchangeResponse.ok) throw new Error(`Exchange fetch failed: ${exchangeResponse.status}`);
