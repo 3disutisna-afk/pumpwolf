@@ -3,7 +3,7 @@ let requestCount = 0;
 const maxRequestsPerMinute = 10;
 const requestWindow = 60000; // 1 menit
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { addr } = req.query;
   if (!addr) return res.status(400).json({ error: "Token address is required" });
 
@@ -96,4 +96,4 @@ export default async function handler(req, res) {
       }
     }
   }
-}
+};
