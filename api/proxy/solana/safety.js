@@ -5,26 +5,27 @@ module.exports = async function handler(req, res) {
 
   try {
     console.log(`Fetching data for ${addr}`);
-    const response = await fetch(`https://pumpwolf.vercel.app/api/proxy/account/mainnet/${addr}`, {
+    const response = await fetch(`https://pumpwolf.vercel.app/api/proxy/token/${addr}?chain=solana`, {
       method: 'GET',
       headers: { 'accept': 'application/json' }
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`Error for ${addr}: ${response.status} ${errorText}`);
       throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
     console.log(`Fetched data for ${addr}:`, data);
 
-    if (!data || !data.result || !data.result.value || !data.result.value.data?.parsed?.info) {
+    if (!data || !data.result || !data.result.length || !data.result[0]) {
       throw new Error("Invalid token data");
     }
 
-    const mintInfo = data.result.value.data.parsed.info;
-    const mintable = mintInfo.mintAuthority !== null;
-    const burned = mintInfo.mintAuthority === null;
+    const tokenData = data.result[0];
+    const mintable = tokenData.mint_authority !== null;
+    const burned = tokenData.mint_authority === null;
 
     res.status(200).json({
       data: { mintable, blacklisted: false, burned, holders: 0, topHolderPct: 0 }
