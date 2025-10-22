@@ -5,8 +5,9 @@
     { "src": "index.html", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/proxy(?:/.*)?$", "dest": "/api/proxy.js" },
-    { "src": "/api/(.*)", "dest": "/api/$1.js" },
+    { "src": "/api/proxy/solana/safety(?:/.*)?$", "dest": "/api/proxy/solana/safety.js" }, // Prioritaskan safety
+    { "src": "/api/proxy(?:/.*)?$", "dest": "/api/proxy.js" }, // Proxy sebagai fallback
+    { "src": "/api/(.*)", "dest": "/api/$1.js" }, // Catch-all untuk API lain
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
