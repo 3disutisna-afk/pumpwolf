@@ -18,7 +18,6 @@ export default async function handler(req, res) {
 
     const rawUrl = req.url || '';
     const upstreamPath = rawUrl.replace(/^\/api\/proxy/, '') || '/';
-    console.log(`Upstream path: ${upstreamPath}`); // Debug log
     const upstreamUrl = `https://solana-gateway.moralis.io${upstreamPath}`;
 
     const fetchImpl = await getFetch();
