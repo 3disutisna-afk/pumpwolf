@@ -5,45 +5,33 @@ module.exports = async function handler(req, res) {
 
   try {
     console.log(`[SAFETY] Request for: ${addr}`);
-    const exchangeResponse = await fetch(
-      `https://pumpwolf.vercel.app/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100`,
+    const response = await fetch(
+      `https://solana-gateway.moralis.io/token/mainnet/${addr}`,
       {
         headers: {
-          "accept": "application/json",
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Ijc3YTQ1MjhhLTYwY2YtNDJkZi04YzQ1LTgwYThhMmIyNTc1NyIsIm9yZ0lkIjoiNDQwOTM1IiwidXNlcklkIjoiNDUzNjQxIiwidHlwZUlkIjoiOTcyYzFhMjgtZTNkYi00NjIwLWE5Y2MtZmNkODk1ZDFjODgzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDQyODU1NjIsImV4cCI6NDkwMDA0NTU2Mn0.u7fKhRKYKuZyArx_DD1fmttQRtT6hXBQwtBOO2XUPaY" // Ganti dengan API key jika ada, atau hapus jika tidak diperlukan
+          'X-API-Key': process.env.MORALIS_KEY,
+          'accept': 'application/json'
         },
         signal: AbortSignal.timeout(5000)
       }
     );
-    if (!exchangeResponse.ok) {
-      console.error(`[SAFETY] Fetch failed: HTTP ${exchangeResponse.status} - ${exchangeResponse.statusText}`);
-      throw new Error(`Fetch failed: ${exchangeResponse.status}`);
+    if (!response.ok) {
+      console.error(`[SAFETY] Fetch failed: HTTP ${response.status}`);
+      throw new Error(`Fetch failed: ${response.status}`);
     }
 
-    const exchangeData = await exchangeResponse.json();
-    console.log(`[SAFETY] Exchange data:`, JSON.stringify(exchangeData, null, 2));
+    const data = await response.json();
+    console.log(`[SAFETY] Moralis data:`, JSON.stringify(data, null, 2));
 
-    const tokenData = exchangeData.result?.find(t => t.tokenAddress?.toLowerCase() === addr.toLowerCase());
-    console.log(`[SAFETY] Found token:`, tokenData ? JSON.stringify(tokenData, null, 2) : "Not found");
-
-    const responseData = tokenData ? {
-      mintable: null,
+    const responseData = {
+      mintable: data.result?.mintAuthority !== null || null,
       blacklisted: false,
-      burned: null,
-      holders: 0,
+      burned: data.result?.mintAuthority === null || null,
+      holders: data.result?.holders || 0,
       topHolderPct: 0,
-      liquidityUsd: parseFloat(tokenData.liquidity) || 0,
-      priceUsd: parseFloat(tokenData.priceUsd) || 0,
-      volume24h: 0
-    } : {
-      mintable: null,
-      blacklisted: false,
-      burned: null,
-      holders: 0,
-      topHolderPct: 0,
-      liquidityUsd: 0,
-      priceUsd: 0,
-      volume24h: 0
+      liquidityUsd: data.result?.liquidity || 0,
+      priceUsd: data.result?.priceUsd || 0,
+      volume24h: data.result?.volume24h || 0
     };
 
     res.status(200).json({ data: responseData });
