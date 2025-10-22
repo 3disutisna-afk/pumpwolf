@@ -4,8 +4,8 @@ module.exports = async function handler(req, res) {
   if (!addr) return res.status(400).json({ error: "Token address is required" });
 
   try {
-    console.log(`Fetching metadata for ${addr}`);
-    const response = await fetch(`https://pumpwolf.vercel.app/api/proxy/token/${addr}/metadata?chain=solana`, {
+    console.log(`Fetching token data for ${addr}`);
+    const response = await fetch(`https://pumpwolf.vercel.app/api/proxy/token/mainnet/${addr}`, {
       method: 'GET',
       headers: { 'accept': 'application/json' }
     });
@@ -17,15 +17,16 @@ module.exports = async function handler(req, res) {
     }
 
     const data = await response.json();
-    console.log(`Fetched metadata for ${addr}:`, data);
+    console.log(`Fetched token data for ${addr}:`, data);
 
-    if (!data || !data.result || !data.result.length || !data.result[0]?.metadata) {
-      throw new Error("Invalid token metadata");
+    if (!data || !data.result || !data.result.length || !data.result[0]) {
+      throw new Error("Invalid token data");
     }
 
     const tokenData = data.result[0];
-    const mintable = tokenData.metadata?.mintAuthority !== null;
-    const burned = tokenData.metadata?.mintAuthority === null;
+    // Cek field yang mungkin ada (sesuaikan setelah tes)
+    const mintable = tokenData.mintAuthority !== null || tokenData.mint_authority !== null;
+    const burned = tokenData.mintAuthority === null && tokenData.mint_authority === null;
 
     res.status(200).json({
       data: { mintable, blacklisted: false, burned, holders: 0, topHolderPct: 0 }
