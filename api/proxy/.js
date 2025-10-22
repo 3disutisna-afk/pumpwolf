@@ -1,4 +1,4 @@
-// api/proxy/proxy.js
+// api/proxy.js
 // Debug-friendly serverless proxy for Moralis (Vercel)
 // WARNING: Do NOT put your MORALIS_KEY here. Set MORALIS_KEY in Vercel env.
 
