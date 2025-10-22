@@ -6,7 +6,7 @@ module.exports = async function handler(req, res) {
   try {
     console.log(`[SAFETY] Request for address: ${addr}`);
     const exchangeResponse = await fetch(
-      `https://pumpwolf.vercel.app/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100`,
+      `https://pumpwolf.vercel.app/api/proxy/token/mainnet/exchange/pumpfun/new?limit=20`,
       { headers: { "accept": "application/json" }, signal: AbortSignal.timeout(10000) }
     );
     if (!exchangeResponse.ok) {
