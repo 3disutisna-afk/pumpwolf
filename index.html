@@ -172,7 +172,7 @@
         try {
           debugLog(`Fetching ${url}`);
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000);
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // Turun ke 10 detik
           const res = await fetch(url, { signal: controller.signal, headers: { "accept": "application/json" } });
           clearTimeout(timeoutId);
           if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -209,13 +209,13 @@
         }).slice(0, 10);
       }
 
-      async function fetchTokens(retry = 3) {
+      async function fetchTokens(retry = 2) { // Turun ke 2 retry
         if (retry === 0) {
           debugLog("API failed after retries, using dummy data");
           renderTokens(dummyTokens);
           return;
         }
-        apiStatusEl.textContent = 'Fetching... (retry ' + (4 - retry) + ')';
+        apiStatusEl.textContent = 'Fetching... (retry ' + (3 - retry) + ')';
         try {
           const data = await fetchJson(ENDPOINT);
           if (!data || !data.result || !Array.isArray(data.result)) {
@@ -226,7 +226,7 @@
           for (const t of data.result) {
             const details = await fetchTokenSafety(t.tokenAddress);
             tokensWithDetails.push({ ...t, logo: t.logo || "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png", ...details });
-            await new Promise(resolve => setTimeout(resolve, 200)); // Delay 200ms
+            await new Promise(resolve => setTimeout(resolve, 150)); // Turun ke 150ms
           }
           const filtered = filterSafeTokens(tokensWithDetails);
           debugLog("Filtered tokens count:", filtered.length);
@@ -239,7 +239,7 @@
           apiStatusEl.textContent = 'Proxy: OK';
         } catch (err) {
           debugLog("Fetch failed:", err.message);
-          setTimeout(() => fetchTokens(retry - 1), 2000);
+          setTimeout(() => fetchTokens(retry - 1), 1500); // Turun ke 1.5 detik
         }
       }
 
@@ -288,9 +288,9 @@
                 <div id="mSymbol" style="margin-top:6px;color:var(--muted)">⛓️ Solana</div>
               </div>
             </div>
-            <div id="mDetails" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+            <div id="mDetails" style="display:flex:flex-direction:column;gap:8px;margin-bottom:12px"></div>
             <canvas id="miniChart" class="mini-chart"></canvas>
-            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+            <div style="margin-top:12px;display:flex;gap:8px:flex-wrap:wrap;justify-content:flex-end">
               <a id="mPump" class="btn small" target="_blank">Open on Pump.fun</a>
               <a id="mSolscan" class="btn small" target="_blank">Open on Solscan</a>
             </div>
@@ -394,13 +394,12 @@
         const isVercel = location.hostname.includes('vercel.app');
         if (isVercel) {
           debugLog("Running on Vercel, skipping strict fallback test");
-          fallback.style.display = 'none'; // Langsung nonaktifkan fallback di Vercel
+          fallback.style.display = 'none';
           fetchTokens();
           startPolling();
           setupModal();
           return;
         }
-        // Hanya tes jika bukan Vercel
         try {
           const testRes = await fetchJson(ENDPOINT.replace('limit=50', 'limit=1'));
           if (testRes && testRes.result && testRes.result.length > 0) {
