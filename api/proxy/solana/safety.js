@@ -1,81 +1,54 @@
-// api/proxy/solana/safety.js
-module.exports = async function handler(req, res) {
-  const { addr } = req.query;
-  if (!addr) return res.status(400).json({ error: "Token address is required" });
+// api/proxy.js
+let _fetchImpl;
+async function getFetch() {
+  if (_fetchImpl) return _fetchImpl;
+  if (typeof fetch !== 'undefined') { _fetchImpl = fetch; return _fetchImpl; }
+  const mod = await import('node-fetch');
+  _fetchImpl = mod.default || mod;
+  return _fetchImpl;
+}
 
+export default async function handler(req, res) {
   try {
-    // Log untuk debugging
-    console.log(`Processing request for address: ${addr}`);
-
-    // Fetch data exchange dengan timeout dan retry
-    const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
-      for (let i = 0; i < retries; i++) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000);
-          const response = await fetch(url, {
-            signal: controller.signal,
-            headers: { "accept": "application/json" }
-          });
-          clearTimeout(timeoutId);
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return await response.json();
-        } catch (err) {
-          console.warn(`Retry ${i + 1}/${retries} failed for ${url}: ${err.message}`);
-          if (i === retries - 1) throw err;
-          await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
-        }
-      }
-    };
-
-    const exchangeResponse = await fetchWithRetry(
-      `https://pumpwolf.vercel.app/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100`
-    );
-    console.log(`Exchange data fetched:`, exchangeResponse);
-
-    const tokenData = exchangeResponse.result.find(t => t.tokenAddress === addr);
-    if (!tokenData) {
-      console.warn(`Token ${addr} not found in exchange data, using fallback`);
-      return res.status(200).json({
-        data: {
-          mintable: null,
-          blacklisted: false,
-          burned: null,
-          holders: 0,
-          topHolderPct: 0,
-          liquidityUsd: 0,
-          priceUsd: 0,
-          volume24h: 0
-        }
-      });
+    const MORALIS_KEY = process.env.MORALIS_KEY;
+    if (!MORALIS_KEY) {
+      res.status(500).json({ error: 'Missing MORALIS_KEY in server environment' });
+      return;
     }
 
-    // Ambil data safety dengan fallback
-    const safetyData = {
-      mintable: null,
-      blacklisted: false,
-      burned: null,
-      holders: 0,
-      topHolderPct: 0,
-      liquidityUsd: parseFloat(tokenData.liquidity) || 0,
-      priceUsd: parseFloat(tokenData.priceUsd) || 0,
-      volume24h: 0
+    const rawUrl = req.url || '';
+    const upstreamPath = rawUrl.replace(/^\/api\/proxy/, '') || '/';
+    console.log(`Upstream path: ${upstreamPath}`); // Debug log
+    const upstreamUrl = `https://solana-gateway.moralis.io${upstreamPath}`;
+
+    const fetchImpl = await getFetch();
+
+    const opts = {
+      method: req.method,
+      headers: {
+        'X-API-Key': MORALIS_KEY,
+        'accept': 'application/json'
+      }
     };
 
-    res.status(200).json({ data: safetyData });
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
+      opts.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+      if (req.headers['content-type']) opts.headers['content-type'] = req.headers['content-type'];
+    }
+
+    const upstreamRes = await fetchImpl(upstreamUrl, opts);
+    const text = await upstreamRes.text();
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    const ct = upstreamRes.headers.get('content-type') || 'application/json';
+    res.status(upstreamRes.status).setHeader('content-type', ct);
+    res.setHeader('cache-control', 'no-store');
+    res.send(text);
   } catch (err) {
-    console.error(`Error processing ${addr}:`, err.message);
-    res.status(200).json({
-      data: {
-        mintable: null,
-        blacklisted: false,
-        burned: null,
-        holders: 0,
-        topHolderPct: 0,
-        liquidityUsd: 0,
-        priceUsd: 0,
-        volume24h: 0
-      }
-    });
+    console.error('proxy error', err && (err.stack || err.message || err));
+    res.status(500).json({ error: 'Proxy internal error' });
   }
-};
+}
