@@ -4,7 +4,8 @@ module.exports = async function handler(req, res) {
   if (!addr) return res.status(400).json({ error: "Token address is required" });
 
   try {
-    const response = await fetch(`https://pumpwolf.vercel.app/api/proxy/token/mainnet/account/${addr}`, {
+    console.log(`Fetching data for ${addr}`);
+    const response = await fetch(`https://pumpwolf.vercel.app/api/proxy/account/mainnet/${addr}`, {
       method: 'GET',
       headers: { 'accept': 'application/json' }
     });
