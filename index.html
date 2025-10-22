@@ -56,8 +56,9 @@
     async function fetchJson(url) {
       try {
         debugLog(`Fetching ${url}`);
-        const res = await fetch(url, { headers: { 'X-API-Key': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImE5ZmRkYjBkLTAyYWQtNGQ4OC1hYmIyLTRhMzYxZTZhNmZmNCIsIm9yZ0lkIjoiNDQ1NjQ1IiwidXNlcklkIjoiNDU4NTE0IiwidHlwZUlkIjoiOWQ3YzFmOTEtN2VkOS00ZDQ1LTg1ODItYWIyM2M5Nzg2YWRmIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDY1ODE1MDksImV4cCI6NDkwMjM0MTUwOX0.WJgUJRDahW8g_WGSg-1lDIgUi4oaGf_dH9222tOFYXE
-', 'accept': 'application/json' } });
+        const res = await fetch(url, {
+          headers: { 'X-API-Key': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImE5ZmRkYjBkLTAyYWQtNGQ4OC1hYmIyLTRhMzYxZTZhNmZmNCIsIm9yZ0lkIjoiNDQ1NjQ1IiwidXNlcklkIjoiNDU4NTE0IiwidHlwZUlkIjoiOWQ3YzFmOTEtN2VkOS00ZDQ1LTg1ODItYWIyM2M5Nzg2YWRmIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDY1ODE1MDksImV4cCI6NDkwMjM0MTUwOX0.WJgUJRDahW8g_WGSg-1lDIgUi4oaGf_dH9222tOFYXE', 'accept': 'application/json' }
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return await res.json();
       } catch (err) {
@@ -70,20 +71,20 @@
       const data = await fetchJson(TOKEN_LIST_ENDPOINT);
       if (!data?.result?.length) {
         debugLog("No data, using dummy");
-        renderTokens([{ name: "Dummy1", symbol: "D1", liquidity: 10000, fdv: 5000, createdAt: new Date().toISOString() },
-                      { name: "Dummy2", symbol: "D2", liquidity: 12000, fdv: 6000, createdAt: new Date().toISOString() }]);
+        renderTokens([{ name: "Dummy1", symbol: "D1", liquidity: 10000, fullyDilutedValuation: 5000, createdAt: new Date().toISOString() },
+                      { name: "Dummy2", symbol: "D2", liquidity: 12000, fullyDilutedValuation: 6000, createdAt: new Date().toISOString() }]);
         return;
       }
       const tokens = data.result.map(item => ({
-        tokenAddress: item.token_address || item.address,
-        name: item.name || `Token ${item.token_address?.slice(0, 6)}`,
+        tokenAddress: item.token_address,
+        name: item.name || `Token ${item.token_address.slice(0, 6)}`,
         symbol: item.symbol || '?',
-        liquidity: item.liquidity || 0,
-        fullyDilutedValuation: item.fully_diluted_valuation || (item.price * (item.supply || 1)),
-        createdAt: item.created_at || new Date().toISOString(),
+        liquidity: Number(item.liquidity) || 0,
+        fullyDilutedValuation: Number(item.fullyDilutedValuation) || 0,
+        createdAt: item.createdAt || new Date().toISOString(),
         logo: item.logo || "https://via.placeholder.com/24"
-      }));
-      renderTokens(tokens.filter(t => t.liquidity >= 5000 && t.fullyDilutedValuation <= 15000));
+      })).filter(t => t.liquidity >= 5000 && t.fullyDilutedValuation <= 15000);
+      renderTokens(tokens);
       apiStatusEl.textContent = 'Moralis: OK';
     }
 
