@@ -1,70 +1,85 @@
-/* launch_mode.js - PumpWolf
-   Fast polling + visual badge for launch day.
-   Usage: place this file next to index.html and add:
-     <script src="./launch_mode.js"></script>
-   before </body>.
-*/
-
+// launch_mode.js
+// Minimal, safe launch helper — non-blocking, wrapped in try/catch
 (function(){
-  const FAST_INTERVAL = 10 * 1000;     // 10s
-  const NORMAL_INTERVAL = 60 * 1000;   // 60s
-  const LAUNCH_MODE_TIME = 60 * 60 * 1000; // 1 hour
+  try {
+    // --- CONFIG you can edit here ---
+    // set featured token (empty string to keep disabled)
+    const FEATURED_TOKEN_ADDRESS = ""; // contoh: "7tGFje81tRs99PMB7soBTZMTgVPkXiTaWKWRpkUY28J"
 
-  // Try to use window.fetchTokens if page exposes it; otherwise create a minimal poll function
-  function safeFetchTokens() {
-    if (typeof window.fetchTokens === 'function') {
-      try { window.fetchTokens(); return; } catch(e){ console.warn('fetchTokens threw', e); }
+    // override logo/banner paths if needed (relative to repo root or /assets/)
+    const BANNER_PATH = "assets/pumpwolf_banner.svg";
+    const LOGO_PATH = "assets/pumpwolf_logo.png"; // optional
+
+    // --- apply settings (non-blocking) ---
+    // set global for other scripts to read
+    try { window.FEATURED_TOKEN_ADDRESS = FEATURED_TOKEN_ADDRESS || ""; } catch(e){ /* ignore */ }
+
+    // apply banner if element/meta exists
+    (function setBanner(){
+      try {
+        // update og:image meta (useful for social)
+        const og = document.querySelector('meta[property="og:image"]');
+        if (og && BANNER_PATH) og.setAttribute('content', BANNER_PATH);
+      } catch(e){ /* ignore */ }
+    })();
+
+    // apply header logo replacement if present on page
+    (function setLogo(){
+      try {
+        if (!LOGO_PATH) return;
+        const logoEl = document.querySelector('header .logo, #featuredLogo');
+        if (logoEl) {
+          // if it's an IMG
+          if (logoEl.tagName && logoEl.tagName.toLowerCase() === 'img') {
+            logoEl.src = LOGO_PATH;
+          } else {
+            // else set background image for div.logo
+            logoEl.style.backgroundImage = `url("${LOGO_PATH}")`;
+            logoEl.style.backgroundSize = 'cover';
+            logoEl.style.backgroundPosition = 'center';
+          }
+        }
+      } catch(e){ /* ignore */ }
+    })();
+
+    // small helper to safely run optional launch actions after DOM ready
+    function onReady(fn){
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fn);
+      } else {
+        setTimeout(fn, 1);
+      }
     }
-    // fallback: ping proxy endpoint (no keys here)
-    const ENDPOINT = (window.ENDPOINT || '/api/proxy/token/mainnet/exchange/pumpfun/new?limit=100');
-    fetch(ENDPOINT, { method: 'GET', cache: 'no-store' })
-      .then(r => {
-        // no-op; this warms the endpoint so main script sees updates faster
-        // optionally you can log to debugPanel if present
-        const dbg = document.getElementById('debugPanel');
-        if (dbg) dbg.textContent = '[launch_mode] probe ' + (r.ok ? 'OK' : r.status);
-      }).catch(()=>{ /* ignore */ });
+
+    onReady(function(){
+      try {
+        // show a small console hint for debugging
+        console.info('[launch_mode] running safe config. featured:', window.FEATURED_TOKEN_ADDRESS || '(none)');
+
+        // If featured token is set, attempt to update title area text
+        if (window.FEATURED_TOKEN_ADDRESS) {
+          try {
+            const ft = document.getElementById('featuredTitle');
+            if (ft) { ft.textContent = ft.textContent.replace(/\$WOLF.*/, '$WOLF — Featured'); }
+          } catch(e){}
+        }
+
+        // make sure fallback probe doesn't run redirect on vercel domain
+        // (the main page already probes; this is just additional safety)
+        try {
+          if (location.hostname && location.hostname.endsWith('.vercel.app')) {
+            const fallback = document.getElementById('pwFallback');
+            if (fallback) fallback.style.display = 'none';
+          }
+        } catch(e){}
+
+      } catch(e){
+        console.warn('[launch_mode] inner error', e && (e.message || e));
+      }
+    });
+
+  } catch (err) {
+    // never throw to page: log to console only
+    try { console.error('[launch_mode] error', err && (err.stack || err.message || err)); } catch(e){}
   }
-
-  // start fast polling
-  let handle = setInterval(safeFetchTokens, FAST_INTERVAL);
-
-  // after LAUNCH_MODE_TIME, revert to normal interval
-  setTimeout(() => {
-    clearInterval(handle);
-    setInterval(safeFetchTokens, NORMAL_INTERVAL);
-    console.info('[launch_mode] ended — polling back to normal');
-  }, LAUNCH_MODE_TIME);
-
-  // visual badge
-  const badge = document.createElement('div');
-  badge.id = 'pw-launch-badge';
-  badge.textContent = '🚀 Launch Mode Active';
-  Object.assign(badge.style, {
-    position: 'fixed',
-    right: '12px',
-    bottom: '12px',
-    zIndex: 99999,
-    padding: '8px 12px',
-    borderRadius: '10px',
-    fontWeight: '800',
-    fontFamily: 'Inter, system-ui, sans-serif',
-    boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
-    background: 'linear-gradient(90deg,#00f0ff,#8a2be2)',
-    color: '#001'
-  });
-  document.body.appendChild(badge);
-
-  // small pulse animation via CSS (insert once)
-  const styleId = 'pw-launch-mode-style';
-  if (!document.getElementById(styleId)) {
-    const st = document.createElement('style');
-    st.id = styleId;
-    st.textContent = `
-      @keyframes pwPulse { 0% { transform: translateY(0); } 50%{ transform: translateY(-4px);} 100%{ transform: translateY(0); } }
-      #pw-launch-badge { animation: pwPulse 2.4s ease-in-out infinite; }
-    `;
-    document.head.appendChild(st);
-  }
-
 })();
