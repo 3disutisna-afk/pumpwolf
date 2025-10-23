@@ -137,7 +137,7 @@
   <script>
   (function() {
     const MORALIS_BASE = "https://solana-gateway.moralis.io";
-    const TOKEN_LIST_ENDPOINT = `${MORALIS_BASE}/tokens?chain=solana&limit=10`; // Endpoint daftar token
+    const TOKEN_LIST_ENDPOINT = `${MORALIS_BASE}/token/mainnet/exchange/pumpfun/new?limit=10`; // Endpoint baru
     const TOKEN_SAFETY_ENDPOINT = (addr) => `${MORALIS_BASE}/token/mainnet/${addr}`;
     const FEATURE_PRICE_URL = (addr) => `${MORALIS_BASE}/token/mainnet/${addr}/price`;
     const FEATURED_TOKEN_ADDRESS = "";
@@ -192,6 +192,50 @@
       }
     }
 
+    async function fetchTokens(retry = 2) {
+      if (retry === 0) {
+        debugLog("API failed after retries, using dummy data");
+        renderTokens(dummyTokens);
+        return;
+      }
+      apiStatusEl.textContent = 'Fetching... (retry ' + (3 - retry) + ')';
+      try {
+        const tokenList = await fetchJson(TOKEN_LIST_ENDPOINT);
+        if (!tokenList || !tokenList.result || !Array.isArray(tokenList.result)) {
+          debugLog("Invalid or empty token list from API:", tokenList);
+          throw new Error('Invalid token list structure');
+        }
+        const tokensWithDetails = tokenList.result.map(async (item) => {
+          const addr = item.token_address || item.address; // Sesuaikan dengan struktur respons
+          const details = await fetchTokenSafety(addr);
+          return {
+            tokenAddress: addr,
+            name: item.name || details.name || `Token ${addr.slice(0, 6)}`,
+            symbol: item.symbol || details.symbol || '?',
+            priceUsd: details.priceUsd || item.price || 0,
+            liquidity: details.liquidityUsd || item.liquidity || 0,
+            fullyDilutedValuation: (details.priceUsd || item.price || 0) * (details.totalSupply || item.supply || 1),
+            createdAt: item.created_at || new Date().toISOString(),
+            logo: item.logo || "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png",
+            ...details
+          };
+        });
+        const resolvedTokens = await Promise.all(tokensWithDetails);
+        const filtered = filterSafeTokens(resolvedTokens);
+        debugLog("Filtered tokens count:", filtered.length);
+        if (filtered.length === 0) {
+          debugLog("No tokens passed filter, using dummy data");
+          renderTokens(dummyTokens);
+        } else {
+          renderTokens(filtered);
+        }
+        apiStatusEl.textContent = 'Moralis: OK';
+      } catch (err) {
+        debugLog("Fetch failed:", err.message);
+        setTimeout(() => fetchTokens(retry - 1), 1500);
+      }
+    }
+
     async function fetchTokenSafety(addr) {
       const res = await fetchJson(TOKEN_SAFETY_ENDPOINT(addr));
       if (!res || !res.result) return { mintable: false, blacklisted: false, burned: false, holders: 0, topHolderPct: 100 };
@@ -223,53 +267,6 @@
         return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && ageMin <= MAX_AGE_MIN &&
                holders >= MIN_HOLDERS && topHolderPct <= MAX_TOP_HOLDER_PCT;
       }).slice(0, 10);
-    }
-
-    async function fetchTokens(retry = 2) {
-      if (retry === 0) {
-        debugLog("API failed after retries, using dummy data");
-        renderTokens(dummyTokens);
-        return;
-      }
-      apiStatusEl.textContent = 'Fetching... (retry ' + (3 - retry) + ')';
-      try {
-        const tokenList = await fetchJson(TOKEN_LIST_ENDPOINT);
-        if (!tokenList || !tokenList.result || !Array.isArray(tokenList.result)) {
-          debugLog("Invalid or empty token list from API:", tokenList);
-          throw new Error('Invalid token list structure');
-        }
-        const tokenAddresses = tokenList.result.map(t => t.token_address);
-        const tokensWithDetails = [];
-        for (const addr of tokenAddresses) {
-          const details = await fetchTokenSafety(addr);
-          if (details) {
-            tokensWithDetails.push({
-              tokenAddress: addr,
-              name: details.name || `Token ${addr.slice(0, 6)}`,
-              symbol: details.symbol || '?',
-              priceUsd: details.priceUsd || 0,
-              liquidity: details.liquidityUsd || 0,
-              fullyDilutedValuation: (details.priceUsd || 0) * (details.totalSupply || 1),
-              createdAt: new Date().toISOString(),
-              logo: "https://raw.githubusercontent.com/3disutisna-afk/pumpwolf/main/assets/wolf_logo.png",
-              ...details
-            });
-          }
-          await new Promise(resolve => setTimeout(resolve, 150));
-        }
-        const filtered = filterSafeTokens(tokensWithDetails);
-        debugLog("Filtered tokens count:", filtered.length);
-        if (filtered.length === 0) {
-          debugLog("No tokens passed filter, using dummy data");
-          renderTokens(dummyTokens);
-        } else {
-          renderTokens(filtered);
-        }
-        apiStatusEl.textContent = 'Moralis: OK';
-      } catch (err) {
-        debugLog("Fetch failed:", err.message);
-        setTimeout(() => fetchTokens(retry - 1), 1500);
-      }
     }
 
     function renderTokens(tokens) {
