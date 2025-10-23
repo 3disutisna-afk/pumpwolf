@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PumpWolf Dashboard</title>
   <meta name="description" content="Track Solana gems live." />
-  <meta property="og:image" content="https://github.com/3disutisna-afk/pumpwolf/blob/276630ee45a54b3d009c1f5847496e752412485a/pumpwolf_banner.jpg" />
+  <meta property="og:image" content="/assets/pumpwolf_banner.jpg" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root { --bg: #030406; --neon: #00f0ff; --muted: #9bb; }
     body { font-family: Inter, sans-serif; background: linear-gradient(135deg, #02030a, var(--bg)); color: #dff; margin: 0; }
     header { padding: 12px; display: flex; align-items: center; gap: 12px; background: rgba(7, 16, 24, 0.9); }
     .logo { width: 50px; height: 50px; border-radius: 8px; object-fit: contain; }
-    .banner { width: 100%; height: 100px; background: url('https://github.com/3disutisna-afk/pumpwolf/blob/accc85d96e536dcf012d96e35407a3c3ae44b00f/wolf_logo.png') no-repeat center; background-size: cover; margin-bottom: 12px; }
+    .banner { width: 100%; height: 100px; background: url('/assets/pumpwolf_banner.jpg') no-repeat center; background-size: cover; margin-bottom: 12px; }
     .card { padding: 12px; background: #071018; border-radius: 8px; margin: 8px 0; cursor: pointer; transition: transform 0.2s; }
     .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 240, 255, 0.1); }
     .token-list { max-height: 65vh; overflow: auto; }
@@ -29,7 +29,7 @@
 <body>
   <div class="banner"></div>
   <header>
-    <img class="logo" src="https://github.com/3disutisna-afk/pumpwolf/blob/cb89fe43472269da6c159c19130cad01288c7a89/wolf_logo.png" alt="PW" onerror="this.src='https://via.placeholder.com/50?text=PW';" />
+    <img class="logo" src="/assets/wolf_logo.png" alt="PW" onerror="this.src='/assets/placeholder.png';" />
     <h1>PumpWolf</h1>
   </header>
   <div class="card">
@@ -62,6 +62,7 @@
     const modalTitle = document.getElementById('modal-title');
     const modalDetails = document.getElementById('modal-details');
     const closeModal = document.getElementById('close-modal');
+    window.tokenMap = {};
 
     function debugLog(...args) {
       const t = new Date().toLocaleTimeString();
@@ -98,19 +99,22 @@
         liquidity: Number(item.liquidity) || 0,
         fullyDilutedValuation: Number(item.fullyDilutedValuation) || 0,
         createdAt: item.createdAt || new Date().toISOString(),
-        logo: item.logo || "https://via.placeholder.com/24"
+        logo: item.logo || "/assets/placeholder.png"
       })).filter(t => t.liquidity >= 5000 && t.fullyDilutedValuation <= 15000);
       renderTokens(tokens);
       apiStatusEl.textContent = 'Moralis: OK';
     }
 
     function renderTokens(tokens) {
-      tokenContainer.innerHTML = tokens.map(t => `
-        <div class="card token" data-addr="${t.tokenAddress}">
-          <div><b style="color: var(--neon)">${t.symbol}</b> — ${t.name}</div>
-          <div class="tiny">💧 $${t.liquidity.toLocaleString()} • 🧮 $${t.fullyDilutedValuation.toLocaleString()}</div>
-        </div>
-      `).join('') || '<div class="tiny">No tokens</div>';
+      tokenContainer.innerHTML = tokens.map(t => {
+        window.tokenMap[t.tokenAddress] = t;
+        return `
+          <div class="card token" data-addr="${t.tokenAddress}">
+            <div><b style="color: var(--neon)">${t.symbol}</b> — ${t.name}</div>
+            <div class="tiny">💧 $${t.liquidity.toLocaleString()} • 🧮 $${t.fullyDilutedValuation.toLocaleString()}</div>
+          </div>
+        `;
+      }).join('') || '<div class="tiny">No tokens</div>';
       lastUpdateEl.textContent = new Date().toLocaleTimeString();
       debugLog(`Rendered ${tokens.length} tokens`);
     }
@@ -130,15 +134,16 @@
       const tokenEl = e.target.closest('.token');
       if (tokenEl) {
         const addr = tokenEl.dataset.addr;
-        const token = window.tokenMap[addr] || {};
-        debugLog(`Clicked token: ${addr}`);
-        showModal(token);
+        const token = window.tokenMap[addr];
+        if (token) {
+          debugLog(`Clicked token: ${addr}`);
+          showModal(token);
+        }
       }
     });
 
     closeModal.addEventListener('click', () => modal.classList.remove('open'));
     modal.addEventListener('click', (e) => e.target === modal && modal.classList.remove('open'));
-
     toggleDebug.addEventListener('click', () => debugPanel.classList.toggle('visible'));
     setInterval(fetchTokens, 60000);
     fetchTokens();
