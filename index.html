@@ -138,7 +138,7 @@
   <script>
     (function() {
       const VERCEL_BASE = "https://pumpwolf.vercel.app";
-      const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=50";
+      const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=10";
       const TOKEN_SAFETY_ENDPOINT = (addr) => `${VERCEL_BASE}/api/proxy/solana/safety?addr=${addr}`;
       const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
       const FEATURED_TOKEN_ADDRESS = "";
@@ -322,7 +322,7 @@
           modal.querySelector('#mSymbol').textContent = (item.symbol || '?') + ' • ' + (addr ? (addr.slice(0, 6) + '...') : '');
 
           const liqFdv = item.liquidity && item.fullyDilutedValuation ? ((Number(item.liquidity) / Number(item.fullyDilutedValuation)) * 100).toFixed(2) + '%' : '—';
-          const ageMin = item.createdAt ? Math.round((new Date() - new Date(it.createdAt)) / (1000 * 60)) + ' min' : '—';
+          const ageMin = item.createdAt ? Math.round((new Date() - new Date(item.createdAt)) / (1000 * 60)) + ' min' : '—';
           const isMintable = item.mintable ? '✅' : '❌';
           const isBlacklisted = item.blacklisted ? '🚫' : '✅';
           const isBurned = item.burned ? '🔥' : '❌';
@@ -402,7 +402,7 @@
         const isVercel = location.hostname.includes('vercel.app');
         if (isVercel) {
           try {
-            const testRes = await fetch(ENDPOINT.replace('limit=50', 'limit=1'), { headers: { "accept": "application/json" } });
+            const testRes = await fetch(ENDPOINT.replace('limit=10', 'limit=1'), { headers: { "accept": "application/json" } });
             if (testRes.ok) {
               fallback.style.display = 'none';
               fetchTokens();
