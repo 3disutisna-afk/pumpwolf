@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PumpWolf Dashboard</title>
   <meta name="description" content="Track Solana gems live." />
-  <meta property="og:image" content="/assets/pumpwolf_banner.jpg" />
+  <meta property="og:image" content="https://via.placeholder.com/100x50" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root { --bg: #030406; --neon: #00f0ff; --muted: #9bb; }
     body { font-family: Inter, sans-serif; background: linear-gradient(135deg, #02030a, var(--bg)); color: #dff; margin: 0; }
     header { padding: 12px; display: flex; align-items: center; gap: 12px; background: rgba(7, 16, 24, 0.9); }
     .logo { width: 50px; height: 50px; border-radius: 8px; object-fit: contain; }
-    .banner { width: 100%; height: 100px; background: url('/assets/pumpwolf_banner.jpg') no-repeat center; background-size: cover; margin-bottom: 12px; }
+    .banner { width: 100%; height: 100px; background: url('https://via.placeholder.com/100x50') no-repeat center; background-size: cover; margin-bottom: 12px; }
     .card { padding: 12px; background: #071018; border-radius: 8px; margin: 8px 0; cursor: pointer; transition: transform 0.2s; }
     .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 240, 255, 0.1); }
     .token-list { max-height: 65vh; overflow: auto; }
@@ -29,7 +29,7 @@
 <body>
   <div class="banner"></div>
   <header>
-    <img class="logo" src="/assets/wolf_logo.png" alt="PW" onerror="this.onerror=null; this.src='https://via.placeholder.com/50?text=PW';" />
+    <img class="logo" src="https://via.placeholder.com/50?text=PW" alt="PW" />
     <h1>PumpWolf</h1>
   </header>
   <div class="card">
@@ -88,8 +88,8 @@
       const data = await fetchJson(TOKEN_LIST_ENDPOINT);
       if (!data?.result?.length) {
         debugLog("No data, using dummy");
-        renderTokens([{ name: "Dummy1", symbol: "D1", liquidity: 10000, fullyDilutedValuation: 5000, createdAt: new Date().toISOString() },
-                      { name: "Dummy2", symbol: "D2", liquidity: 12000, fullyDilutedValuation: 6000, createdAt: new Date().toISOString() }]);
+        renderTokens([{ name: "Dummy1", symbol: "D1", liquidity: 10000, fullyDilutedValuation: 5000, createdAt: new Date().toISOString(), tokenAddress: "dummy1" },
+                      { name: "Dummy2", symbol: "D2", liquidity: 12000, fullyDilutedValuation: 6000, createdAt: new Date().toISOString(), tokenAddress: "dummy2" }]);
         return;
       }
       const tokens = data.result.map(item => ({
@@ -99,7 +99,7 @@
         liquidity: Number(item.liquidity) || 0,
         fullyDilutedValuation: Number(item.fullyDilutedValuation) || 0,
         createdAt: item.createdAt || new Date().toISOString(),
-        logo: item.logo || "/assets/placeholder.png"
+        logo: item.logo || "https://via.placeholder.com/24"
       })).filter(t => t.liquidity >= 5000 && t.fullyDilutedValuation <= 15000);
       renderTokens(tokens);
       apiStatusEl.textContent = 'Moralis: OK';
@@ -108,6 +108,7 @@
     function renderTokens(tokens) {
       tokenContainer.innerHTML = tokens.map(t => {
         window.tokenMap[t.tokenAddress] = t;
+        debugLog(`Mapping token: ${t.tokenAddress}`);
         return `
           <div class="card token" data-addr="${t.tokenAddress}">
             <div><b style="color: var(--neon)">${t.symbol}</b> — ${t.name}</div>
@@ -134,14 +135,17 @@
     tokenContainer.addEventListener('click', (e) => {
       const tokenEl = e.target.closest('.token');
       if (tokenEl) {
-        const addr = tokenEl.dataset.addr;
+        const addr = tokenEl.getAttribute('data-addr');
+        debugLog(`Clicked element data-addr: ${addr}`);
         const token = window.tokenMap[addr];
         if (token) {
-          debugLog(`Clicked token: ${addr}`);
+          debugLog(`Found token: ${addr}`);
           showModal(token);
         } else {
-          debugLog(`Token not found in map: ${addr}`);
+          debugLog(`Token not found in map for addr: ${addr}`);
         }
+      } else {
+        debugLog('No token element clicked');
       }
     });
 
