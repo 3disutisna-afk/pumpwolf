@@ -6,7 +6,7 @@ module.exports = async function handler(req, res) {
   try {
     console.log(`[SAFETY] Request for: ${addr}`);
     const response = await fetch(
-      `https://solana-gateway.moralis.io/token/mainnet/${addr}`,
+      `https://solana-gateway.moralis.io/token/mainnet/exchange/pumpfun/new?limit=10/${addr}`,
       {
         headers: {
           'X-API-Key': process.env.MORALIS_KEY,
