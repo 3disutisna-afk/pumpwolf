@@ -167,28 +167,29 @@
         debugPanel.scrollTop = debugPanel.scrollHeight;
       }
 
-      async function fetchJson(url) {
-        try {
-          debugLog(`Fetching ${url}`);
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 detik
-          const res = await fetch(url, {
-            signal: controller.signal,
-            headers: {
-              'X-API-Key': 'YOUR_MORALIS_API_KEY', // Ganti dengan API key Moralis Anda
-              'accept': 'application/json'
-            }
-          });
-          clearTimeout(timeoutId);
-          if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-          const data = await res.json();
-          debugLog(`Fetched data:`, data);
-          return data;
-        } catch (err) {
-          debugLog("Fetch error:", err.message);
-          return null;
-        }
+       async function fetchJson(url) {
+  try {
+    debugLog(`Fetching ${url}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'X-API-Key': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImE5ZmRkYjBkLTAyYWQtNGQ4OC1hYmIyLTRhMzYxZTZhNmZmNCIsIm9yZ0lkIjoiNDQ1NjQ1IiwidXNlcklkIjoiNDU4NTE0IiwidHlwZUlkIjoiOWQ3YzFmOTEtN2VkOS00ZDQ1LTg1ODItYWIyM2M5Nzg2YWRmIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDY1ODE1MDksImV4cCI6NDkwMjM0MTUwOX0.WJgUJRDahW8g_WGSg-1lDIgUi4oaGf_dH9222tOFYXE
+',
+        'accept': 'application/json'
       }
+    });
+    clearTimeout(timeoutId);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    const data = await res.json();
+    debugLog(`Fetched data:`, data);
+    return data;
+  } catch (err) {
+    debugLog("Fetch error:", err.message);
+    return null;
+  }
+       }
 
       async function fetchTokenSafety(addr) {
         const res = await fetchJson(TOKEN_SAFETY_ENDPOINT(addr));
