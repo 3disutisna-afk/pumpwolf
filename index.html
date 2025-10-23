@@ -29,7 +29,7 @@
 <body>
   <div class="banner"></div>
   <header>
-    <img class="logo" src="/assets/wolf_logo.png" alt="PW" onerror="this.src='/assets/placeholder.png';" />
+    <img class="logo" src="/assets/wolf_logo.png" alt="PW" onerror="this.onerror=null; this.src='https://via.placeholder.com/50?text=PW';" />
     <h1>PumpWolf</h1>
   </header>
   <div class="card">
@@ -130,6 +130,7 @@
       modal.classList.add('open');
     }
 
+    // Event listener untuk klik card
     tokenContainer.addEventListener('click', (e) => {
       const tokenEl = e.target.closest('.token');
       if (tokenEl) {
@@ -138,6 +139,8 @@
         if (token) {
           debugLog(`Clicked token: ${addr}`);
           showModal(token);
+        } else {
+          debugLog(`Token not found in map: ${addr}`);
         }
       }
     });
