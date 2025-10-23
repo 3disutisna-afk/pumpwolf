@@ -114,7 +114,7 @@
 
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap">
-          <div><b style="color:var(--neon)">Live Tokens (Filtered Safe & Potensial)</b> <span class="muted">— auto-updated from Vercel proxy</span></div>
+          <div><b style="color:var(--neon)">Live Tokens (Filtered Safe & Potensial)</b> <span class="muted">— auto-updated from Moralis</span></div>
           <div class="muted" style="font-size:0.85rem">Refresh: <span id="interval-label">60s</span></div>
         </div>
 
@@ -138,7 +138,7 @@
   <script>
     (function() {
       const VERCEL_BASE = "https://pumpwolf.vercel.app";
-      const ENDPOINT = VERCEL_BASE + "/api/proxy/token/mainnet/exchange/pumpfun/new?limit=10";
+      const ENDPOINT = "https://solana-gateway.moralis.io/token/mainnet/exchange/pumpfun/new?limit=10";
       const TOKEN_SAFETY_ENDPOINT = (addr) => `${VERCEL_BASE}/api/proxy/solana/safety?addr=${addr}`;
       const FEATURE_PRICE_URL = (addr) => VERCEL_BASE + `/api/proxy/token/mainnet/${addr}/price`;
       const FEATURED_TOKEN_ADDRESS = "";
@@ -188,7 +188,7 @@
 
       async function fetchTokenSafety(addr) {
         const res = await fetchJson(TOKEN_SAFETY_ENDPOINT(addr));
-        if (!res || !res.data) return { mintable: false, blacklisted: false, burned: false, holders: 0, topHolderPct: 100 };
+        if (!res || !res.data) return { holders: 0 };
         return res.data;
       }
 
@@ -198,7 +198,7 @@
       ];
 
       function filterSafeTokens(tokens, exchangeData) {
-        const now = new Date();
+        const now = Date.now();
         return tokens.map((it, index) => {
           const exchangeToken = exchangeData.result.find(t => t.tokenAddress === it.tokenAddress);
           return {
@@ -206,16 +206,13 @@
             liquidity: exchangeToken ? parseFloat(exchangeToken.liquidity) || it.liquidity : it.liquidity,
             priceUsd: exchangeToken ? parseFloat(exchangeToken.priceUsd) || it.priceUsd : it.priceUsd,
             holders: it.holders || 1, // Default minimal 1
-            topHolderPct: it.topHolderPct || 0
           };
         }).filter(it => {
           const liq = Number(it.liquidity || 0);
           const fdv = Number(it.fullyDilutedValuation || 0);
-          const ageMin = (now - new Date(it.createdAt)) / (1000 * 60);
+          const ageMin = it.createdAt ? (now - new Date(it.createdAt).getTime()) / (1000 * 60) : Infinity;
           const holders = Number(it.holders || 0);
-          const topHolderPct = Number(it.topHolderPct || 0);
-          return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && ageMin <= MAX_AGE_MIN &&
-                 holders >= MIN_HOLDERS && topHolderPct <= MAX_TOP_HOLDER_PCT;
+          return liq >= MIN_LIQUIDITY && fdv <= MAX_FDV && ageMin <= MAX_AGE_MIN && holders >= MIN_HOLDERS;
         }).slice(0, 10);
       }
 
@@ -322,11 +319,7 @@
           modal.querySelector('#mSymbol').textContent = (item.symbol || '?') + ' • ' + (addr ? (addr.slice(0, 6) + '...') : '');
 
           const liqFdv = item.liquidity && item.fullyDilutedValuation ? ((Number(item.liquidity) / Number(item.fullyDilutedValuation)) * 100).toFixed(2) + '%' : '—';
-          const ageMin = item.createdAt ? Math.round((new Date() - new Date(item.createdAt)) / (1000 * 60)) + ' min' : '—';
-          const isMintable = item.mintable ? '✅' : '❌';
-          const isBlacklisted = item.blacklisted ? '🚫' : '✅';
-          const isBurned = item.burned ? '🔥' : '❌';
-          const topHolderPct = item.topHolderPct !== undefined ? `${item.topHolderPct}%` : 'N/A';
+          const ageMin = item.createdAt ? Math.round((Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60)) + ' min' : '—';
           const holders = item.holders !== undefined ? item.holders : 'N/A';
 
           modal.querySelector('#mDetails').innerHTML = `
@@ -336,10 +329,6 @@
             <div class="tiny">💸 Price: $${item.priceUsd ? Number(item.priceUsd).toFixed(6) : '—'}</div>
             <div class="tiny">⏳ Age: ${ageMin}</div>
             <div class="tiny">👥 Holders: ${holders}</div>
-            <div class="tiny">🔒 Mintable: ${isMintable}</div>
-            <div class="tiny">🚫 Blacklisted: ${isBlacklisted}</div>
-            <div class="tiny">🔥 Burned: ${isBurned}</div>
-            <div class="tiny">👑 Top Holder: ${topHolderPct}</div>
             <div class="tiny">📍 Address: ${addr}</div>
           `;
 
